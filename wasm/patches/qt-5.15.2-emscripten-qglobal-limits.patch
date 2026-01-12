@@ -1,0 +1,7 @@
+--- a/qtbase/src/corelib/global/qglobal.h
++++ b/qtbase/src/corelib/global/qglobal.h
+@@ -141,6 +141,7 @@
+ #ifdef __cplusplus
+ 
+ #include <algorithm>
++#include <limits>

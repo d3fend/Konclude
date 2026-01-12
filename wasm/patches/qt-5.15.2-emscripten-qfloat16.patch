@@ -1,0 +1,7 @@
+--- a/qtbase/src/corelib/global/qfloat16.h
++++ b/qtbase/src/corelib/global/qfloat16.h
+@@ -44,6 +44,7 @@
+ #include <QtCore/qglobal.h>
+ #include <QtCore/qmetatype.h>
+ #include <string.h>
++#include <limits>

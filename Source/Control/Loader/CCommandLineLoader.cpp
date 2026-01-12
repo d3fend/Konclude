@@ -20,6 +20,10 @@
 
 #include "CCommandLineLoader.h"
 
+#ifdef __EMSCRIPTEN__
+#include <cstdio>
+#endif
+
 
 namespace Konclude {
 
@@ -306,9 +310,23 @@ namespace Konclude {
 			}
 
 			void CCommandLineLoader::threadStarted() {
+				#ifdef __EMSCRIPTEN__
+				fprintf(stderr, "[konclude wasm] CommandLineLoader threadStarted, loaders=%d\n", loaderContainer.count());
+				fflush(stderr);
+				#endif
 				containerSync.lock();
+				int loaderIndex = 0;
 				foreach (CLoader *loader, loaderContainer) {
+					#ifdef __EMSCRIPTEN__
+					fprintf(stderr, "[konclude wasm] loader[%d] load begin\n", loaderIndex);
+					fflush(stderr);
+					#endif
 					loader->load();
+					#ifdef __EMSCRIPTEN__
+					fprintf(stderr, "[konclude wasm] loader[%d] load end\n", loaderIndex);
+					fflush(stderr);
+					#endif
+					++loaderIndex;
 				}
 				containerSync.unlock();
 			}

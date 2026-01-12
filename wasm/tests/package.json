@@ -1,0 +1,12 @@
+{
+  "name": "konclude-wasm-tests",
+  "private": true,
+  "version": "0.0.1",
+  "description": "Browser smoke tests for Konclude WASM build",
+  "scripts": {
+    "test": "node e2e.js"
+  },
+  "devDependencies": {
+    "playwright": "1.57.0"
+  }
+}

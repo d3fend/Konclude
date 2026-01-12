@@ -20,6 +20,10 @@
 
 #include "CCLIBatchProcessingLoader.h"
 
+#ifdef __EMSCRIPTEN__
+#include <cstdio>
+#endif
+
 
 namespace Konclude {
 
@@ -70,6 +74,13 @@ namespace Konclude {
 
 
 			CLoader *CCLIBatchProcessingLoader::load() {
+				#ifdef __EMSCRIPTEN__
+				QByteArray reqPath = mRequestFileString.toUtf8();
+				QByteArray resPath = mResponseFileString.toUtf8();
+				fprintf(stderr, "[konclude wasm] CCLIBatchProcessingLoader load, request=%s response=%s\n",
+						reqPath.constData(), resPath.constData());
+				fflush(stderr);
+				#endif
 				startProcessing();
 				if (mBlockUntilProcessed) {
 					mBlockingSemaphore.acquire();

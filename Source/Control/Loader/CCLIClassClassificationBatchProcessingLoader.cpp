@@ -20,6 +20,9 @@
 
 #include "CCLIClassClassificationBatchProcessingLoader.h"
 
+#ifdef __EMSCRIPTEN__
+#include <cstdio>
+#endif
 
 namespace Konclude {
 
@@ -45,6 +48,13 @@ namespace Konclude {
 
 
 			void CCLIClassClassificationBatchProcessingLoader::createClassificationTestingCommands() {
+				#ifdef __EMSCRIPTEN__
+				QByteArray reqPath = mRequestFileString.toUtf8();
+				QByteArray resPath = mResponseFileString.toUtf8();
+				fprintf(stderr, "[konclude wasm] createClassificationTestingCommands request=%s response=%s\n",
+						reqPath.constData(), resPath.constData());
+				fflush(stderr);
+				#endif
 				logOutputMessage(QString("Starting classification for '%1'.").arg(mRequestFileString));
 				QString testKB = QString("http://konclude.com/test/kb");
 				CCreateKnowledgeBaseCommand* createKBCommand = new CCreateKnowledgeBaseCommand(testKB);
