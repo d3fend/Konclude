@@ -47,8 +47,16 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
         
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          token: ${{ secrets.GITHUB_TOKEN }}
+        
       - name: Install Qt
         uses: jurplel/install-qt-action@v2
+        with:
+          setup-python: false
           
       - name: Compile Ubuntu
         if: startsWith(matrix.config.os, 'ubuntu')
@@ -112,4 +120,3 @@ jobs:
           Release/Konclude.app/Contents/MacOS/Konclude owllinkfile -c Configs/default-config.xml -i Tests/1b-satisfiability-request.xml
           Release/Konclude.app/Contents/MacOS/Konclude sparqlfile -s Tests/lubm-univ-bench-sparql-load-and-query-test.sparql -o Tests/query-answers.xml -c Configs/querying-config.xml
           Release/Konclude.app/Contents/MacOS/Konclude sparqlfile -s Tests/roberts-family-full-sparql-existential-variables-query-test.sparql -i Tests/roberts-family-full-D.owl.xml
-

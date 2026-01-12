@@ -97,10 +97,17 @@ jobs:
           echo '#define KONCLUDE_VERSION_GIT_REVISION_HASH_STRING "${{needs.tags.outputs.revision_hash}}"' >> "revision-git.h"
         
         
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          token: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Install Qt
-        uses: jurplel/install-qt-action@v2   
+        uses: jurplel/install-qt-action@v2
         with:
           version: ${{ matrix.config.qt }}
+          setup-python: false
 
       - name: Prepare Visual Studio
         uses: ilammy/msvc-dev-cmd@v1
