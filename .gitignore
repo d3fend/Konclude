@@ -1,0 +1,54 @@
+# Build outputs
+/build/
+/build-*/
+/Binaries/
+/bin/
+/lib/
+/out/
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+Makefile
+*.o
+*.obj
+*.a
+*.lib
+*.so
+*.so.*
+*.dylib
+*.dll
+*.exe
+*.pdb
+*.idb
+*.ipch
+*.ilk
+*.ncb
+*.suo
+*.user
+*.vcxproj.user
+*.sln.DotSettings.user
+
+# Qt generated files
+*.moc
+moc_*.cpp
+moc_*.h
+qrc_*.cpp
+ui_*.h
+*.rcc
+*.qm
+*.qph
+*.qhp
+*.qhc
+*.pro.user*
+*.qmake.stash
+
+# LSP/IDE caches
+compile_commands.json
+/.cache/
+/.clangd.d/
+/.clangd
+
+# Logs/temp
+*.log
+*.tmp
+*.cache
