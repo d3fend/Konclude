@@ -20,6 +20,10 @@
 
 #include "CSubsumptionClassifierThread.h"
 
+#ifdef __EMSCRIPTEN__
+#include <cstdio>
+#endif
+
 
 namespace Konclude {
 
@@ -37,7 +41,14 @@ namespace Konclude {
 				mStatCalculatingJobs = 0;
 				mClassifierActive = false;
 				statistics = new CClassifierStatistics();
+#if !defined(KONCLUDE_COMPILE_WASM_INTERFACE)
 				startThread(QThread::HighPriority);
+#else
+				#ifdef __EMSCRIPTEN__
+				std::fprintf(stderr, "[konclude wasm] classifier thread running inline\n");
+				std::fflush(stderr);
+				#endif
+#endif
 			}
 
 

@@ -30,7 +30,9 @@ namespace Konclude {
 
 			CPreconditionSynchronizer::CPreconditionSynchronizer(CCommandDelegater *commandDelegater) : CThread("CommandPreconditionSynchronizer") {
 				delegater = commandDelegater;
+#ifndef KONCLUDE_COMPILE_WASM_INTERFACE
 				startThread();
+#endif
 			}
 
 
@@ -51,6 +53,10 @@ namespace Konclude {
 						if (commandEvent) {
 							CCommand *command = commandEvent->getCommand();
 							if (command) {
+#ifdef __EMSCRIPTEN__
+								std::fprintf(stderr, "[konclude wasm] precondition event for command tag=%d\n", command->getCommandTag());
+								std::fflush(stderr);
+#endif
 								CPreconditionCommand *preComm = dynamic_cast<CPreconditionCommand *>(command);
 								if (preComm) {
 									bool processable = false;

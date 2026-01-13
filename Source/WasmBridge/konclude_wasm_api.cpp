@@ -20,6 +20,10 @@
 #include <QTemporaryFile>
 #include <QStringList>
 
+#include "Config/CConfiguration.h"
+#include "Config/CConfigData.h"
+#include "Utilities/CSingletonProvider.hpp"
+
 #ifdef __EMSCRIPTEN__
 #include <cstdio>
 #endif
@@ -27,7 +31,11 @@
 #include "Logger/CLogger.h"
 #include "Control/Loader/CCommandLineLoader.h"
 #include "Control/Loader/CDefaultLoaderFactory.h"
+#include "Control/Loader/CDefaultReasonerLoader.h"
+#include "Control/Loader/CCLIClassClassificationBatchProcessingLoader.h"
+#include "Control/Loader/CCLIRealizationBatchProcessingLoader.h"
 #include "Control/Interface/CommandLine/CCommandLinePreparationTranslatorSelector.h"
+#include "Control/Command/CReasonerConfigurationGroup.h"
 
 using namespace Konclude;
 using namespace Konclude::Logger;
@@ -49,6 +57,10 @@ namespace {
 				if (event && event->type() == QEvent::Quit) {
 					if (!gWasmAllowQuit) {
 						gWasmQuitSeen = true;
+#ifdef __EMSCRIPTEN__
+						std::fprintf(stderr, "[konclude wasm] QEvent::Quit intercepted\n");
+						std::fflush(stderr);
+#endif
 						return true;
 					}
 				}
@@ -200,8 +212,8 @@ namespace {
 		bool done = false;
 		bool error = false;
 		bool quitSeen = false;
-		CCommandLineLoader* cmdLineLoader = nullptr;
-		CLoaderFactory* loaderFactory = nullptr;
+		int outputCheckCount = 0;
+		CCLIBatchProcessingLoader* cliLoader = nullptr;
 	};
 
 	class CWasmJobManager {
@@ -211,20 +223,28 @@ namespace {
 				return manager;
 			}
 
-			int submitJob(const char* command, const char* inputPath, const char* outputPath) {
-				if (!command || !inputPath || !outputPath) {
-					return -1;
-				}
-				CWasmJob* job = new CWasmJob();
-				job->id = ++mNextJobId;
-				job->command = QString::fromUtf8(command);
-				job->inputPath = QString::fromUtf8(inputPath);
-				job->outputPath = QString::fromUtf8(outputPath);
-				mJobs[job->id] = std::unique_ptr<CWasmJob>(job);
-				mQueue.push_back(job->id);
-				if (mActiveJobId == 0) {
-					startNextJob();
-				}
+				int submitJob(const char* command, const char* inputPath, const char* outputPath) {
+					if (!command || !inputPath || !outputPath) {
+						return -1;
+					}
+					CWasmJob* job = new CWasmJob();
+					job->id = ++mNextJobId;
+					job->command = QString::fromUtf8(command);
+					job->inputPath = QString::fromUtf8(inputPath);
+					job->outputPath = QString::fromUtf8(outputPath);
+#ifdef __EMSCRIPTEN__
+					std::fprintf(stderr, "[konclude] submit job %d cmd=%s in=%s out=%s\n",
+							job->id,
+							command,
+							inputPath,
+							outputPath);
+					std::fflush(stderr);
+#endif
+					mJobs[job->id] = std::unique_ptr<CWasmJob>(job);
+					mQueue.push_back(job->id);
+					if (mActiveJobId == 0) {
+						startNextJob();
+					}
 				return job->id;
 			}
 
@@ -284,6 +304,19 @@ namespace {
 							finishJob(job);
 						} else if (isOutputReady(job)) {
 							finishJob(job);
+						} else {
+#ifdef __EMSCRIPTEN__
+							if ((job->outputCheckCount++ % 200) == 0) {
+								QFileInfo outInfo(job->outputPath);
+								std::fprintf(stderr, "[konclude wasm] output check exists=%d size=%lld path=%s\n",
+										outInfo.exists() ? 1 : 0,
+										static_cast<long long>(outInfo.size()),
+										job->outputPath.toUtf8().constData());
+								std::fprintf(stderr, "[konclude wasm] output check cwd=%s\n",
+										QDir::currentPath().toUtf8().constData());
+								std::fflush(stderr);
+							}
+#endif
 						}
 					} else if (gWasmQuitSeen) {
 						gWasmQuitSeen = false;
@@ -306,48 +339,109 @@ namespace {
 				ensureApp();
 				CLogger::getInstance();
 
+#ifdef __EMSCRIPTEN__
+				QDir::setCurrent("/");
+#endif
 				QFileInfo inputInfo(job->inputPath);
-				if (!inputInfo.exists() || !inputInfo.isFile()) {
-					LOG(ERROR,"::Konclude::Wasm",QString("Input file not found: %1 (cwd: %2)").arg(job->inputPath).arg(QDir::currentPath()),0);
-					return false;
-				}
+				job->inputPath = inputInfo.absoluteFilePath();
+				inputInfo.setFile(job->inputPath);
 
 				QFileInfo outputInfo(job->outputPath);
+				job->outputPath = outputInfo.absoluteFilePath();
+				outputInfo.setFile(job->outputPath);
+
+#ifdef __EMSCRIPTEN__
+				std::fprintf(stderr, "[konclude] start job %d cmd=%s in=%s out=%s\n",
+						job->id,
+						job->command.toUtf8().constData(),
+						job->inputPath.toUtf8().constData(),
+						job->outputPath.toUtf8().constData());
+					std::fflush(stderr);
+#endif
+
+				if (!inputInfo.exists() || !inputInfo.isFile()) {
+#ifdef __EMSCRIPTEN__
+					std::fprintf(stderr, "[konclude] input file not found: %s (cwd=%s)\n",
+							job->inputPath.toUtf8().constData(),
+							QDir::currentPath().toUtf8().constData());
+						std::fflush(stderr);
+#endif
+						LOG(ERROR,"::Konclude::Wasm",QString("Input file not found: %1 (cwd: %2)").arg(job->inputPath).arg(QDir::currentPath()),0);
+						return false;
+					}
+
 				if (!outputInfo.absolutePath().isEmpty()) {
 					QDir().mkpath(outputInfo.absolutePath());
 				}
 
-				job->loaderFactory = new CDefaultLoaderFactory();
+				if (!mConfiguration) {
+					CConfigurationGroup* reasonerConfigGroup = CSingletonProvider<CReasonerConfigurationGroup>::getInstance()->getReferencedConfigurationGroup();
+					mConfiguration = new CConfiguration(reasonerConfigGroup);
+				}
 
-				QString loaderName;
+				auto setConfigValue = [&](const QString& name, const QString& value) {
+					CConfigData* confData = mConfiguration->createAndSetConfig(name);
+					if (confData) {
+						confData->readFromString(value);
+					}
+				};
+
+				setConfigValue("Konclude.Calculation.BlockingThreadPoolThreadsCount", "false");
+#if defined(__EMSCRIPTEN_PTHREADS__)
+				QString procCount("1");
+#ifdef KONCLUDE_WASM_PROCESSOR_COUNT
+				procCount = QString::number(KONCLUDE_WASM_PROCESSOR_COUNT);
+#endif
+				setConfigValue("Konclude.Calculation.ProcessorCount", procCount);
+				setConfigValue("Konclude.Calculation.WorkerCount", procCount);
+				setConfigValue("Konclude.Calculation.AdaptThreadPoolSizeProcessorCount", "false");
+#else
+				setConfigValue("Konclude.Calculation.ProcessorCount", "1");
+				setConfigValue("Konclude.Calculation.WorkerCount", "1");
+				setConfigValue("Konclude.Calculation.AdaptThreadPoolSizeProcessorCount", "false");
+#endif
+				setConfigValue("Konclude.CLI.RequestFile", job->inputPath);
+				setConfigValue("Konclude.CLI.ResponseFile", job->outputPath);
+				setConfigValue("Konclude.CLI.CloseAfterProcessedRequest", "true");
+				setConfigValue("Konclude.CLI.BlockUntilProcessedRequest", "false");
+
+				if (!mReasonerLoader) {
+					mReasonerLoader = new CDefaultReasonerLoader();
+					mReasonerLoader->init(nullptr, mConfiguration);
+					mReasonerLoader->load();
+				}
+
 				const QString commandLower = job->command.toLower();
 				if (commandLower == "classification") {
-					loaderName = QString("CLIClassClassificationBatchProcessingLoader");
+					job->cliLoader = new CCLIClassClassificationBatchProcessingLoader();
 				} else if (commandLower == "realisation" || commandLower == "realization") {
-					loaderName = QString("CLIRealizationBatchProcessingLoader");
+					job->cliLoader = new CCLIRealizationBatchProcessingLoader();
 				} else {
-					delete job->loaderFactory;
-					job->loaderFactory = nullptr;
 					return false;
 				}
 
-				QStringList arguments;
-				arguments << "-ConfigurableCoutLogObserverLoader"
-						<< "-LoggerConfigurationLoader"
-						<< "-DefaultReasonerLoader"
-						<< QString("-%1").arg(loaderName)
-						<< QString("+Konclude.CLI.RequestFile=%1").arg(job->inputPath)
-						<< QString("+Konclude.CLI.ResponseFile=%1").arg(job->outputPath)
-						<< "+Konclude.CLI.CloseAfterProcessedRequest=true"
-						<< "+Konclude.CLI.BlockUntilProcessedRequest=true";
-
-				job->cmdLineLoader = new CCommandLineLoader(arguments, false);
-				job->cmdLineLoader->init(job->loaderFactory);
-				job->cmdLineLoader->load();
+#ifdef __EMSCRIPTEN__
+				std::fprintf(stderr, "[konclude] cliLoader init\n");
+				std::fflush(stderr);
+#endif
+				job->cliLoader->init(nullptr, mConfiguration);
+#ifdef __EMSCRIPTEN__
+				std::fprintf(stderr, "[konclude] cliLoader load\n");
+				std::fflush(stderr);
+#endif
+				job->cliLoader->load();
+#ifdef __EMSCRIPTEN__
+				std::fprintf(stderr, "[konclude] cliLoader load returned\n");
+				std::fflush(stderr);
+#endif
 				job->done = false;
 				job->error = false;
 				job->exitCode = -999;
 				mActiveJobId = job->id;
+#ifdef __EMSCRIPTEN__
+				std::fprintf(stderr, "[konclude] start job active id=%d\n", job->id);
+				std::fflush(stderr);
+#endif
 				return true;
 			}
 
@@ -357,6 +451,10 @@ namespace {
 				}
 				const int id = mQueue.front();
 				mQueue.pop_front();
+#ifdef __EMSCRIPTEN__
+				std::fprintf(stderr, "[konclude] startNextJob id=%d queue=%zu\n", id, mQueue.size());
+				std::fflush(stderr);
+#endif
 				auto it = mJobs.find(id);
 				if (it == mJobs.end()) {
 					return;
@@ -374,22 +472,34 @@ namespace {
 					return;
 				}
 
+#ifdef __EMSCRIPTEN__
+				std::fprintf(stderr, "[konclude wasm] finishJob start id=%d\n", job->id);
+				std::fflush(stderr);
+#endif
 				const bool ok = isOutputReady(job);
 
-				if (job->cmdLineLoader) {
-					job->cmdLineLoader->exit();
-					delete job->cmdLineLoader;
-					job->cmdLineLoader = nullptr;
+				if (job->cliLoader) {
+#ifdef __EMSCRIPTEN__
+					std::fprintf(stderr, "[konclude wasm] finishJob cliLoader exit\n");
+					std::fflush(stderr);
+#endif
+					job->cliLoader->exit();
+#ifdef __EMSCRIPTEN__
+					std::fprintf(stderr, "[konclude wasm] finishJob cliLoader exit done\n");
+					std::fflush(stderr);
+#endif
+					delete job->cliLoader;
+					job->cliLoader = nullptr;
 				}
-				if (job->loaderFactory) {
-					delete job->loaderFactory;
-					job->loaderFactory = nullptr;
-				}
-
 				job->done = true;
 				job->error = !ok;
 				job->exitCode = ok ? 0 : -1;
 				mActiveJobId = 0;
+#ifdef __EMSCRIPTEN__
+				std::fprintf(stderr, "[konclude wasm] finishJob id=%d ok=%d quitSeen=%d\n",
+						job->id, ok ? 1 : 0, job->quitSeen ? 1 : 0);
+				std::fflush(stderr);
+#endif
 			}
 
 			bool isOutputReady(const CWasmJob* job) const {
@@ -397,12 +507,23 @@ namespace {
 					return false;
 				}
 				QFileInfo outInfo(job->outputPath);
-				return outInfo.exists() && outInfo.isFile() && outInfo.size() > 0;
+				const bool ready = outInfo.exists() && outInfo.isFile() && outInfo.size() > 0;
+#ifdef __EMSCRIPTEN__
+				if (ready) {
+					std::fprintf(stderr, "[konclude wasm] output ready exists=1 size=%lld path=%s\n",
+							static_cast<long long>(outInfo.size()),
+							job->outputPath.toUtf8().constData());
+					std::fflush(stderr);
+				}
+#endif
+				return ready;
 			}
 
 		private:
 			int mNextJobId = 0;
 			int mActiveJobId = 0;
+			CConfiguration* mConfiguration = nullptr;
+			CDefaultReasonerLoader* mReasonerLoader = nullptr;
 			std::deque<int> mQueue;
 			std::unordered_map<int, std::unique_ptr<CWasmJob>> mJobs;
 	};

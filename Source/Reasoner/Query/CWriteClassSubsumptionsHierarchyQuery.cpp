@@ -20,6 +20,10 @@
 
 #include "CWriteClassSubsumptionsHierarchyQuery.h"
 
+#ifdef __EMSCRIPTEN__
+#include <cstdio>
+#endif
+
 
 namespace Konclude {
 
@@ -118,6 +122,11 @@ namespace Konclude {
 
 			bool CWriteClassSubsumptionsHierarchyQuery::writeSubClassHierarchyResult(CTaxonomy *taxonomy) {
 				if (startWritingOutput()) {
+#ifdef __EMSCRIPTEN__
+					std::fprintf(stderr, "[konclude wasm] writeSubClassHierarchyResult start taxonomy=%s\n",
+							taxonomy ? "set" : "null");
+					std::fflush(stderr);
+#endif
 					writeOntologyStart();
 
 					CHierarchyNode* topNode = taxonomy->getTopHierarchyNode();
@@ -126,6 +135,13 @@ namespace Konclude {
 					if (!mClassName.isEmpty()) {
 						basicNode = taxonomy->getHierarchyNode(ontology->getConcept(mClassName));
 					}
+#ifdef __EMSCRIPTEN__
+					std::fprintf(stderr, "[konclude wasm] writeSubClassHierarchyResult nodes top=%p bottom=%p basic=%p\n",
+							static_cast<void*>(topNode),
+							static_cast<void*>(bottomNode),
+							static_cast<void*>(basicNode));
+					std::fflush(stderr);
+#endif
 					writeDeclarations(bottomNode);
 					writeBottomEquivalences(bottomNode);
 					QSet<CHierarchyNode *> processNodeSet;
@@ -136,6 +152,7 @@ namespace Konclude {
 						writeTopEquivalences(basicNode);
 						processNodeSet.insert(basicNode);
 						processNodeList.append(basicNode);
+						cint64 processedCount = 0;
 						while (!processNodeList.isEmpty()) {
 							CHierarchyNode *procNode = processNodeList.takeFirst();
 							QSet<CHierarchyNode *>* childNodeSet(procNode->getChildNodeSet());
@@ -152,9 +169,27 @@ namespace Konclude {
 									writeSubClassRelations(procNode,childNode);
 								}
 							}
+							++processedCount;
+#ifdef __EMSCRIPTEN__
+							if ((processedCount % 100) == 0) {
+								std::fprintf(stderr, "[konclude wasm] writeSubClassHierarchyResult progress processed=%lld queue=%d\n",
+										static_cast<long long>(processedCount),
+										processNodeList.size());
+								std::fflush(stderr);
+							}
+#endif
 						}
+#ifdef __EMSCRIPTEN__
+						std::fprintf(stderr, "[konclude wasm] writeSubClassHierarchyResult loop done processed=%lld\n",
+								static_cast<long long>(processedCount));
+						std::fflush(stderr);
+#endif
 					}
 					writeOntologyEnd();
+#ifdef __EMSCRIPTEN__
+					std::fprintf(stderr, "[konclude wasm] writeSubClassHierarchyResult end\n");
+					std::fflush(stderr);
+#endif
 					return endWritingOutput();
 				}
 				return false;

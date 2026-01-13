@@ -20,6 +20,10 @@
 
 #include "CWriteQueryFileOWL2XMLSerializer.h"
 
+#ifdef __EMSCRIPTEN__
+#include <cstdio>
+#endif
+#include <QFileInfo>
 
 namespace Konclude {
 
@@ -48,12 +52,40 @@ namespace Konclude {
 
 			bool CWriteQueryFileOWL2XMLSerializer::endWritingOutput() {
 				if (mCurrentOutputFile) {
+#ifdef __EMSCRIPTEN__
+					std::fprintf(stderr, "[konclude wasm] endWritingOutput xml start file=%s\n",
+							mFileString.toUtf8().constData());
+					std::fflush(stderr);
+#endif
 					mCurrentOutputStreamWriter->writeEndDocument();
+					mCurrentOutputFile->flush();
+#ifdef __EMSCRIPTEN__
+					{
+						QFileInfo beforeInfo(mCurrentOutputFile->fileName());
+						std::fprintf(stderr, "[konclude wasm] endWritingOutput xml before close exists=%d size=%lld\n",
+								beforeInfo.exists() ? 1 : 0,
+								static_cast<long long>(beforeInfo.size()));
+						std::fflush(stderr);
+					}
+#endif
 					mCurrentOutputFile->close();
 					delete mCurrentOutputStreamWriter;
 					delete mCurrentOutputFile;
+#ifdef __EMSCRIPTEN__
+					{
+						QFileInfo afterInfo(mFileString);
+						std::fprintf(stderr, "[konclude wasm] endWritingOutput xml after close exists=%d size=%lld\n",
+								afterInfo.exists() ? 1 : 0,
+								static_cast<long long>(afterInfo.size()));
+						std::fflush(stderr);
+					}
+#endif
 					return true;
 				}
+#ifdef __EMSCRIPTEN__
+				std::fprintf(stderr, "[konclude wasm] endWritingOutput xml no file\n");
+				std::fflush(stderr);
+#endif
 				return false;
 			}
 

@@ -144,7 +144,13 @@ self.onmessage = async (event) => {
       status = jobStatus(jobId);
       if (status === 0) {
         if ((pollCount++ % 50) === 0) {
-          console.log("worker job status", { status });
+          let size = null;
+          try {
+            size = moduleResolved.FS.stat(outPath).size;
+          } catch {
+            size = null;
+          }
+          console.log("worker job status", { status, size });
         }
         if (Date.now() - start > 120000) {
           jobFree(jobId);

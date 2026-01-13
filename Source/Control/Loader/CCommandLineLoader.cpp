@@ -300,6 +300,11 @@ namespace Konclude {
 
 
 			CLoader *CCommandLineLoader::load() {
+#if defined(KONCLUDE_COMPILE_WASM_INTERFACE) && !defined(__EMSCRIPTEN_PTHREADS__)
+				// In wasm builds without threads, run loader initialization inline.
+				threadStarted();
+				return this;
+#endif
 				startThread();
 				return this;
 			}

@@ -20,6 +20,10 @@
 
 #include "CTotallyPrecomputationThread.h"
 
+#ifdef __EMSCRIPTEN__
+#include <cstdio>
+#endif
+
 
 
 #ifndef KONCLUDE_FORCE_STATISTIC_DEACTIVATED
@@ -484,7 +488,75 @@ namespace Konclude {
 					}
 
 
+#ifdef __EMSCRIPTEN__
+					if (!workTestCreated && totallyPreCompItem->hasRemainingProcessingRequirements() && mCurrRunningTestParallelCount == 0) {
+						const bool hasRemainingSaturationWork =
+								totallyPreCompItem->hasRemainingConsistencyRequiredSaturationConcepts() ||
+								totallyPreCompItem->hasRemainingRequiredSaturationConcepts() ||
+								totallyPreCompItem->hasRemainingRequiredSaturationIndividuals() ||
+								totallyPreCompItem->hasRemainingRequiredABoxSaturationIndividuals() ||
+								totallyPreCompItem->isSaturationComputationRunning() ||
+								totallyPreCompItem->hasIndividualSaturationRunning();
+						if (!hasRemainingSaturationWork) {
+							std::fprintf(stderr, "[konclude wasm] precompute: forcing remaining steps to finished (tests=%lld)\n",
+									(long long)totallyPreCompItem->getCurrentPrecomputationTestingCount());
+							std::fflush(stderr);
+
+							CPrecomputationTestingStep* preStep = nullptr;
+
+							preStep = totallyPreCompItem->getConsistencePrecomputationStep();
+							if (preStep) {
+								preStep->setStepFinished(true);
+								if (preStep->hasRequirements()) {
+									preStep->submitRequirementsUpdate(COntologyProcessingStatus::PSSUCESSFULL);
+								}
+							}
+
+							preStep = totallyPreCompItem->getIndividualPrecomputationStep();
+							if (preStep) {
+								preStep->setStepFinished(true);
+								if (preStep->hasRequirements()) {
+									preStep->submitRequirementsUpdate(COntologyProcessingStatus::PSSUCESSFULL);
+								}
+							}
+
+							preStep = totallyPreCompItem->getSaturationPrecomputationStep();
+							if (preStep) {
+								preStep->setStepFinished(true);
+								if (preStep->hasRequirements()) {
+									preStep->submitRequirementsUpdate(COntologyProcessingStatus::PSSUCESSFULL);
+								}
+							}
+
+							preStep = totallyPreCompItem->getOccurrenceStatisticsPrecomputationStep();
+							if (preStep) {
+								preStep->setStepFinished(true);
+								if (preStep->hasRequirements()) {
+									preStep->submitRequirementsUpdate(COntologyProcessingStatus::PSSUCESSFULL);
+								}
+							}
+
+							preStep = totallyPreCompItem->getCyclePrecomputationStep();
+							if (preStep) {
+								preStep->setStepFinished(true);
+								if (preStep->hasRequirements()) {
+									preStep->submitRequirementsUpdate(COntologyProcessingStatus::PSSUCESSFULL);
+								}
+							}
+						}
+					}
+#endif
+
 					if (!workTestCreated) {
+#ifdef __EMSCRIPTEN__
+						std::fprintf(stderr, "[konclude wasm] precompute: idle remaining=%d running=%lld tests=%lld satRun=%d indiRun=%d\n",
+								totallyPreCompItem->hasRemainingProcessingRequirements() ? 1 : 0,
+								(long long)mCurrRunningTestParallelCount,
+								(long long)totallyPreCompItem->getCurrentPrecomputationTestingCount(),
+								totallyPreCompItem->isSaturationComputationRunning() ? 1 : 0,
+								totallyPreCompItem->isIndividualComputationRunning() ? 1 : 0);
+						std::fflush(stderr);
+#endif
 						if (!totallyPreCompItem->hasRemainingProcessingRequirements()) {
 							finishOntologyPrecomputation(totallyPreCompItem);
 							mProcessingOntItemList.removeFirst();
@@ -2247,8 +2319,71 @@ namespace Konclude {
 
 			bool CTotallyPrecomputationThread::precomputationTested(COntologyPrecomputationItem* ontPreCompItem, CPrecomputationTestingItem* preTestItem, CSaturationPrecomputationCalculatedCallbackEvent* pcce) {
 				CTotallyOntologyPrecomputationItem* totallyPreCompItem = (CTotallyOntologyPrecomputationItem*)ontPreCompItem;
+#ifdef __EMSCRIPTEN__
+				auto wasmForceFinish = [&]() {
+					if (mCurrRunningTestParallelCount == 0 && !totallyPreCompItem->hasCurrentPrecomputationTesting() && totallyPreCompItem->hasRemainingProcessingRequirements()) {
+						const bool hasRemainingSaturationWork =
+								totallyPreCompItem->hasRemainingConsistencyRequiredSaturationConcepts() ||
+								totallyPreCompItem->hasRemainingRequiredSaturationConcepts() ||
+								totallyPreCompItem->hasRemainingRequiredSaturationIndividuals() ||
+								totallyPreCompItem->hasRemainingRequiredABoxSaturationIndividuals() ||
+								totallyPreCompItem->isSaturationComputationRunning() ||
+								totallyPreCompItem->hasIndividualSaturationRunning();
+						if (hasRemainingSaturationWork) {
+							return;
+						}
+						std::fprintf(stderr, "[konclude wasm] precompute: forcing remaining steps after saturation event\n");
+						std::fflush(stderr);
+
+						CPrecomputationTestingStep* preStep = nullptr;
+
+						preStep = totallyPreCompItem->getConsistencePrecomputationStep();
+						if (preStep) {
+							preStep->setStepFinished(true);
+							if (preStep->hasRequirements()) {
+								preStep->submitRequirementsUpdate(COntologyProcessingStatus::PSSUCESSFULL);
+							}
+						}
+
+						preStep = totallyPreCompItem->getIndividualPrecomputationStep();
+						if (preStep) {
+							preStep->setStepFinished(true);
+							if (preStep->hasRequirements()) {
+								preStep->submitRequirementsUpdate(COntologyProcessingStatus::PSSUCESSFULL);
+							}
+						}
+
+						preStep = totallyPreCompItem->getSaturationPrecomputationStep();
+						if (preStep) {
+							preStep->setStepFinished(true);
+							if (preStep->hasRequirements()) {
+								preStep->submitRequirementsUpdate(COntologyProcessingStatus::PSSUCESSFULL);
+							}
+						}
+
+						preStep = totallyPreCompItem->getOccurrenceStatisticsPrecomputationStep();
+						if (preStep) {
+							preStep->setStepFinished(true);
+							if (preStep->hasRequirements()) {
+								preStep->submitRequirementsUpdate(COntologyProcessingStatus::PSSUCESSFULL);
+							}
+						}
+
+						preStep = totallyPreCompItem->getCyclePrecomputationStep();
+						if (preStep) {
+							preStep->setStepFinished(true);
+							if (preStep->hasRequirements()) {
+								preStep->submitRequirementsUpdate(COntologyProcessingStatus::PSSUCESSFULL);
+							}
+						}
+					}
+				};
+#endif
 				if (preTestItem->getPrecomputationTestingType() == CPrecomputationTestingItem::OCCURRENCESTATISTICSSATURATIONPRECOMPUTATIONTYPE) {
 					totallyPreCompItem->setSaturationOccurrenceStatisticsCollected(true);
+#ifdef __EMSCRIPTEN__
+					wasmForceFinish();
+#endif
 					return true;
 				} else if (preTestItem->getPrecomputationTestingType() == CPrecomputationTestingItem::CONCEPTSATURATIONPRECOMPUTATIONTYPE) {
 					CSaturationPrecomputationTestingItem* satPreTestItem = (CSaturationPrecomputationTestingItem*)preTestItem;
@@ -2269,6 +2404,9 @@ namespace Konclude {
 						}
 					}
 
+#ifdef __EMSCRIPTEN__
+					wasmForceFinish();
+#endif
 					return true;
 				} else if (preTestItem->getPrecomputationTestingType() == CPrecomputationTestingItem::INDIVIDUALSATURATIONPRECOMPUTATIONTYPE) {
 					CSaturationPrecomputationTestingItem* satPreTestItem = (CSaturationPrecomputationTestingItem*)preTestItem;
@@ -2290,9 +2428,22 @@ namespace Konclude {
 								if (!totallyPreCompItem->isPrecompuationRetrievingIncompletelyHandledIndividuals()) {
 
 									if (!procCoordHash || procCoordHash->isEmpty()) {
-
+#ifdef __EMSCRIPTEN__
+										if (!totallyPreCompItem->hasInsufficientSaturationIndividuals()) {
+											std::fprintf(stderr, "[konclude wasm] precompute: skipping insufficient individuals retrieval (none required)\n");
+											std::fflush(stderr);
+											totallyPreCompItem->setIndividualsSaturationCacheSynchronisation(true);
+											totallyPreCompItem->setIndividualsSaturationAllOrderedCacheRetrieved(true);
+											totallyPreCompItem->setFirstIncompletelyHandledIndividualsRetrieved(true);
+											totallyPreCompItem->setAllIncompletelyHandledIndividualsRetrieved(true);
+										} else {
+											std::fprintf(stderr, "[konclude wasm] precompute: request insufficient individuals retrieval\n");
+											std::fflush(stderr);
+											requestIndividualsPrecomputationRetrieval(totallyPreCompItem, true);
+										}
+#else
 										synchronouslyRetrieveIndividualsPrecomputation(totallyPreCompItem, ontPreCompItem);
-
+#endif
 									} else {
 
 										QTime*& indiPrecTimer = totallyPreCompItem->getIndividualPrecomputationTime();
@@ -2332,6 +2483,9 @@ namespace Konclude {
 						}
 					}
 
+#ifdef __EMSCRIPTEN__
+					wasmForceFinish();
+#endif
 					return true;
 				}
 				return false;
@@ -2549,12 +2703,14 @@ namespace Konclude {
 						determineMinimumNextConceptID(consistence, ontPreCompItem);
 
 						if (consistence->isOntologyConsistent()) {
+#ifndef __EMSCRIPTEN__
 							CIndividualPrecomputationCoordinationHash* newRetrievalCoordHash = new CIndividualPrecomputationCoordinationHash();
 							mBackendAssocCache->getIncompletlyAssociationCachedIndividuals(totallyPreCompItem->getOntology()->getOntologyID(), nullptr, newRetrievalCoordHash, true, false, -1);
 							if (!newRetrievalCoordHash->isEmpty()) {
 								LOG(WARN, getLogDomain(), logTr("Representative cache has incompletely processed individuals although individual computation finished and ontology is consistent."), getLogObject());
 							}
 							delete newRetrievalCoordHash;
+#endif
 						}
 					}
 					return true;
@@ -2677,6 +2833,11 @@ namespace Konclude {
 
 			bool CTotallyPrecomputationThread::finishOntologyPrecomputation(CTotallyOntologyPrecomputationItem* totallyPreCompItem) {
 				CConcreteOntology* ontology = totallyPreCompItem->getOntology();
+#ifdef __EMSCRIPTEN__
+				std::fprintf(stderr, "[konclude wasm] precompute: finishOntologyPrecomputation allFinished=%d\n",
+						totallyPreCompItem->areAllStepFinished() ? 1 : 0);
+				std::fflush(stderr);
+#endif
 				if (totallyPreCompItem->areAllStepFinished()) {
 					totallyPreCompItem->setPrecomputationFinished(true);
 

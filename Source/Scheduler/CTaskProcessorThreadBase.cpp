@@ -20,6 +20,9 @@
 
 #include "CTaskProcessorThreadBase.h"
 
+#ifdef __EMSCRIPTEN__
+#include <cstdio>
+#endif
 
 namespace Konclude {
 
@@ -336,6 +339,12 @@ namespace Konclude {
 				CSendTaskProcessEvent* sendTaskProcessEvent = (CSendTaskProcessEvent*)event;
 				CTask* task = sendTaskProcessEvent->getTask();
 				bool schedulable = sendTaskProcessEvent->isSchedulingTask();
+#ifdef __EMSCRIPTEN__
+				std::fprintf(stderr, "[konclude wasm] taskprocessor event process task=%p schedulable=%d\n",
+						static_cast<void*>(task),
+						schedulable ? 1 : 0);
+				std::fflush(stderr);
+#endif
 				++mRecievedTasks;
 				if (!mTaskProcessingQueue || !schedulable) {
 					addProcessingTask(task);
@@ -354,6 +363,11 @@ namespace Konclude {
 				return true;
 			} else if (eventID == CSendTaskCompleteEvent::EVENTTYPEID) {
 				CTask* task = ((CSendTaskCompleteEvent*)event)->getTask();
+#ifdef __EMSCRIPTEN__
+				std::fprintf(stderr, "[konclude wasm] taskprocessor event complete task=%p\n",
+						static_cast<void*>(task));
+				std::fflush(stderr);
+#endif
 				processCompleteTask(task);
 				mMemoryAllocator->releaseMemoryPoolContainer(event);
 				return true;

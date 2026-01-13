@@ -20,6 +20,9 @@
 
 #include "CConfigDependedCalculationEnvironmentFactory.h"
 
+#ifdef __EMSCRIPTEN__
+#include <cstdio>
+#endif
 
 namespace Konclude {
 
@@ -82,6 +85,12 @@ namespace Konclude {
 								taskProcessorCount = convertedTaskProcessorCount;
 							}
 						}
+#ifdef __EMSCRIPTEN__
+						std::fprintf(stderr, "[konclude wasm] calc env processorCountString=%s resolved=%lld\n",
+								taskProcessorCountString.toUtf8().constData(),
+								static_cast<long long>(taskProcessorCount));
+						std::fflush(stderr);
+#endif
 
 
 						CCentralizedAllocationConfigProvidedDependendLimitation* allocLimitation = new CCentralizedAllocationConfigProvidedDependendLimitation(configProvider,"Konclude.Calculation.Memory");

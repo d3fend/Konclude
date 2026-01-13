@@ -119,7 +119,9 @@ namespace Konclude {
 			addObserverToDomains(obsData,domains);
 			observerHash.insertMulti(observer,obsData);
 			observerSyncMutex.unlock();
+#ifndef __EMSCRIPTEN__
 			CThread::waitSynchronization();
+#endif
 		}
 
 

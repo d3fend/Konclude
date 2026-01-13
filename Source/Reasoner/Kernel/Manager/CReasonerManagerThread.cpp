@@ -20,6 +20,10 @@
 
 #include "CReasonerManagerThread.h"
 
+#ifdef __EMSCRIPTEN__
+#include <cstdio>
+#endif
+
 
 namespace Konclude {
 
@@ -37,6 +41,7 @@ namespace Konclude {
 					mPreprocessingManager = 0;
 					mRealizationManager = 0;
 					mAnswererManager = 0;
+					mManualThreadStart = false;
 				}
 
 
@@ -91,7 +96,14 @@ namespace Konclude {
 					mRealizationManager = new CRealizationManager(this);
 					mRequirementExpander = new COntologyProcessingRequirementExpander();
 
+#if defined(KONCLUDE_COMPILE_WASM_INTERFACE)
+					if (!mManualThreadStart) {
+						mManualThreadStart = true;
+						threadStarted();
+					}
+#else
 					startThread();
+#endif
 
 					return this;
 				}
@@ -99,6 +111,12 @@ namespace Konclude {
 
 
 				CReasonerManagerThread::~CReasonerManagerThread() {
+#if defined(KONCLUDE_COMPILE_WASM_INTERFACE)
+					if (mManualThreadStart) {
+						threadStopped();
+						mManualThreadStart = false;
+					}
+#endif
 					stopThread();
 				}
 
@@ -120,6 +138,10 @@ namespace Konclude {
 
 
 				CReasonerManager *CReasonerManagerThread::reasoningQuery(CQuery *query, CCallbackData *callback) {
+#ifdef __EMSCRIPTEN__
+					std::fprintf(stderr, "[konclude wasm] ReasonerManagerThread::reasoningQuery called\n");
+					std::fflush(stderr);
+#endif
 					postEvent(new CCalcQueryEvent(query,callback));
 					return this;
 				}
@@ -849,6 +871,12 @@ namespace Konclude {
 
 							CQueryStatistics* queryStats = taxQuery->getQueryStatistics();
 							CConcreteOntology* ontology = taxQuery->getOntology();
+#ifdef __EMSCRIPTEN__
+							std::fprintf(stderr, "[konclude wasm] initiateQueryReasoning taxonomy query=%s ontology=%s\n",
+									taxQuery->getQueryName().toUtf8().constData(),
+									ontology ? ontology->getOntologyName().toUtf8().constData() : "(null)");
+							std::fflush(stderr);
+#endif
 							if (queryStats) {
 								CClassConceptClassification* classConClassif = ontology->getClassification()->getClassConceptClassification();
 								if (classConClassif) {
@@ -864,6 +892,10 @@ namespace Konclude {
 							updateFinishingCalculationStatistics(reasoningData,queryStats,ontology->getConfiguration());
 
 							taxQuery->constructResult(ontology->getClassification()->getClassConceptClassification()->getClassConceptTaxonomy());
+#ifdef __EMSCRIPTEN__
+							std::fprintf(stderr, "[konclude wasm] initiateQueryReasoning taxonomy query done\n");
+							std::fflush(stderr);
+#endif
 
 							qint64 mSecs = reasoningData->mStartTime.elapsed();
 							LOG(INFO,"::Konclude::Reasoner::Kernel::ReasonerManager",logTr("Query '%1' processed in '%2' ms.").arg(taxQuery->getQueryName()).arg(mSecs),this);
@@ -1210,6 +1242,10 @@ namespace Konclude {
 
 					} else if (type == CCalcQueryEvent::EVENTTYPE) {
  						CCalcQueryEvent *cqe = static_cast<CCalcQueryEvent *>(event);
+#ifdef __EMSCRIPTEN__
+						std::fprintf(stderr, "[konclude wasm] reasoner manager: CCalcQueryEvent\n");
+						std::fflush(stderr);
+#endif
 
 						prepareQueryReasoning(cqe);	
 
@@ -1217,6 +1253,10 @@ namespace Konclude {
 
 					} else if (type == CPrepareOntologyEvent::EVENTTYPE) {
 						CPrepareOntologyEvent* poe = static_cast<CPrepareOntologyEvent *>(event);
+#ifdef __EMSCRIPTEN__
+						std::fprintf(stderr, "[konclude wasm] reasoner manager: CPrepareOntologyEvent\n");
+						std::fflush(stderr);
+#endif
 
 						prepareOntologyReasoning(poe);	
 
@@ -1224,6 +1264,10 @@ namespace Konclude {
 
 					} else if (type == CCalcedQueryEvent::EVENTTYPE) {
 						CCalcedQueryEvent *cqe = static_cast<CCalcedQueryEvent *>(event);
+#ifdef __EMSCRIPTEN__
+						std::fprintf(stderr, "[konclude wasm] reasoner manager: CCalcedQueryEvent\n");
+						std::fflush(stderr);
+#endif
 
 						finishQueryReasoning(cqe);
 
@@ -1233,6 +1277,12 @@ namespace Konclude {
 						CRequirementProcessedCallbackEvent* rpce = static_cast<CRequirementProcessedCallbackEvent *>(event);
 						CConcreteOntology* ontology = rpce->getOntology();
 						CRequirementPreparingData* reqPrepData = rpce->getRequirementPreparingData();
+#ifdef __EMSCRIPTEN__
+						std::fprintf(stderr, "[konclude wasm] reasoner manager: RequirementProcessed procType=%lld ontology=%s\n",
+								static_cast<long long>(rpce->mProcType),
+								ontology ? ontology->getOntologyName().toUtf8().constData() : "(null)");
+						std::fflush(stderr);
+#endif
 
 						continueRequirementProcessing(reqPrepData, ontology);
 

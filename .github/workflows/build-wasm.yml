@@ -1,0 +1,47 @@
+name: Build WebAssembly (Qt 5.15)
+
+on:
+  push:
+    paths:
+      - "wasm/**"
+      - "KoncludeWasm.pro"
+      - "Source/WasmBridge/**"
+      - ".github/workflows/build-wasm.yml"
+  workflow_dispatch:
+
+jobs:
+  wasm:
+    runs-on: ubuntu-latest
+    env:
+      DOCKER_BUILDKIT: "1"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Build wasm (docker)
+        run: ./wasm/scripts/docker_build.sh
+
+      - name: Install test dependencies
+        working-directory: wasm/tests
+        run: npm ci
+
+      - name: Install Playwright (Chromium)
+        working-directory: wasm/tests
+        run: npx playwright install --with-deps chromium
+
+      - name: Run wasm e2e tests (Chromium)
+        working-directory: wasm/tests
+        env:
+          BROWSERS: chromium
+        run: node e2e.js
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: konclude-wasm
+          path: wasm/dist

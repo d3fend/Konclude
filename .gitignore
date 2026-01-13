@@ -52,3 +52,17 @@ compile_commands.json
 *.log
 *.tmp
 *.cache
+
+# WASM build outputs
+/wasm/build/
+/wasm/dist/
+/wasm/Konclude_wasm.pri
+
+# WASM test artifacts
+/wasm/tests/node_modules/
+/wasm/tests/playwright-report/
+/wasm/tests/.cache/
+/wasm/tests/.playwright/
+
+# Node dependencies
+node_modules/

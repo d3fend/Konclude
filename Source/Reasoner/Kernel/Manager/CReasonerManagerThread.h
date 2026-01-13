@@ -274,11 +274,12 @@ namespace Konclude {
 
 						COntologyProcessingRequirementExpander* mRequirementExpander;
 
-						cint64 mWorkControllerCount;
-						bool mConfgAdaptThreadPoolToWorkerCount;
-						cint64 mBlockThreadPoolThreadCount;
-						QSemaphore mBlockThreadPoolThreadsBlockingSemaphore;
-						QSemaphore mBlockThreadPoolThreadsReleasingSemaphore;
+					cint64 mWorkControllerCount;
+					bool mConfgAdaptThreadPoolToWorkerCount;
+					cint64 mBlockThreadPoolThreadCount;
+					QSemaphore mBlockThreadPoolThreadsBlockingSemaphore;
+					QSemaphore mBlockThreadPoolThreadsReleasingSemaphore;
+					bool mManualThreadStart;
 
 					// private methods
 					private:

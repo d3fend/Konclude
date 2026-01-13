@@ -32,7 +32,8 @@ namespace Konclude {
 		namespace Loader {
 
 
-			CCLIBatchProcessingLoader::CCLIBatchProcessingLoader() : mLogIdentifier("::Konclude::CLIBatchProcessor",this) {
+			CCLIBatchProcessingLoader::CCLIBatchProcessingLoader()
+				: mLogIdentifier("::Konclude::CLIBatchProcessor",this) {
 				mOWLLinkInterpreter = nullptr;
 				mLoaderConfig = nullptr;
 				mConfLogProcessingTimes = false;
@@ -58,6 +59,10 @@ namespace Konclude {
 			CLoader *CCLIBatchProcessingLoader::init(CLoaderFactory *loaderFactory, CConfiguration *config) {
 				mLoaderConfig = config;
 				reasonerCommander = CConfigManagerReader::readCommanderManagerConfig(config);
+#ifdef __EMSCRIPTEN__
+				std::fprintf(stderr, "[konclude wasm] cli init reasonerCommander=%s\n", reasonerCommander ? "set" : "null");
+				std::fflush(stderr);
+#endif
 
 				mCloseAfterOutput = CConfigDataReader::readConfigBoolean(mLoaderConfig, "Konclude.CLI.CloseAfterProcessedRequest", true);
 				mBlockUntilProcessed = CConfigDataReader::readConfigBoolean(mLoaderConfig, "Konclude.CLI.BlockUntilProcessedRequest", true);
@@ -193,12 +198,22 @@ namespace Konclude {
 			void CCLIBatchProcessingLoader::processNextCommand() {
 				mProcessingCommandData = mProcessCommandList.takeFirst();
 				CCommand* command = mProcessingCommandData->mCommand;
+#ifdef __EMSCRIPTEN__
+				std::fprintf(stderr, "[konclude wasm] processNextCommand tag=%d desc=%s\n",
+						command ? command->getCommandTag() : -1,
+						command ? command->getBriefCommandDescription().toUtf8().constData() : "(null)");
+				std::fflush(stderr);
+#endif
 				logOutputNotice(QString("Starting '%1' command").arg(command->getBriefCommandDescription()));
 				command->setRecorder(this);
 				command->setReportErrorFromSubCommands(false);
 				CCommandProcessedCallbackEvent *proComm = new CCommandProcessedCallbackEvent(this,command);
 				command->addProcessedCallback(proComm);
 				mMeasurementTime.start();
+#ifdef __EMSCRIPTEN__
+				std::fprintf(stderr, "[konclude wasm] delegating to preSynchronizer\n");
+				std::fflush(stderr);
+#endif
 				preSynchronizer->delegateCommand(command);
 			}
 
@@ -215,6 +230,13 @@ namespace Konclude {
 					cint64 timeElapsed = mTotalTime.elapsed();
 					logOutputMessage(QString("Total processing time: %1 ms.").arg(timeElapsed));
 				}
+
+#ifdef __EMSCRIPTEN__
+				std::fprintf(stderr, "[konclude wasm] terminateProcessing closeAfterOutput=%d blockUntilProcessed=%d\n",
+						mCloseAfterOutput ? 1 : 0,
+						mBlockUntilProcessed ? 1 : 0);
+				std::fflush(stderr);
+#endif
 
 				if (mBlockUntilProcessed) {
 					mBlockingSemaphore.release();

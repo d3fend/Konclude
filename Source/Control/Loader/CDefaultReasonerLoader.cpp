@@ -20,6 +20,10 @@
 
 #include "CDefaultReasonerLoader.h"
 
+#ifdef __EMSCRIPTEN__
+#include <cstdio>
+#endif
+
 
 namespace Konclude {
 
@@ -66,6 +70,12 @@ namespace Konclude {
 				reasonerCommander->realizeCommand(new CInitializeConfigurationCommand(configuration));
 
 				reasonerCommander->realizeCommand(new CInitializeReasonerCommand(new CDefaultCommanderInitializationFactory()));
+
+#ifdef __EMSCRIPTEN__
+				std::fprintf(stderr, "[konclude wasm] reasonerCommander thread running=%d\n",
+						reasonerCommander->isThreadRunning() ? 1 : 0);
+				std::fflush(stderr);
+#endif
 
 				return this;
 			}

@@ -63,6 +63,9 @@ namespace Konclude {
 					mConfDebugWriteRepresentativeCache = CConfigDataReader::readConfigBoolean(config, "Konclude.Debugging.WriteDebuggingRepresentativeCacheContent", false);
 					mStatCollectStatistics = CConfigDataReader::readConfigBoolean(config, "Konclude.Cache.RepresentativeBackendCache.LogStorageStatistics", false);
 					mConfDirectUpdateSynchronization = !CConfigDataReader::readConfigBoolean(config, "Konclude.Cache.RepresentativeBackendCache.ThreadedUpdateSynchronization", true);
+#if defined(KONCLUDE_COMPILE_WASM_INTERFACE)
+					mConfDirectUpdateSynchronization = true;
+#endif
 
 
 					cint64 limitCount = CConfigDataReader::readConfigInteger(config, "Konclude.Cache.RepresentativeBackendCache.PendingWriteDataLimit", -1);

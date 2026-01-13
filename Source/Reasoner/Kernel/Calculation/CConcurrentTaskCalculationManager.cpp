@@ -20,6 +20,9 @@
 
 #include "CConcurrentTaskCalculationManager.h"
 
+#ifdef __EMSCRIPTEN__
+#include <cstdio>
+#endif
 
 namespace Konclude {
 
@@ -38,6 +41,13 @@ namespace Konclude {
 				}
 
 				CCalculationManager *CConcurrentTaskCalculationManager::calculateTask(CSatisfiableCalculationTask* task) {
+#ifdef __EMSCRIPTEN__
+					std::fprintf(stderr, "[konclude wasm] calculateTask task=%p taskEnv=%s scheduler=%p\n",
+							static_cast<void*>(task),
+							mTaskCalcEn ? "set" : "null",
+							mTaskCalcEn ? static_cast<void*>(mTaskCalcEn->getSchedulerTaskProcessorUnit()->getEventHandler()) : nullptr);
+					std::fflush(stderr);
+#endif
 					if (mTaskCalcEn) {
 						CTaskEventCommunicator::postSendTaskScheduleEvent(mTaskCalcEn->getSchedulerTaskProcessorUnit()->getEventHandler(),task,mTemMemMan);
 					}
@@ -47,6 +57,12 @@ namespace Konclude {
 				CCalculationManager *CConcurrentTaskCalculationManager::calculateJob(CCalculationJob* job, CCallbackData* callbackData) {
 					CSatisfiableCalculationTaskFromCalculationJobGenerator gen(mGenTaskHandleContext);
 					CSatisfiableCalculationTask* task = gen.createSatisfiableCalculationTask(job,callbackData);
+#ifdef __EMSCRIPTEN__
+					std::fprintf(stderr, "[konclude wasm] calculateJob job=%p task=%p\n",
+							static_cast<void*>(job),
+							static_cast<void*>(task));
+					std::fflush(stderr);
+#endif
 					if (task) {
 						calculateTask(task);
 					}

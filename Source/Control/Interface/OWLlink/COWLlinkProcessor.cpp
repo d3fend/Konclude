@@ -20,6 +20,10 @@
 
 #include "COWLlinkProcessor.h"
 
+#ifdef __EMSCRIPTEN__
+#include <cstdio>
+#endif
+
 
 namespace Konclude {
 
@@ -45,7 +49,9 @@ namespace Konclude {
 					mNetworkManager = nullptr;
 
 					if (immediatelyStartThread) {
+#if !defined(KONCLUDE_COMPILE_WASM_INTERFACE)
 						startThread();
+#endif
 					}
 				}
 
@@ -60,6 +66,10 @@ namespace Konclude {
 
 
 				COWLlinkProcessor *COWLlinkProcessor::startProcessing() {
+#ifdef __EMSCRIPTEN__
+					std::fprintf(stderr, "[konclude wasm] owllink startProcessing\n");
+					std::fflush(stderr);
+#endif
 					postEvent(new CInitializeEvent());
 					return this;
 				}
@@ -67,6 +77,10 @@ namespace Konclude {
 
 
 				CCommandDelegater *COWLlinkProcessor::delegateCommand(CCommand *command) {
+#ifdef __EMSCRIPTEN__
+					std::fprintf(stderr, "[konclude wasm] owllink delegateCommand tag=%d\n", command ? command->getCommandTag() : -1);
+					std::fflush(stderr);
+#endif
 					postEvent(new CRealizeCommandEvent(command));
 					return this;
 				}
@@ -139,13 +153,26 @@ namespace Konclude {
 							if (iriFileString.startsWith("file:")) {
 								iriFileString.replace("file:","");
 							}
+#ifdef __EMSCRIPTEN__
+							std::fprintf(stderr, "[konclude] load IRI '%s' resolved '%s'\n",
+									ontoIRIString.toUtf8().constData(),
+									iriFileString.toUtf8().constData());
+#endif
 							while (!QFile::exists(iriFileString) && iriFileString.startsWith("/")) {
 								iriFileString = iriFileString.remove(0,1);
 							}
 
 							if (!QFile::exists(iriFileString)) {
+#ifdef __EMSCRIPTEN__
+								std::fprintf(stderr, "[konclude] file not found '%s'\n",
+										iriFileString.toUtf8().constData());
+#endif
 								CUnspecifiedMessageErrorRecord::makeRecord(QString("File '%1' not found.").arg(resolvedString),&commandRecordRouter);
 							} else {
+#ifdef __EMSCRIPTEN__
+								std::fprintf(stderr, "[konclude] file found '%s'\n",
+										iriFileString.toUtf8().constData());
+#endif
 								QFile* file = new QFile(iriFileString);
 								CLoadKnowledgeBaseData* loadData = new CLoadKnowledgeBaseData(file,ontoIRIString,resolvedString);
 								loadDataList.append(loadData);
@@ -176,6 +203,10 @@ namespace Konclude {
 							if (commandEvent) {
 								CCommand *command = commandEvent->getCommand();
 								if (command) {
+#ifdef __EMSCRIPTEN__
+									std::fprintf(stderr, "[konclude wasm] owllink event command tag=%d\n", command->getCommandTag());
+									std::fflush(stderr);
+#endif
 									if (dynamic_cast<CTellKnowledgeBaseOWL2XMLNodeCommand *>(command)) {
 										CCommandRecordRouter commandRecordRouter(command,this);
 										CStartProcessCommandRecord::makeRecord(command->getRecorder(),getLogDomain(),command);
@@ -2205,6 +2236,11 @@ namespace Konclude {
 										CFinishProcessCommandRecord::makeRecord(&commandRecordRouter);
 
 									} else {
+#ifdef __EMSCRIPTEN__
+										std::fprintf(stderr, "[konclude wasm] owllink default dispatch, reasonerCommander=%s\n",
+												reasonerCommander ? "set" : "null");
+										std::fflush(stderr);
+#endif
 										if (reasonerCommander) {
 											reasonerCommander->realizeCommand(command);
 										} else {
@@ -2214,15 +2250,27 @@ namespace Konclude {
 											CStopProcessCommandRecord::makeRecord(&commandRecordRouter);
 											CFinishProcessCommandRecord::makeRecord(&commandRecordRouter);
 											LOG(ERROR,getLogDomain(),logTr("Reasoner Commander missing."),this);
+#ifdef __EMSCRIPTEN__
+											std::fprintf(stderr, "[konclude wasm] reasoner commander missing\n");
+											std::fflush(stderr);
+#endif
 										}
 									}
 								}
 							}
 							return true;
 						} else if (type == EVENTINITIALIZE) {
+#ifdef __EMSCRIPTEN__
+							std::fprintf(stderr, "[konclude wasm] owllink EVENTINITIALIZE\n");
+							std::fflush(stderr);
+#endif
 							initializeOWLlinkContent();
 							return true;
 						} else if (type == EVENTCOMMANDPROCESSEDCALLBACK) {
+#ifdef __EMSCRIPTEN__
+							std::fprintf(stderr, "[konclude wasm] owllink EVENTCOMMANDPROCESSEDCALLBACK\n");
+							std::fflush(stderr);
+#endif
 							CCommandProcessedCallbackEvent *commProCallbackEvent = (CCommandProcessedCallbackEvent *)event;	
 							concludeOWLlinkContent();
 							return true;

@@ -20,6 +20,10 @@
 
 #include "CPreprocessingThread.h"
 
+#ifdef __EMSCRIPTEN__
+#include <cstdio>
+#endif
+
 
 namespace Konclude {
 
@@ -35,7 +39,9 @@ namespace Konclude {
 				mConfMaxTestParallelCount = 1;
 				mStatCalculatingJobs = 0;
 
-				startThread(QThread::HighPriority);
+#if !defined(KONCLUDE_COMPILE_WASM_INTERFACE)
+					startThread(QThread::HighPriority);
+#endif
 			}
 
 
@@ -142,6 +148,10 @@ namespace Konclude {
 				if (CThread::processCustomsEvents(type,event)) {
 					return true;
 				} else if (type == CPreprocessOntologyEvent::EVENTTYPE) {
+					#ifdef __EMSCRIPTEN__
+						std::fprintf(stderr, "[konclude wasm] preprocessing: CPreprocessOntologyEvent\n");
+						std::fflush(stderr);
+					#endif
 					CPreprocessOntologyEvent* poe = (CPreprocessOntologyEvent*)event;
 
 					CCallbackData* callbackData = poe->getCallbackData();
@@ -176,6 +186,10 @@ namespace Konclude {
 					return true;
 
 				} else if (type == CCallbackPreprocessedOntologyEvent::EVENTTYPE) {
+					#ifdef __EMSCRIPTEN__
+						std::fprintf(stderr, "[konclude wasm] preprocessing: CCallbackPreprocessedOntologyEvent\n");
+						std::fflush(stderr);
+					#endif
 					CCallbackPreprocessedOntologyEvent* cpoe = (CCallbackPreprocessedOntologyEvent*)event;
 
 					CConcreteOntology* ontology = cpoe->getOntology();
@@ -199,6 +213,10 @@ namespace Konclude {
 					return true;
 
 				} else if (type == CPreprocessingCalculatedCallbackEvent::EVENTTYPE) {
+					#ifdef __EMSCRIPTEN__
+						std::fprintf(stderr, "[konclude wasm] preprocessing: CPreprocessingCalculatedCallbackEvent\n");
+						std::fflush(stderr);
+					#endif
 					CPreprocessingCalculatedCallbackEvent* pcce = (CPreprocessingCalculatedCallbackEvent*)event;
 
 					--mCurrRunningTestParallelCount;

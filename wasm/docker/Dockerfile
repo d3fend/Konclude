@@ -5,6 +5,8 @@ ARG QT_SRC_DIR=qt-everywhere-src-5.15.2
 ARG QT_CONFIGURE_FLAGS="-xplatform wasm-emscripten -nomake examples -nomake tests -opensource -confirm-license -prefix /opt/qt-wasm -feature-thread"
 ARG KONCLUDE_WASM_TOTAL_MEMORY=536870912
 ARG KONCLUDE_WASM_PTHREAD_POOL=
+ARG KONCLUDE_WASM_PROCESSOR_COUNT=
+ARG KONCLUDE_WASM_PTHREAD_STRICT=
 
 FROM ubuntu:22.04 AS toolchain
 ARG EMSDK_VERSION
@@ -54,8 +56,9 @@ RUN /bin/bash -lc "source /opt/emsdk/emsdk_env.sh && \
     make install"
 
 FROM toolchain AS build
-ARG KONCLUDE_WASM_INITIAL_MEMORY
-ARG KONCLUDE_WASM_MAXIMUM_MEMORY
+ARG KONCLUDE_WASM_TOTAL_MEMORY
+ARG KONCLUDE_WASM_PTHREAD_POOL
+ARG KONCLUDE_WASM_PROCESSOR_COUNT
 
 WORKDIR /src
 COPY . /src
@@ -64,6 +67,8 @@ RUN /bin/bash -lc "export EMSDK_DIR=/opt/emsdk; \
     export QT_WASM_DIR=/opt/qt-wasm; \
     export KONCLUDE_WASM_TOTAL_MEMORY=${KONCLUDE_WASM_TOTAL_MEMORY}; \
     export KONCLUDE_WASM_PTHREAD_POOL=${KONCLUDE_WASM_PTHREAD_POOL}; \
+    export KONCLUDE_WASM_PROCESSOR_COUNT=${KONCLUDE_WASM_PROCESSOR_COUNT}; \
+    export KONCLUDE_WASM_PTHREAD_STRICT=${KONCLUDE_WASM_PTHREAD_STRICT}; \
     /src/wasm/scripts/build_wasm_all.sh"
 
 RUN mkdir -p /out && cp -r /src/wasm/dist/* /out/

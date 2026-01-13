@@ -51,6 +51,13 @@ using namespace Konclude::Control::Interface::CommandLine;
 int main(int argc, char *argv[])
 {
 
+#ifdef KONCLUDE_COMPILE_WASM_INTERFACE
+	// WebAssembly builds expose a C API; skip the CLI event loop.
+	(void)argc;
+	(void)argv;
+	return 0;
+#endif
+
 	QCoreApplication a(argc, argv);
 
 	CLogger *logger = CLogger::getInstance();

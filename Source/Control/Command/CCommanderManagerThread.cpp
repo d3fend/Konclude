@@ -20,6 +20,10 @@
 
 #include "CCommanderManagerThread.h"
 
+#ifdef __EMSCRIPTEN__
+#include <cstdio>
+#endif
+
 
 namespace Konclude {
 
@@ -34,7 +38,9 @@ namespace Konclude {
 				kbCommandsDelegater = 0;
 				classificationMan = 0;
 				ontoRevMan = 0;
+#ifndef KONCLUDE_COMPILE_WASM_INTERFACE
 				startThread();
+#endif
 			}
 
 
@@ -64,9 +70,13 @@ namespace Konclude {
 					if (type == EVENTREALIZECOMMAND) {
 						CRealizeCommandEvent *commandEvent = (CRealizeCommandEvent *)event;
 						if (commandEvent) {
-							CCommand *command = commandEvent->getCommand();
-							if (command) {
-								if (command->getCommandTag() == INITIALIZECONFIGURATIONCOMMAND) {
+						CCommand *command = commandEvent->getCommand();
+						if (command) {
+#ifdef __EMSCRIPTEN__
+							std::fprintf(stderr, "[konclude wasm] commander received command tag=%d\n", command->getCommandTag());
+							std::fflush(stderr);
+#endif
+							if (command->getCommandTag() == INITIALIZECONFIGURATIONCOMMAND) {
 									CInitializeConfigurationCommand *initializeConfigCommand = (CInitializeConfigurationCommand *)command;
 									CCommandRecordRouter commandRecordRouter(command,this);
 									CStartProcessCommandRecord::makeRecord(&commandRecordRouter);
@@ -193,6 +203,12 @@ namespace Konclude {
 
 									CCalculateQueryCommand *calcQueryCommand = (CCalculateQueryCommand *)command;
 									CQuery *query = calcQueryCommand->getQuery();
+#ifdef __EMSCRIPTEN__
+									std::fprintf(stderr, "[konclude wasm] commander calculate query, reasonerManager=%s query=%s\n",
+											reasonerManager ? "set" : "null",
+											query ? "set" : "null");
+									std::fflush(stderr);
+#endif
 									if (reasonerManager) {
 										if (query) {
 											CUnspecifiedMessageInformationRecord::makeRecord("Sending query to reasoner manager.",&commandRecordRouter);

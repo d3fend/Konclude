@@ -117,6 +117,10 @@ The binaries of Konclude (and possibly some shared libraries) are located in the
 
 On GitHub, there is an up-to-date Docker image of Konclude available (`docker pull konclude/konclude`, cf. https://hub.docker.com/r/konclude/konclude), which should run on most platforms with Docker installed.
 
+# WEBASSEMBLY
+
+For a reproducible Qt 5.15 WebAssembly build (without Redland) and the JS/WASM API, see `wasm/README.md`.
+
 In principle, Konclude requires Qt 5.11 libraries or above [6], but they are included (or statically integrated/linked into the binary) for the released versions for most platfroms. If this is not the case, then you should install them manually on your system.
 
 On Mac, you may be required to deactivate the 'Unidentified Developer' warning dialogue for Konclude (cf. [10]).
