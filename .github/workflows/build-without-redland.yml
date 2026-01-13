@@ -1,7 +1,19 @@
 name: Build
 
-# Run this workflow every time a new commit pushed to your repository
-on: [push]
+# Run this workflow only when relevant files change
+on:
+  push:
+    paths:
+      - "Source/**"
+      - "Configs/**"
+      - "Scripts/**"
+      - "Tests/**"
+      - "External/**"
+      - "Konclude*.pro"
+      - "Konclude.pri"
+      - ".github/workflows/build-without-redland.yml"
+    paths-ignore:
+      - "Source/WasmBridge/**"
 
 jobs:
 
@@ -20,8 +32,8 @@ jobs:
             cxx: "g++"
           }
         - {
-            name: "Ubuntu 16.04 GCC",
-            os: ubuntu-16.04,
+            name: "Ubuntu 22.04 GCC",
+            os: ubuntu-22.04,
             build_type: "Release", 
             cc: "gcc", 
             cxx: "g++"
@@ -45,7 +57,7 @@ jobs:
     steps:
       # Checks out a copy of your repository on the machine
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
         
       - name: Setup Python
         uses: actions/setup-python@v5
