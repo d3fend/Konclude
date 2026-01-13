@@ -4,7 +4,20 @@ name: Build
 on:
   push:
     paths:
-      - "Source/**"
+      - "Source/*.cpp"
+      - "Source/*.h"
+      - "Source/Concurrent/**"
+      - "Source/Config/**"
+      - "Source/Context/**"
+      - "Source/Control/**"
+      - "Source/Logger/**"
+      - "Source/Network/**"
+      - "Source/Parser/**"
+      - "Source/Reasoner/**"
+      - "Source/Renderer/**"
+      - "Source/Scheduler/**"
+      - "Source/Test/**"
+      - "Source/Utilities/**"
       - "Configs/**"
       - "Scripts/**"
       - "Tests/**"
@@ -12,8 +25,6 @@ on:
       - "Konclude*.pro"
       - "Konclude.pri"
       - ".github/workflows/build-without-redland.yml"
-    paths-ignore:
-      - "Source/WasmBridge/**"
 
 jobs:
 
