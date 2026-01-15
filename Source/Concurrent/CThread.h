@@ -118,6 +118,8 @@ namespace Konclude {
 				virtual void run();
 				virtual bool event(QEvent *event);
 
+				virtual void runThreadLoop();
+
 
 				virtual void prepareBlocking();
 				virtual void concludeBlocking();

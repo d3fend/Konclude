@@ -19,6 +19,7 @@
  */
 
 #include "CCLIConsistencyBatchProcessingLoader.h"
+#include "Control/Command/Instructions/CReleaseKnowledgeBaseCommand.h"
 
 
 namespace Konclude {
@@ -46,14 +47,19 @@ namespace Konclude {
 
 			void CCLIConsistencyBatchProcessingLoader::createConsistencyTestingCommands() {
 				logOutputMessage(QString("Starting consistency checking for '%1'.").arg(mRequestFileString));
-				QString testKB = QString("http://konclude.com/test/kb");
-				CCreateKnowledgeBaseCommand* createKBCommand = new CCreateKnowledgeBaseCommand(testKB);
+				mTrivialOnly = CConfigDataReader::readConfigBoolean(mLoaderConfig, "Konclude.CLI.TrivialConsistencyOnly", false);
+				if (mTrivialOnly) {
+					logOutputNotice("Trivial-only consistency mode enabled (skipping full consistency test).");
+				}
+				mTestKB = QString("http://konclude.com/test/kb");
+				mReleaseScheduled = false;
+				CCreateKnowledgeBaseCommand* createKBCommand = new CCreateKnowledgeBaseCommand(mTestKB);
 				QStringList ontoIRIList;
 				ontoIRIList.append(mRequestFileString);
-				//CLoadKnowledgeBaseOWLXMLOntologyCommand* loadKBCommand = new CLoadKnowledgeBaseOWLXMLOntologyCommand(testKB,ontoIRIList);
-				CLoadKnowledgeBaseOWLAutoOntologyCommand* loadKBCommand = new CLoadKnowledgeBaseOWLAutoOntologyCommand(testKB,ontoIRIList);
-				mConsistencyKBCommand = new CIsConsistentQueryCommand(testKB);
-				mTriviallyConsistencyKBCommand = new CIsTriviallyConsistentQueryCommand(testKB);
+				//CLoadKnowledgeBaseOWLXMLOntologyCommand* loadKBCommand = new CLoadKnowledgeBaseOWLXMLOntologyCommand(mTestKB,ontoIRIList);
+				CLoadKnowledgeBaseOWLAutoOntologyCommand* loadKBCommand = new CLoadKnowledgeBaseOWLAutoOntologyCommand(mTestKB,ontoIRIList);
+				mConsistencyKBCommand = new CIsConsistentQueryCommand(mTestKB);
+				mTriviallyConsistencyKBCommand = new CIsTriviallyConsistentQueryCommand(mTestKB);
 				addProcessingCommand(createKBCommand);
 				addProcessingCommand(loadKBCommand);
 				addProcessingCommand(mTriviallyConsistencyKBCommand,false,"",true,mResponseFileString);
@@ -73,6 +79,10 @@ namespace Konclude {
 							CBooleanQueryResult* boolQueryResult = dynamic_cast<CBooleanQueryResult*>(queryResult);
 							if (boolQueryResult) {
 								bool writeOutput = false;
+								if (mTrivialOnly && processedCommand == mTriviallyConsistencyKBCommand) {
+									writeOutput = true;
+									requiresDetailedConsistencyChecking = false;
+								}
 								if (boolQueryResult->getResult() == true) {
 									requiresDetailedConsistencyChecking = false;
 									writeOutput = true;
@@ -110,6 +120,9 @@ namespace Konclude {
 				}
 				if (requiresDetailedConsistencyChecking) {
 					addProcessingCommand(mConsistencyKBCommand,false,"",true,mResponseFileString);
+				} else if (!mReleaseScheduled && !mTestKB.isEmpty()) {
+					mReleaseScheduled = true;
+					addProcessingCommand(new CReleaseKnowledgeBaseCommand(mTestKB));
 				} else if (!outputWritten) {
 					logOutputError("Consistency checking failed.");
 				}

@@ -20,6 +20,12 @@
 
 #include "CRealizingCalculatedCallbackEvent.h"
 
+#ifdef __EMSCRIPTEN__
+#include <QCoreApplication>
+#include <QThread>
+#include "WasmBridge/konclude_wasm_runtime.h"
+#endif
+
 
 namespace Konclude {
 
@@ -44,7 +50,23 @@ namespace Konclude {
 				}
 
 				void CRealizingCalculatedCallbackEvent::doCallback() {
-					mRecThread->postEvent(this);
+#ifdef __EMSCRIPTEN__
+					QThread* receiverThread = mRecThread ? mRecThread->thread() : nullptr;
+					bool directDispatch = (receiverThread && receiverThread == QThread::currentThread());
+#if defined(KONCLUDE_COMPILE_WASM_INTERFACE)
+					if (!konclude_wasm_threads_enabled() && mRecThread && (!mRecThread->isThreadRunning() || !receiverThread)) {
+						directDispatch = true;
+					}
+#endif
+					if (mRecThread && directDispatch) {
+						QCoreApplication::sendEvent(mRecThread, this);
+						delete this;
+						return;
+					}
+#endif
+					if (mRecThread) {
+						mRecThread->postEvent(this);
+					}
 				}
 
 				bool CRealizingCalculatedCallbackEvent::getTestResultSatisfiable() {

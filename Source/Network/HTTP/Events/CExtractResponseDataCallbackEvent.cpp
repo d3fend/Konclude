@@ -56,7 +56,9 @@ namespace Konclude {
 
 
 				void CExtractResponseDataCallbackEvent::doCallback() {
-					mThread->postEvent(this); 
+					if (mThread) {
+						mThread->postEvent(this);
+					}
 				}
 
 

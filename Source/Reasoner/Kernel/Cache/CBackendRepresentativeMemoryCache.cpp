@@ -21,6 +21,10 @@
 #include "CBackendRepresentativeMemoryCache.h"
 #include "CBackendRepresentativeMemoryCacheWriter.h"
 
+#ifdef __EMSCRIPTEN__
+#include "WasmBridge/konclude_wasm_runtime.h"
+#endif
+
 
 namespace Konclude {
 
@@ -63,8 +67,10 @@ namespace Konclude {
 					mConfDebugWriteRepresentativeCache = CConfigDataReader::readConfigBoolean(config, "Konclude.Debugging.WriteDebuggingRepresentativeCacheContent", false);
 					mStatCollectStatistics = CConfigDataReader::readConfigBoolean(config, "Konclude.Cache.RepresentativeBackendCache.LogStorageStatistics", false);
 					mConfDirectUpdateSynchronization = !CConfigDataReader::readConfigBoolean(config, "Konclude.Cache.RepresentativeBackendCache.ThreadedUpdateSynchronization", true);
-#if defined(KONCLUDE_COMPILE_WASM_INTERFACE)
-					mConfDirectUpdateSynchronization = true;
+#ifdef __EMSCRIPTEN__
+					if (!konclude_wasm_threads_enabled()) {
+						mConfDirectUpdateSynchronization = true;
+					}
 #endif
 
 

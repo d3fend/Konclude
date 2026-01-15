@@ -20,6 +20,11 @@
 
 #include "CRealizerThread.h"
 
+#ifdef __EMSCRIPTEN__
+#include <QCoreApplication>
+#include <QThread>
+#include "WasmBridge/konclude_wasm_runtime.h"
+#endif
 
 namespace Konclude {
 
@@ -67,7 +72,22 @@ namespace Konclude {
 					}
 				} else {
 					CBlockingCallbackData callbackBlock;
+#ifdef __EMSCRIPTEN__
+					bool directDispatch = (thread() == QThread::currentThread());
+#if defined(KONCLUDE_COMPILE_WASM_INTERFACE)
+					if (!konclude_wasm_threads_enabled() && !isThreadRunning()) {
+						directDispatch = true;
+					}
+#endif
+					if (directDispatch) {
+						CCallbackRealizedOntologyEvent event(ontology, &callbackBlock, callback);
+						QCoreApplication::sendEvent(this, &event);
+					} else {
+						postEvent(new CCallbackRealizedOntologyEvent(ontology,&callbackBlock,callback));
+					}
+#else
 					postEvent(new CCallbackRealizedOntologyEvent(ontology,&callbackBlock,callback));
+#endif
 					callbackBlock.waitForCallback();
 					CCallbackDataContext* callbackContext = callbackBlock.getCallbackDataContext();
 					if (callbackContext) {

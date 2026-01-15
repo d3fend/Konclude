@@ -57,6 +57,12 @@ namespace Konclude {
 		using namespace Interface::OWLlink;
 		using namespace Command;
 
+		namespace Command {
+			namespace Instructions {
+				class CIsConsistentQueryCommand;
+			};
+		};
+
 		namespace Loader {
 
 			/*! 
@@ -82,6 +88,7 @@ namespace Konclude {
 
 					void createClassificationTestingCommands();
 					virtual void createTestingCommands();
+					virtual void writeCommandOutput(const QString& outputFileName, CCommand* processedCommand);
 
 				// protected variables
 				protected:
@@ -91,6 +98,8 @@ namespace Konclude {
 
 				// private variables
 				private:
+					Command::Instructions::CIsConsistentQueryCommand* mConsistencyKBCommand = nullptr;
+					QString mConsistencyResponseFileString;
 
 			};
 

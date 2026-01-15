@@ -20,7 +20,6 @@
 
 #include "CTaskEventCommunicator.h"
 
-
 namespace Konclude {
 
 	namespace Scheduler {
@@ -423,4 +422,3 @@ namespace Konclude {
 	}; // end namespace Scheduler
 
 }; // end namespace Konclude
-

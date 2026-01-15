@@ -27,17 +27,35 @@ async function runBrowser(browserType, label, modes) {
   console.log(`launching ${label}`);
   const browser = await browserType.launch();
   const page = await browser.newPage();
-  page.setDefaultTimeout(180000);
-  page.on("console", (msg) => {
-    console.log(`[${label}] ${msg.type()}: ${msg.text()}`);
-  });
+  const pageTimeout = Number(process.env.E2E_TIMEOUT_MS || 180000);
+  page.setDefaultTimeout(pageTimeout);
+  const consoleMode = String(process.env.E2E_CONSOLE || "all").toLowerCase();
+  const logConsole = consoleMode !== "0" && consoleMode !== "none";
+  const logErrorsOnly = consoleMode === "errors" || consoleMode === "error";
+  if (logConsole) {
+    page.on("console", (msg) => {
+      if (logErrorsOnly && msg.type() !== "error") {
+        return;
+      }
+      console.log(`[${label}] ${msg.type()}: ${msg.text()}`);
+    });
+  }
   page.on("pageerror", (err) => {
     console.error(`[${label}] pageerror: ${err.message}`);
   });
 
   for (const mode of modes) {
     const debugParam = process.env.DEBUG_WORKER === "1" ? "&debug=1" : "";
-    const url = `${baseUrl}/web/index.html?mode=${mode}${debugParam}`;
+    const datasetParam = process.env.DATASET ? `&dataset=${encodeURIComponent(process.env.DATASET)}` : "";
+    const timeoutParam = process.env.TIMEOUT_MS ? `&timeoutMs=${encodeURIComponent(process.env.TIMEOUT_MS)}` : "";
+    let mainParam = "";
+    if (process.env.MAIN_THREAD === "1") {
+      mainParam = "&main=1";
+    } else if (process.env.MAIN_THREAD === "0") {
+      mainParam = "&main=0";
+    }
+    const onlyParam = process.env.ONLY ? `&only=${encodeURIComponent(process.env.ONLY)}` : "";
+    const url = `${baseUrl}/web/index.html?mode=${mode}${debugParam}${datasetParam}${timeoutParam}${mainParam}${onlyParam}`;
     console.log(`${label} ${mode}: loading`);
 
     await page.goto(url, { waitUntil: "load" });
@@ -45,13 +63,17 @@ async function runBrowser(browserType, label, modes) {
 
     await page.waitForFunction(
       () => window.__koncludeResult && window.__koncludeResult.done,
-      { timeout: 180000 }
+      { timeout: pageTimeout }
     );
 
     const result = await page.evaluate(() => window.__koncludeResult);
     if (!result || !result.ok) {
       await browser.close();
       throw new Error(`${label} ${mode} failed: ${JSON.stringify(result)}`);
+    }
+    if (result.consistency && result.consistency.consistent !== true) {
+      await browser.close();
+      throw new Error(`${label} ${mode} consistency failed: ${JSON.stringify(result.consistency)}`);
     }
     if (mode === "mt" && !result.crossOriginIsolated) {
       await browser.close();

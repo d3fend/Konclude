@@ -20,6 +20,10 @@
 
 #include "CCommandCalculatedQueryCallbackEvent.h"
 
+#ifdef __EMSCRIPTEN__
+#include <QCoreApplication>
+#include <QThread>
+#endif
 
 namespace Konclude {
 
@@ -50,6 +54,14 @@ namespace Konclude {
 
 				void CCommandCalculatedQueryCallbackEvent::doCallback() {
 					if (receiver) {
+#ifdef __EMSCRIPTEN__
+						QThread* receiverThread = receiver->thread();
+						if (receiverThread && receiverThread == QThread::currentThread()) {
+							QCoreApplication::sendEvent(receiver, this);
+							delete this;
+							return;
+						}
+#endif
 						receiver->postEvent(this);
 					}
 				}

@@ -97,6 +97,10 @@ namespace Konclude {
 						"Determines whether the size of the Qt default thread pool is adapted to the processor count.",
 						new CBooleanConfigType(true)),
 						new CBooleanConfigType(true));
+				addConfigProperty(new CConfigDescription("Konclude.Calculation.ThreadPoolMaxCount",
+						"Sets the maximum number of threads used by the Qt thread pool (0 keeps the default/adaptive setting).",
+						new CIntegerConfigType(0)),
+						new CIntegerConfigType(0));
 				addConfigProperty(new CConfigDescription("Konclude.Calculation.BlockingThreadPoolThreadsCount",
 						"Determines the number of threads that are blocked from the default thread pool.",
 						new CIntegerConfigType(1)),
@@ -3057,6 +3061,10 @@ namespace Konclude {
 						"Filepath of response file for command line interface.",
 						new CStringConfigType("")),
 						new CStringConfigType(""));
+				addConfigProperty(new CConfigDescription("Konclude.CLI.ConsistencyResponseFile",
+						"Filepath of consistency response file for command line interface.",
+						new CStringConfigType("")),
+						new CStringConfigType(""));
 				addConfigProperty(new CConfigDescription("Konclude.CLI.IRIName",
 						"IRI name for command line interface.",
 						new CStringConfigType("")),
@@ -3070,6 +3078,10 @@ namespace Konclude {
 						"Blocks processing until request has finished.",
 						new CBooleanConfigType(true)),
 						new CBooleanConfigType(true));
+				addConfigProperty(new CConfigDescription("Konclude.CLI.TrivialConsistencyOnly",
+						"Only perform trivial consistency checking (skip full consistency).",
+						new CBooleanConfigType(false)),
+						new CBooleanConfigType(false));
 
 
 

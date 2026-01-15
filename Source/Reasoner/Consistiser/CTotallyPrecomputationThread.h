@@ -196,6 +196,7 @@ namespace Konclude {
 					bool decrementUsageFromIndividualPrecomputationCoordinationHash(CIndividualPrecomputationCoordinationHash* indiPrecompCoordHash, CTotallyOntologyPrecomputationItem* totallyPreCompItem);
 					bool requestIndividualsPrecomputationRetrieval(CTotallyOntologyPrecomputationItem* totallyPreCompItem, bool allIndividualsSaturated);
 					bool retrieveIndividualsPrecomputation(CTotallyOntologyPrecomputationItem* totallyPreCompItem);
+					CBackendRepresentativeMemoryCache* getBackendAssociationCache();
 
 
 					bool createIndividualPrecomputationCheck(CTotallyOntologyPrecomputationItem* totallyPreCompItem);

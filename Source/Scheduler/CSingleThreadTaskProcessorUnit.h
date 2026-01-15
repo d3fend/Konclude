@@ -121,6 +121,7 @@ namespace Konclude {
 
 			// protected methods
 			protected:
+				virtual void runThreadLoop() override;
 				virtual bool processControlEvents(QEvent::Type type, CControlEvent *event);
 
 				bool addProcessingTask(CTask* task);
@@ -193,6 +194,10 @@ namespace Konclude {
 
 				CTask* mDebugLastCompletedTask;
 				CTask* mDebugLastProcessedTask;
+
+#ifdef __EMSCRIPTEN__
+				bool mWasmProcessingLogged;
+#endif
 
 			// private methods
 			private:

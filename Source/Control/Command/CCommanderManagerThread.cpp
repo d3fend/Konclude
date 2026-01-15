@@ -22,6 +22,8 @@
 
 #ifdef __EMSCRIPTEN__
 #include <cstdio>
+#include <QCoreApplication>
+#include <QThread>
 #endif
 
 
@@ -38,7 +40,7 @@ namespace Konclude {
 				kbCommandsDelegater = 0;
 				classificationMan = 0;
 				ontoRevMan = 0;
-#ifndef KONCLUDE_COMPILE_WASM_INTERFACE
+#if !defined(KONCLUDE_COMPILE_WASM_INTERFACE)
 				startThread();
 #endif
 			}
@@ -60,6 +62,13 @@ namespace Konclude {
 			}
 
 			CCommanderManagerThread *CCommanderManagerThread::realizeCommand(CCommand *command) {
+#ifdef __EMSCRIPTEN__
+				if (!isThreadRunning() || QThread::currentThread() == thread()) {
+					CRealizeCommandEvent event(command);
+					QCoreApplication::sendEvent(this, &event);
+					return this;
+				}
+#endif
 				postEvent(new CRealizeCommandEvent(command));
 				return this;
 			}
@@ -72,10 +81,6 @@ namespace Konclude {
 						if (commandEvent) {
 						CCommand *command = commandEvent->getCommand();
 						if (command) {
-#ifdef __EMSCRIPTEN__
-							std::fprintf(stderr, "[konclude wasm] commander received command tag=%d\n", command->getCommandTag());
-							std::fflush(stderr);
-#endif
 							if (command->getCommandTag() == INITIALIZECONFIGURATIONCOMMAND) {
 									CInitializeConfigurationCommand *initializeConfigCommand = (CInitializeConfigurationCommand *)command;
 									CCommandRecordRouter commandRecordRouter(command,this);
@@ -84,14 +89,14 @@ namespace Konclude {
 									CStopProcessCommandRecord::makeRecord(&commandRecordRouter);
 									CFinishProcessCommandRecord::makeRecord(&commandRecordRouter);
 
-								} else if (command->getCommandTag() == INITIALIZEREASONERCOMMAND) {
-									CInitializeReasonerCommand *initializeReasonerCommand = (CInitializeReasonerCommand *)command;
-									CCommandRecordRouter commandRecordRouter(command,this);
-									CStartProcessCommandRecord::makeRecord(&commandRecordRouter);
-									CCommanderInitializationFactory *initFact = initializeReasonerCommand->getInitializationFactory();
-									initializeCommander(initFact,&commandRecordRouter);
-									CStopProcessCommandRecord::makeRecord(&commandRecordRouter);
-									CFinishProcessCommandRecord::makeRecord(&commandRecordRouter);
+							} else if (command->getCommandTag() == INITIALIZEREASONERCOMMAND) {
+								CInitializeReasonerCommand *initializeReasonerCommand = (CInitializeReasonerCommand *)command;
+								CCommandRecordRouter commandRecordRouter(command,this);
+								CStartProcessCommandRecord::makeRecord(&commandRecordRouter);
+								CCommanderInitializationFactory *initFact = initializeReasonerCommand->getInitializationFactory();
+								initializeCommander(initFact,&commandRecordRouter);
+								CStopProcessCommandRecord::makeRecord(&commandRecordRouter);
+								CFinishProcessCommandRecord::makeRecord(&commandRecordRouter);
 
 								} else if (command->getCommandTag() == GETKNOWLEGEBASECONFIGURATIONCOMMAND) {
 									CGetKnowledgeBaseConfigCommand *getConfigCommand = (CGetKnowledgeBaseConfigCommand *)command;
@@ -203,12 +208,6 @@ namespace Konclude {
 
 									CCalculateQueryCommand *calcQueryCommand = (CCalculateQueryCommand *)command;
 									CQuery *query = calcQueryCommand->getQuery();
-#ifdef __EMSCRIPTEN__
-									std::fprintf(stderr, "[konclude wasm] commander calculate query, reasonerManager=%s query=%s\n",
-											reasonerManager ? "set" : "null",
-											query ? "set" : "null");
-									std::fflush(stderr);
-#endif
 									if (reasonerManager) {
 										if (query) {
 											CUnspecifiedMessageInformationRecord::makeRecord("Sending query to reasoner manager.",&commandRecordRouter);
@@ -343,7 +342,7 @@ namespace Konclude {
 					initializationFactory->initializeClassificationManager(classificationMan,configurationProvider);
 					initializationFactory->initializeOntologyRevisionManager(ontoRevMan,configurationProvider);
 
-					kbCommandsDelegater = dynamic_cast<CSPOntologyRevisionManager *>(ontoRevMan);
+					kbCommandsDelegater = ontoRevMan;
 				}
 			}
 

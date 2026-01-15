@@ -6,7 +6,9 @@
 
 #include <cstdlib>
 #include <cstring>
+#include <atomic>
 #include <deque>
+#include <exception>
 #include <memory>
 #include <unordered_map>
 
@@ -18,6 +20,7 @@
 #include <QFile>
 #include <QFileInfo>
 #include <QTemporaryFile>
+#include <QThread>
 #include <QStringList>
 
 #include "Config/CConfiguration.h"
@@ -25,7 +28,9 @@
 #include "Utilities/CSingletonProvider.hpp"
 
 #ifdef __EMSCRIPTEN__
-#include <cstdio>
+#ifdef __EMSCRIPTEN_PTHREADS__
+#include <emscripten/threading.h>
+#endif
 #endif
 #include "CKoncludeInfo.h"
 #include "Logger/CLogger.h"
@@ -33,9 +38,11 @@
 #include "Control/Loader/CDefaultLoaderFactory.h"
 #include "Control/Loader/CDefaultReasonerLoader.h"
 #include "Control/Loader/CCLIClassClassificationBatchProcessingLoader.h"
+#include "Control/Loader/CCLIConsistencyBatchProcessingLoader.h"
 #include "Control/Loader/CCLIRealizationBatchProcessingLoader.h"
 #include "Control/Interface/CommandLine/CCommandLinePreparationTranslatorSelector.h"
 #include "Control/Command/CReasonerConfigurationGroup.h"
+#include "WasmBridge/konclude_wasm_runtime.h"
 
 using namespace Konclude;
 using namespace Konclude::Logger;
@@ -45,8 +52,37 @@ using namespace Konclude::Control::Interface::CommandLine;
 namespace {
 
 #ifdef __EMSCRIPTEN__
-	bool gWasmAllowQuit = false;
-	bool gWasmQuitSeen = false;
+	static std::atomic<int> gWasmProcessingDone{0};
+	static bool gWasmThreadsChecked = false;
+	static bool gWasmThreadsEnabled = false;
+	extern "C" void konclude_wasm_notify_processing_complete() {
+		gWasmProcessingDone.store(1, std::memory_order_release);
+	}
+	extern "C" void konclude_wasm_reset_processing_complete() {
+		gWasmProcessingDone.store(0, std::memory_order_release);
+	}
+	extern "C" int konclude_wasm_is_processing_complete() {
+		return gWasmProcessingDone.load(std::memory_order_acquire) ? 1 : 0;
+	}
+
+	static void ensureWasmThreadingState() {
+#if defined(__EMSCRIPTEN_PTHREADS__)
+		// Re-evaluate threading availability to avoid caching a false value too early.
+		gWasmThreadsEnabled = emscripten_has_threading_support();
+		gWasmThreadsChecked = true;
+#else
+		gWasmThreadsEnabled = false;
+		gWasmThreadsChecked = true;
+#endif
+	}
+
+	extern "C" int konclude_wasm_threads_enabled() {
+		ensureWasmThreadingState();
+		return gWasmThreadsEnabled ? 1 : 0;
+	}
+
+	std::atomic<int> gWasmAllowQuit{0};
+	std::atomic<int> gWasmQuitSeen{0};
 
 	class CWasmQuitFilter : public QObject {
 		public:
@@ -55,12 +91,8 @@ namespace {
 		protected:
 			bool eventFilter(QObject* watched, QEvent* event) override {
 				if (event && event->type() == QEvent::Quit) {
-					if (!gWasmAllowQuit) {
-						gWasmQuitSeen = true;
-#ifdef __EMSCRIPTEN__
-						std::fprintf(stderr, "[konclude wasm] QEvent::Quit intercepted\n");
-						std::fflush(stderr);
-#endif
+					if (!gWasmAllowQuit.load(std::memory_order_acquire)) {
+						gWasmQuitSeen.store(1, std::memory_order_release);
 						return true;
 					}
 				}
@@ -232,14 +264,6 @@ namespace {
 					job->command = QString::fromUtf8(command);
 					job->inputPath = QString::fromUtf8(inputPath);
 					job->outputPath = QString::fromUtf8(outputPath);
-#ifdef __EMSCRIPTEN__
-					std::fprintf(stderr, "[konclude] submit job %d cmd=%s in=%s out=%s\n",
-							job->id,
-							command,
-							inputPath,
-							outputPath);
-					std::fflush(stderr);
-#endif
 					mJobs[job->id] = std::unique_ptr<CWasmJob>(job);
 					mQueue.push_back(job->id);
 					if (mActiveJobId == 0) {
@@ -291,35 +315,23 @@ namespace {
 				if (app) {
 					QCoreApplication::processEvents(QEventLoop::AllEvents, maxMs);
 				}
-				if (mActiveJobId == 0 && gWasmQuitSeen) {
-					gWasmQuitSeen = false;
+				if (mActiveJobId == 0 && gWasmQuitSeen.load(std::memory_order_acquire)) {
+					gWasmQuitSeen.store(0, std::memory_order_release);
 				}
 				if (mActiveJobId != 0) {
 					auto it = mJobs.find(mActiveJobId);
 					if (it != mJobs.end()) {
 						CWasmJob* job = it->second.get();
-						if (gWasmQuitSeen) {
+						if (konclude_wasm_is_processing_complete()) {
+							konclude_wasm_reset_processing_complete();
+							finishJob(job);
+						} else if (gWasmQuitSeen.load(std::memory_order_acquire)) {
 							job->quitSeen = true;
-							gWasmQuitSeen = false;
+							gWasmQuitSeen.store(0, std::memory_order_release);
 							finishJob(job);
-						} else if (isOutputReady(job)) {
-							finishJob(job);
-						} else {
-#ifdef __EMSCRIPTEN__
-							if ((job->outputCheckCount++ % 200) == 0) {
-								QFileInfo outInfo(job->outputPath);
-								std::fprintf(stderr, "[konclude wasm] output check exists=%d size=%lld path=%s\n",
-										outInfo.exists() ? 1 : 0,
-										static_cast<long long>(outInfo.size()),
-										job->outputPath.toUtf8().constData());
-								std::fprintf(stderr, "[konclude wasm] output check cwd=%s\n",
-										QDir::currentPath().toUtf8().constData());
-								std::fflush(stderr);
-							}
-#endif
 						}
-					} else if (gWasmQuitSeen) {
-						gWasmQuitSeen = false;
+					} else if (gWasmQuitSeen.load(std::memory_order_acquire)) {
+						gWasmQuitSeen.store(0, std::memory_order_release);
 						mActiveJobId = 0;
 					}
 				}
@@ -336,6 +348,9 @@ namespace {
 					return false;
 				}
 
+#ifdef __EMSCRIPTEN__
+				konclude_wasm_reset_processing_complete();
+#endif
 				ensureApp();
 				CLogger::getInstance();
 
@@ -350,25 +365,10 @@ namespace {
 				job->outputPath = outputInfo.absoluteFilePath();
 				outputInfo.setFile(job->outputPath);
 
-#ifdef __EMSCRIPTEN__
-				std::fprintf(stderr, "[konclude] start job %d cmd=%s in=%s out=%s\n",
-						job->id,
-						job->command.toUtf8().constData(),
-						job->inputPath.toUtf8().constData(),
-						job->outputPath.toUtf8().constData());
-					std::fflush(stderr);
-#endif
-
 				if (!inputInfo.exists() || !inputInfo.isFile()) {
-#ifdef __EMSCRIPTEN__
-					std::fprintf(stderr, "[konclude] input file not found: %s (cwd=%s)\n",
-							job->inputPath.toUtf8().constData(),
-							QDir::currentPath().toUtf8().constData());
-						std::fflush(stderr);
-#endif
-						LOG(ERROR,"::Konclude::Wasm",QString("Input file not found: %1 (cwd: %2)").arg(job->inputPath).arg(QDir::currentPath()),0);
-						return false;
-					}
+					LOG(ERROR,"::Konclude::Wasm",QString("Input file not found: %1 (cwd: %2)").arg(job->inputPath).arg(QDir::currentPath()),0);
+					return false;
+				}
 
 				if (!outputInfo.absolutePath().isEmpty()) {
 					QDir().mkpath(outputInfo.absolutePath());
@@ -379,6 +379,11 @@ namespace {
 					mConfiguration = new CConfiguration(reasonerConfigGroup);
 				}
 
+				const QString commandLower = job->command.toLower();
+				const bool isConsistency = (commandLower == "consistency" || commandLower == "cons");
+				const bool allowFullCompletionGraph = isConsistency && inputInfo.size() > 0 && inputInfo.size() <= (5 * 1024 * 1024);
+				const bool cacheEnabled = false;
+
 				auto setConfigValue = [&](const QString& name, const QString& value) {
 					CConfigData* confData = mConfiguration->createAndSetConfig(name);
 					if (confData) {
@@ -386,15 +391,110 @@ namespace {
 					}
 				};
 
-				setConfigValue("Konclude.Calculation.BlockingThreadPoolThreadsCount", "false");
+				setConfigValue("Konclude.Calculation.BlockingThreadPoolThreadsCount", "0");
 #if defined(__EMSCRIPTEN_PTHREADS__)
-				QString procCount("1");
-#ifdef KONCLUDE_WASM_PROCESSOR_COUNT
-				procCount = QString::number(KONCLUDE_WASM_PROCESSOR_COUNT);
+				const bool wasmThreadsEnabled = konclude_wasm_threads_enabled() != 0;
+				cint64 detectedCores = 0;
+#ifdef __EMSCRIPTEN_PTHREADS__
+				detectedCores = emscripten_num_logical_cores();
 #endif
-				setConfigValue("Konclude.Calculation.ProcessorCount", procCount);
-				setConfigValue("Konclude.Calculation.WorkerCount", procCount);
-				setConfigValue("Konclude.Calculation.AdaptThreadPoolSizeProcessorCount", "false");
+				if (!wasmThreadsEnabled) {
+					detectedCores = 1;
+				}
+				if (detectedCores <= 0) {
+					detectedCores = QThread::idealThreadCount();
+				}
+				if (detectedCores <= 0) {
+					detectedCores = 1;
+				}
+				cint64 threadOverhead = 0;
+#ifdef KONCLUDE_WASM_PTHREAD_OVERHEAD
+				threadOverhead = KONCLUDE_WASM_PTHREAD_OVERHEAD;
+#endif
+				if (threadOverhead < 0) {
+					threadOverhead = 0;
+				}
+				cint64 poolCount = detectedCores + threadOverhead;
+				if (poolCount < detectedCores) {
+					poolCount = detectedCores;
+				}
+				bool useAllThreads = true;
+				const bool enableUnsatCache = cacheEnabled;
+				const bool enableSatExpCache = cacheEnabled;
+				const bool enableReuseCompGraphCache = cacheEnabled;
+				const bool enableSatNodeExpCache = cacheEnabled;
+				const bool enableCompConsCache = cacheEnabled;
+				const bool enableBackendCache = true;
+				const bool enableOccStatsCache = false;
+				const cint64 cacheThreadReserve =
+						(enableUnsatCache ? 1 : 0) +
+						(enableSatExpCache ? 1 : 0) +
+						(enableReuseCompGraphCache ? 1 : 0) +
+						(enableSatNodeExpCache ? 1 : 0) +
+						(enableCompConsCache ? 1 : 0) +
+						(enableBackendCache ? 1 : 0) +
+						(enableOccStatsCache ? 1 : 0);
+				// Reserve threads for manager/precompute/classifier/etc. in addition to caches.
+				const cint64 baseThreadReserve = threadOverhead > 0 ? qMin<cint64>(10, threadOverhead) : 0;
+				const cint64 safetyThreadReserve = threadOverhead > 0 ? qMax<cint64>(2, threadOverhead / 8) : 0;
+				cint64 procCount = detectedCores;
+#ifdef KONCLUDE_WASM_PROCESSOR_COUNT
+#if KONCLUDE_WASM_PROCESSOR_COUNT > 0
+				useAllThreads = false;
+				procCount = KONCLUDE_WASM_PROCESSOR_COUNT;
+#endif
+#endif
+				if (procCount <= 0) {
+					procCount = 1;
+				}
+				cint64 availablePoolReserve = threadOverhead - (cacheThreadReserve + baseThreadReserve + safetyThreadReserve);
+				if (availablePoolReserve < 0) {
+					availablePoolReserve = 0;
+				}
+				cint64 threadPoolMax = qMin<cint64>(detectedCores / 2, availablePoolReserve);
+				if (threadPoolMax < 0) {
+					threadPoolMax = 0;
+				}
+				cint64 maxProc = poolCount - (cacheThreadReserve + baseThreadReserve + safetyThreadReserve + threadPoolMax);
+				if (maxProc < 1) {
+					maxProc = 1;
+					threadPoolMax = qMax<cint64>(0, poolCount - (cacheThreadReserve + baseThreadReserve + safetyThreadReserve + maxProc));
+				}
+				if (procCount > maxProc) {
+					procCount = maxProc;
+#ifdef __EMSCRIPTEN__
+					LOG(INFO, "::Konclude::Wasm",
+							QString("Thread reserve=%1 reduces procCount to %2 (pool=%3)")
+									.arg(cacheThreadReserve + baseThreadReserve + safetyThreadReserve + threadPoolMax)
+									.arg(procCount)
+									.arg(poolCount),
+							0);
+#endif
+				}
+				if (!wasmThreadsEnabled) {
+					procCount = 1;
+					threadPoolMax = 0;
+					useAllThreads = false;
+				}
+				const QString procCountString = QString::number(procCount);
+				setConfigValue("Konclude.Calculation.ProcessorCount", procCountString);
+				setConfigValue("Konclude.Calculation.WorkerCount", procCountString);
+				setConfigValue("Konclude.Calculation.AdaptThreadPoolSizeProcessorCount", threadPoolMax > 0 ? "false" : "true");
+				setConfigValue("Konclude.Calculation.ThreadPoolMaxCount", QString::number(threadPoolMax));
+#ifdef __EMSCRIPTEN__
+				LOG(INFO, "::Konclude::Wasm",
+						QString("Thread config cmd=%1 detectedCores=%2 overhead=%3 pool=%4 proc=%5 reserve=%6 poolMax=%7 useAll=%8 threadsEnabled=%9")
+								.arg(job->command)
+								.arg(detectedCores)
+								.arg(threadOverhead)
+								.arg(poolCount)
+								.arg(procCount)
+								.arg(cacheThreadReserve + baseThreadReserve + safetyThreadReserve + threadPoolMax)
+								.arg(threadPoolMax)
+								.arg(useAllThreads ? "true" : "false")
+								.arg(wasmThreadsEnabled ? "true" : "false"),
+						0);
+#endif
 #else
 				setConfigValue("Konclude.Calculation.ProcessorCount", "1");
 				setConfigValue("Konclude.Calculation.WorkerCount", "1");
@@ -404,44 +504,107 @@ namespace {
 				setConfigValue("Konclude.CLI.ResponseFile", job->outputPath);
 				setConfigValue("Konclude.CLI.CloseAfterProcessedRequest", "true");
 				setConfigValue("Konclude.CLI.BlockUntilProcessedRequest", "false");
+				if (commandLower == "classification") {
+					const QString consistencyPath = job->outputPath + ".consistency.txt";
+					setConfigValue("Konclude.CLI.ConsistencyResponseFile", consistencyPath);
+				} else {
+					setConfigValue("Konclude.CLI.ConsistencyResponseFile", "");
+				}
+				auto setConfigBool = [&](const QString& name, bool value) {
+					setConfigValue(name, value ? "true" : "false");
+				};
+				setConfigBool("Konclude.Calculation.Optimization.UnsatisfiableCacheRetrieval", cacheEnabled);
+				setConfigBool("Konclude.Calculation.Optimization.UnsatisfiableCacheSingleLevelWriting", cacheEnabled);
+				setConfigBool("Konclude.Calculation.Optimization.UnsatisfiableCacheTestingConceptWriting", cacheEnabled);
+				setConfigBool("Konclude.Calculation.Optimization.SatisfiableCacheRetrieval", cacheEnabled);
+				setConfigBool("Konclude.Calculation.Optimization.SatisfiableCacheSingleLevelWriting", cacheEnabled);
+				setConfigBool("Konclude.Calculation.Optimization.SatisfiableExpansionCacheRetrieval", cacheEnabled);
+				setConfigBool("Konclude.Calculation.Optimization.SatisfiableExpansionCacheWriting", cacheEnabled);
+				setConfigBool("Konclude.Calculation.Optimization.SatisfiableExpansionCacheConceptExpansion", cacheEnabled);
+				setConfigBool("Konclude.Calculation.Optimization.SatisfiableExpansionCacheSatisfiableBlocking", cacheEnabled);
+				setConfigBool("Konclude.Calculation.Optimization.CompletionGraphCaching", cacheEnabled);
+				setConfigBool("Konclude.Calculation.Optimization.SaturationExpansionSatisfiabilityCacheWriting", cacheEnabled);
+				setConfigBool("Konclude.Calculation.Optimization.SaturationUnsatisfiabilityCacheWriting", cacheEnabled);
+				setConfigBool("Konclude.Calculation.Optimization.ComputedTypesCaching", cacheEnabled);
+				setConfigBool("Konclude.Calculation.Optimization.IndividualsBackendCacheLoading", enableBackendCache);
+				setConfigBool("Konclude.Calculation.Optimization.OccurrenceStatisticsCollecting", false);
+				// Enable preprocessing to avoid slow on-demand computation in large runs.
+				if (!isConsistency) {
+					setConfigValue("Konclude.Calculation.Preprocessing.OntologyPrecomputation", "true");
+					setConfigValue("Konclude.Calculation.Preprocessing.CheckingOntologyConsistency", "true");
+					setConfigValue("Konclude.Calculation.Preprocessing.CoreConceptCyclesPrecomputation", "true");
+					setConfigValue("Konclude.Calculation.Preprocessing.CoreConceptCyclesExtraction", "true");
+					// Drop triples data after indexing to reduce memory for large ontologies.
+					setConfigValue("Konclude.Calculation.Preprocessing.TripleEncodedAssertionsIndexing.DeleteTriplesDataAfterIndexing", "true");
+				} else {
+					// Keep ontology precomputation enabled; avoid full completion graphs for memory safety.
+					setConfigValue("Konclude.Calculation.Preprocessing.OntologyPrecomputation", "true");
+					setConfigValue("Konclude.Calculation.Preprocessing.CheckingOntologyConsistency", "true");
+					setConfigValue("Konclude.Calculation.Preprocessing.CoreConceptCyclesPrecomputation", "true");
+					setConfigValue("Konclude.Calculation.Preprocessing.CoreConceptCyclesExtraction", "true");
+					// Avoid full completion graph construction in memory-constrained wasm runs unless the input is small.
+					setConfigValue("Konclude.Calculation.Precomputation.ForceFullCompletionGraphConstruction", "false");
+					setConfigValue("Konclude.Calculation.Precomputation.ConditionalFullCompletionGraphConstruction", allowFullCompletionGraph ? "true" : "false");
+					// Drop triples data after indexing to save memory.
+					setConfigValue("Konclude.Calculation.Preprocessing.TripleEncodedAssertionsIndexing.DeleteTriplesDataAfterIndexing", "true");
+				}
+				// Reduce memory spikes in WASM by shrinking allocation growth.
+				setConfigValue("Konclude.Calculation.Memory.IncreaseAllocationSize", "67108864");
+				// Keep backend cache enabled; precomputation expects it even in wasm.
+				setConfigValue("Konclude.Calculation.Optimization.IndividualsBackendCacheLoading", "true");
+				// Cache-heavy optimizations: keep them enabled in WASM for better performance.
+				const QString cacheFlag = cacheEnabled ? "true" : "false";
+				setConfigValue("Konclude.Calculation.Optimization.OccurrenceStatisticsCollecting", "false");
+				setConfigValue("Konclude.Calculation.Optimization.ComputedTypesCaching", cacheFlag);
+				setConfigValue("Konclude.Calculation.Optimization.SaturationExpansionSatisfiabilityCacheWriting", cacheFlag);
+				setConfigValue("Konclude.Calculation.Optimization.SaturationUnsatisfiabilityCacheWriting", cacheFlag);
+				setConfigValue("Konclude.Calculation.Optimization.UnsatisfiableCacheRetrieval", cacheFlag);
+				setConfigValue("Konclude.Calculation.Optimization.SatisfiableCacheRetrieval", cacheFlag);
+				setConfigValue("Konclude.Calculation.Optimization.UnsatisfiableCacheSingleLevelWriting", cacheFlag);
+				setConfigValue("Konclude.Calculation.Optimization.UnsatisfiableCacheTestingConceptWriting", cacheFlag);
+				setConfigValue("Konclude.Calculation.Optimization.SatisfiableCacheSingleLevelWriting", cacheFlag);
+				setConfigValue("Konclude.Calculation.Optimization.SatisfiableExpansionCacheRetrieval", cacheFlag);
+				setConfigValue("Konclude.Calculation.Optimization.SatisfiableExpansionCacheConceptExpansion", cacheFlag);
+				setConfigValue("Konclude.Calculation.Optimization.SatisfiableExpansionCacheSatisfiableBlocking", cacheFlag);
+				setConfigValue("Konclude.Calculation.Optimization.SatisfiableExpansionCacheWriting", cacheFlag);
+				setConfigValue("Konclude.Calculation.Optimization.CompletionGraphCaching", cacheFlag);
+				setConfigValue("Konclude.Calculation.Optimization.CompletionGraphReuseCachingRetrieval", cacheFlag);
+				setConfigValue("Konclude.Calculation.Optimization.CompletionGraphDeterministicReuse", cacheFlag);
+				setConfigValue("Konclude.Calculation.Optimization.CompletionGraphNonDeterministicReuse", cacheFlag);
+				setConfigValue("Konclude.Calculation.Optimization.SignatureSaving", cacheFlag);
+				setConfigValue("Konclude.Calculation.Optimization.SignatureMirroringBlocking", cacheFlag);
+				// Scale parallel subsumption for classification runs to available workers.
+#if defined(__EMSCRIPTEN_PTHREADS__)
+				if (commandLower == "classification") {
+					setConfigValue("Konclude.Calculation.Classification.MaximumParallelSubsumptionCalculationCount", procCountString);
+				} else {
+					setConfigValue("Konclude.Calculation.Classification.MaximumParallelSubsumptionCalculationCount", "1");
+				}
+#else
+				setConfigValue("Konclude.Calculation.Classification.MaximumParallelSubsumptionCalculationCount", "1");
+#endif
 
 				if (!mReasonerLoader) {
 					mReasonerLoader = new CDefaultReasonerLoader();
 					mReasonerLoader->init(nullptr, mConfiguration);
 					mReasonerLoader->load();
 				}
-
-				const QString commandLower = job->command.toLower();
 				if (commandLower == "classification") {
 					job->cliLoader = new CCLIClassClassificationBatchProcessingLoader();
+				} else if (commandLower == "consistency" || commandLower == "cons") {
+					job->cliLoader = new CCLIConsistencyBatchProcessingLoader();
 				} else if (commandLower == "realisation" || commandLower == "realization") {
 					job->cliLoader = new CCLIRealizationBatchProcessingLoader();
 				} else {
 					return false;
 				}
 
-#ifdef __EMSCRIPTEN__
-				std::fprintf(stderr, "[konclude] cliLoader init\n");
-				std::fflush(stderr);
-#endif
 				job->cliLoader->init(nullptr, mConfiguration);
-#ifdef __EMSCRIPTEN__
-				std::fprintf(stderr, "[konclude] cliLoader load\n");
-				std::fflush(stderr);
-#endif
 				job->cliLoader->load();
-#ifdef __EMSCRIPTEN__
-				std::fprintf(stderr, "[konclude] cliLoader load returned\n");
-				std::fflush(stderr);
-#endif
 				job->done = false;
 				job->error = false;
 				job->exitCode = -999;
 				mActiveJobId = job->id;
-#ifdef __EMSCRIPTEN__
-				std::fprintf(stderr, "[konclude] start job active id=%d\n", job->id);
-				std::fflush(stderr);
-#endif
 				return true;
 			}
 
@@ -451,10 +614,6 @@ namespace {
 				}
 				const int id = mQueue.front();
 				mQueue.pop_front();
-#ifdef __EMSCRIPTEN__
-				std::fprintf(stderr, "[konclude] startNextJob id=%d queue=%zu\n", id, mQueue.size());
-				std::fflush(stderr);
-#endif
 				auto it = mJobs.find(id);
 				if (it == mJobs.end()) {
 					return;
@@ -472,34 +631,18 @@ namespace {
 					return;
 				}
 
-#ifdef __EMSCRIPTEN__
-				std::fprintf(stderr, "[konclude wasm] finishJob start id=%d\n", job->id);
-				std::fflush(stderr);
-#endif
 				const bool ok = isOutputReady(job);
 
 				if (job->cliLoader) {
-#ifdef __EMSCRIPTEN__
-					std::fprintf(stderr, "[konclude wasm] finishJob cliLoader exit\n");
-					std::fflush(stderr);
-#endif
 					job->cliLoader->exit();
-#ifdef __EMSCRIPTEN__
-					std::fprintf(stderr, "[konclude wasm] finishJob cliLoader exit done\n");
-					std::fflush(stderr);
-#endif
 					delete job->cliLoader;
 					job->cliLoader = nullptr;
 				}
+				// Keep the reasoner/config alive in WASM to avoid teardown hangs between jobs.
 				job->done = true;
 				job->error = !ok;
 				job->exitCode = ok ? 0 : -1;
 				mActiveJobId = 0;
-#ifdef __EMSCRIPTEN__
-				std::fprintf(stderr, "[konclude wasm] finishJob id=%d ok=%d quitSeen=%d\n",
-						job->id, ok ? 1 : 0, job->quitSeen ? 1 : 0);
-				std::fflush(stderr);
-#endif
 			}
 
 			bool isOutputReady(const CWasmJob* job) const {
@@ -508,14 +651,6 @@ namespace {
 				}
 				QFileInfo outInfo(job->outputPath);
 				const bool ready = outInfo.exists() && outInfo.isFile() && outInfo.size() > 0;
-#ifdef __EMSCRIPTEN__
-				if (ready) {
-					std::fprintf(stderr, "[konclude wasm] output ready exists=1 size=%lld path=%s\n",
-							static_cast<long long>(outInfo.size()),
-							job->outputPath.toUtf8().constData());
-					std::fflush(stderr);
-				}
-#endif
 				return ready;
 			}
 
@@ -566,9 +701,6 @@ int konclude_run_command(int argc, const char** argv) {
 
 int konclude_classify_files(const char* input_path, const char* output_path) {
 #ifdef __EMSCRIPTEN__
-	std::fprintf(stderr, "[konclude] classify_files start '%s' -> '%s'\n",
-			input_path ? input_path : "(null)",
-			output_path ? output_path : "(null)");
 	return runJobBlocking("classification", input_path, output_path);
 #else
 	return runSimpleCommand("classification", input_path, output_path);
@@ -645,7 +777,19 @@ void konclude_job_free(int job_id) {
 }
 
 void konclude_tick(int max_ms) {
+#ifdef __EMSCRIPTEN__
+	try {
+		CWasmJobManager::instance().tick(max_ms);
+	} catch (const std::exception& ex) {
+		LOG(ERROR,"::Konclude::Wasm",QString("Tick exception: %1").arg(QString::fromUtf8(ex.what())),0);
+		konclude_wasm_notify_processing_complete();
+	} catch (...) {
+		LOG(ERROR,"::Konclude::Wasm",QString("Tick exception: unknown"),0);
+		konclude_wasm_notify_processing_complete();
+	}
+#else
 	CWasmJobManager::instance().tick(max_ms);
+#endif
 }
 #endif
 
@@ -657,7 +801,7 @@ void konclude_free(void* ptr) {
 
 void konclude_shutdown() {
 #ifdef __EMSCRIPTEN__
-	gWasmAllowQuit = true;
+		gWasmAllowQuit.store(1, std::memory_order_release);
 #endif
 	CLogger* logger = CLogger::getInstance();
 	if (logger) {

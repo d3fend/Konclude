@@ -19,6 +19,9 @@
  */
 
 #include "CCLIClassClassificationBatchProcessingLoader.h"
+#include "Config/CConfigDataReader.h"
+#include "Control/Command/Instructions/CIsConsistentQueryCommand.h"
+#include "Control/Command/Instructions/CReleaseKnowledgeBaseCommand.h"
 
 #ifdef __EMSCRIPTEN__
 #include <cstdio>
@@ -48,14 +51,11 @@ namespace Konclude {
 
 
 			void CCLIClassClassificationBatchProcessingLoader::createClassificationTestingCommands() {
-				#ifdef __EMSCRIPTEN__
-				QByteArray reqPath = mRequestFileString.toUtf8();
-				QByteArray resPath = mResponseFileString.toUtf8();
-				fprintf(stderr, "[konclude wasm] createClassificationTestingCommands request=%s response=%s\n",
-						reqPath.constData(), resPath.constData());
-				fflush(stderr);
-				#endif
 				logOutputMessage(QString("Starting classification for '%1'.").arg(mRequestFileString));
+				mConsistencyResponseFileString = CConfigDataReader::readConfigString(mLoaderConfig, "Konclude.CLI.ConsistencyResponseFile");
+				if (!mConsistencyResponseFileString.isEmpty()) {
+					logOutputNotice(QString("Consistency output will be written to '%1'.").arg(mConsistencyResponseFileString));
+				}
 				QString testKB = QString("http://konclude.com/test/kb");
 				CCreateKnowledgeBaseCommand* createKBCommand = new CCreateKnowledgeBaseCommand(testKB);
 				QStringList ontoIRIList;
@@ -71,9 +71,56 @@ namespace Konclude {
 					CWriteCustomQueryCommand* writeHierarchyCommand = new CWriteCustomQueryCommand(testKB,CWriteQuery::WRITESUBCLASSHIERARCHY,new CWriteQueryFileOWL2XMLSerializer(mResponseFileString));
 					addProcessingCommand(writeHierarchyCommand);
 				}
+				if (!mConsistencyResponseFileString.isEmpty()) {
+					mConsistencyKBCommand = new CIsConsistentQueryCommand(testKB);
+					addProcessingCommand(mConsistencyKBCommand,false,"",true,mConsistencyResponseFileString);
+				}
+				CReleaseKnowledgeBaseCommand* releaseKBCommand = new CReleaseKnowledgeBaseCommand(testKB);
+				addProcessingCommand(releaseKBCommand);
 				processNextCommand();
 			}
 
+			void CCLIClassClassificationBatchProcessingLoader::writeCommandOutput(const QString& outputFileName, CCommand* processedCommand) {
+				if (!processedCommand || processedCommand != mConsistencyKBCommand) {
+					return;
+				}
+
+				CKnowledgeBaseQueryCommand* kbQueryCommand = dynamic_cast<CKnowledgeBaseQueryCommand*>(processedCommand);
+				if (!kbQueryCommand) {
+					logOutputError("Consistency checking failed.");
+					return;
+				}
+				CQuery* query = kbQueryCommand->getCalculateQueryCommand()->getQuery();
+				if (!query) {
+					logOutputError("Consistency checking failed.");
+					return;
+				}
+				CQueryResult* queryResult = query->getQueryResult();
+				if (!queryResult) {
+					logOutputError("Consistency checking failed.");
+					return;
+				}
+				CBooleanQueryResult* boolQueryResult = dynamic_cast<CBooleanQueryResult*>(queryResult);
+				if (!boolQueryResult) {
+					logOutputError("Consistency checking failed.");
+					return;
+				}
+
+				logOutputMessage(QString("Ontology '%1' is %2.").arg(mRequestFileString).arg(boolQueryResult->getResult() ? "consistent" : "inconsistent"));
+				if (outputFileName.isEmpty()) {
+					return;
+				}
+
+				forcedPathCreated(outputFileName);
+				QFile outputFile(outputFileName);
+				if (outputFile.open(QIODevice::WriteOnly)) {
+					const QString outputData = boolQueryResult->getResult() ? QString("true\n") : QString("false\n");
+					outputFile.write(outputData.toUtf8());
+					outputFile.close();
+				} else {
+					logOutputError(QString("Failed writing output to file '%1'.").arg(outputFileName));
+				}
+			}
 
 
 

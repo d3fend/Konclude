@@ -21,7 +21,9 @@
 #include "CPrecomputationThread.h"
 
 #ifdef __EMSCRIPTEN__
-#include <cstdio>
+#include <QCoreApplication>
+#include <QThread>
+#include "WasmBridge/konclude_wasm_runtime.h"
 #endif
 
 
@@ -40,8 +42,12 @@ namespace Konclude {
 				mStatCalculatingJobs = 0;
 				mConfMaxTestBatchCreationCount = -1;
 
-#if !defined(KONCLUDE_COMPILE_WASM_INTERFACE)
+#ifndef __EMSCRIPTEN__
+				startThread(QThread::HighPriority);
+#else
+				if (konclude_wasm_threads_enabled()) {
 					startThread(QThread::HighPriority);
+				}
 #endif
 			}
 
@@ -52,6 +58,19 @@ namespace Konclude {
 
 
 			bool CPrecomputationThread::precompute(CConcreteOntology* ontology, CConfigurationBase* config, const QList<COntologyProcessingRequirement*>& requirementList, CCallbackData* callback) {
+#ifdef __EMSCRIPTEN__
+				bool directDispatch = (thread() == QThread::currentThread());
+#if defined(KONCLUDE_COMPILE_WASM_INTERFACE)
+				if (!konclude_wasm_threads_enabled() && !isThreadRunning()) {
+					directDispatch = true;
+				}
+#endif
+				if (directDispatch) {
+					CPrecomputeOntologyEvent event(ontology, config, requirementList, callback);
+					QCoreApplication::sendEvent(this, &event);
+					return true;
+				}
+#endif
 				postEvent(new CPrecomputeOntologyEvent(ontology,config,requirementList,callback));
 				return true;
 			}
@@ -59,7 +78,23 @@ namespace Konclude {
 
 			bool CPrecomputationThread::precompute(CConcreteOntology* ontology, CConfigurationBase* config, const QList<COntologyProcessingRequirement*>& requirementList) {
 				CBlockingCallbackData callback;
-				postEvent(new CPrecomputeOntologyEvent(ontology,config,requirementList,&callback));
+				bool handled = false;
+#ifdef __EMSCRIPTEN__
+				bool directDispatch = (thread() == QThread::currentThread());
+#if defined(KONCLUDE_COMPILE_WASM_INTERFACE)
+				if (!konclude_wasm_threads_enabled() && !isThreadRunning()) {
+					directDispatch = true;
+				}
+#endif
+				if (directDispatch) {
+					CPrecomputeOntologyEvent event(ontology, config, requirementList, &callback);
+					QCoreApplication::sendEvent(this, &event);
+					handled = true;
+				}
+#endif
+				if (!handled) {
+					postEvent(new CPrecomputeOntologyEvent(ontology,config,requirementList,&callback));
+				}
 				callback.waitForCallback();
 				return true;
 			}
@@ -74,7 +109,22 @@ namespace Konclude {
 					}
 				} else {
 					CBlockingCallbackData callbackBlock;
+#ifdef __EMSCRIPTEN__
+					bool directDispatch = (thread() == QThread::currentThread());
+#if defined(KONCLUDE_COMPILE_WASM_INTERFACE)
+					if (!konclude_wasm_threads_enabled() && !isThreadRunning()) {
+						directDispatch = true;
+					}
+#endif
+					if (directDispatch) {
+						CCallbackPrecomputedOntologyEvent event(ontology, &callbackBlock, callback);
+						QCoreApplication::sendEvent(this, &event);
+					} else {
+						postEvent(new CCallbackPrecomputedOntologyEvent(ontology,&callbackBlock,callback));
+					}
+#else
 					postEvent(new CCallbackPrecomputedOntologyEvent(ontology,&callbackBlock,callback));
+#endif
 					callbackBlock.waitForCallback();
 					CCallbackDataContext* callbackContext = callbackBlock.getCallbackDataContext();
 					if (callbackContext) {
@@ -126,13 +176,6 @@ namespace Konclude {
 
 				CPrecomputationCalculatedCallbackEvent* callbackEvent = new CPrecomputationCalculatedCallbackEvent(this,job,preTestItem);
 				preCompItem->getPrecomputationTestingItemSet()->insert(preTestItem);
-#ifdef __EMSCRIPTEN__
-				std::fprintf(stderr, "[konclude wasm] precompute: submit job type=%d item=%p\n",
-						preTestItem ? (int)preTestItem->getPrecomputationTestingType() : -1,
-						static_cast<void*>(preTestItem));
-				std::fflush(stderr);
-#endif
-
 				mCurrRunningTestParallelCount++;
 				++mStatCalculatingJobs;
 				if (!mCalculationManager) {
@@ -158,13 +201,6 @@ namespace Konclude {
 
 				CSaturationPrecomputationCalculatedCallbackEvent* callbackEvent = new CSaturationPrecomputationCalculatedCallbackEvent(this,job,preTestItem);
 				preCompItem->getPrecomputationTestingItemSet()->insert(preTestItem);
-#ifdef __EMSCRIPTEN__
-				std::fprintf(stderr, "[konclude wasm] precompute: submit saturation job type=%d item=%p\n",
-						preTestItem ? (int)preTestItem->getPrecomputationTestingType() : -1,
-						static_cast<void*>(preTestItem));
-				std::fflush(stderr);
-#endif
-
 				mCurrRunningTestParallelCount++;
 				++mStatCalculatingJobs;
 				if (!mCalculationManager) {
@@ -197,10 +233,6 @@ namespace Konclude {
 				if (CThread::processCustomsEvents(type,event)) {
 					return true;
 				} else if (type == CPrecomputeOntologyEvent::EVENTTYPE) {
-					#ifdef __EMSCRIPTEN__
-						std::fprintf(stderr, "[konclude wasm] precompute: CPrecomputeOntologyEvent\n");
-						std::fflush(stderr);
-					#endif
 					CPrecomputeOntologyEvent* poe = (CPrecomputeOntologyEvent*)event;
 
 					CCallbackData* callbackData = poe->getCallbackData();
@@ -235,10 +267,6 @@ namespace Konclude {
 					return true;
 
 				} else if (type == CCallbackPrecomputedOntologyEvent::EVENTTYPE) {
-					#ifdef __EMSCRIPTEN__
-						std::fprintf(stderr, "[konclude wasm] precompute: CCallbackPrecomputedOntologyEvent\n");
-						std::fflush(stderr);
-					#endif
 					CCallbackPrecomputedOntologyEvent* cpoe = (CCallbackPrecomputedOntologyEvent*)event;
 
 					CConcreteOntology* ontology = cpoe->getOntology();
@@ -262,33 +290,18 @@ namespace Konclude {
 					return true;
 
 				} else if (type == CRetrievedPrecomputationIndividualsCallbackEvent::EVENTTYPE) {
-					#ifdef __EMSCRIPTEN__
-						std::fprintf(stderr, "[konclude wasm] precompute: CRetrievedPrecomputationIndividualsCallbackEvent\n");
-						std::fflush(stderr);
-					#endif
 					CRetrievedPrecomputationIndividualsCallbackEvent* cpoe = (CRetrievedPrecomputationIndividualsCallbackEvent*)event;
 
 					precomputationIndividualsRetrieved(cpoe->getOntologyPrecomputationItem(), cpoe);
 					return true;
 
 				} else if (type == CPrecomputationCalculatedCallbackEvent::EVENTTYPE) {
-					#ifdef __EMSCRIPTEN__
-						std::fprintf(stderr, "[konclude wasm] precompute: CPrecomputationCalculatedCallbackEvent\n");
-						std::fflush(stderr);
-					#endif
 					CPrecomputationCalculatedCallbackEvent* pcce = (CPrecomputationCalculatedCallbackEvent*)event;
 
 					--mCurrRunningTestParallelCount;
 
 					CPrecomputationTestingItem* testingItem = pcce->getTestingItem();
 					COntologyPrecomputationItem* ontPreCompItem = testingItem->getOntologyPrecomputationItem();
-
-#ifdef __EMSCRIPTEN__
-					std::fprintf(stderr, "[konclude wasm] precompute: completed job type=%d item=%p\n",
-							testingItem ? (int)testingItem->getPrecomputationTestingType() : -1,
-							static_cast<void*>(testingItem));
-					std::fflush(stderr);
-#endif
 
 					ontPreCompItem->getPrecomputationTestingItemSet()->remove(testingItem);
 					CConsistenceCalculationStatisticsCollection* statisticCollection = testingItem->getUsedStatisticsCollection();
@@ -303,23 +316,12 @@ namespace Konclude {
 					return true;
 
 				} else if (type == CSaturationPrecomputationCalculatedCallbackEvent::EVENTTYPE) {
-					#ifdef __EMSCRIPTEN__
-						std::fprintf(stderr, "[konclude wasm] precompute: CSaturationPrecomputationCalculatedCallbackEvent\n");
-						std::fflush(stderr);
-					#endif
 					CSaturationPrecomputationCalculatedCallbackEvent* spcce = (CSaturationPrecomputationCalculatedCallbackEvent*)event;
 
 					--mCurrRunningTestParallelCount;
 
 					CPrecomputationTestingItem* testingItem = spcce->getPrecomputationTestingItem();
 					COntologyPrecomputationItem* ontPreCompItem = testingItem->getOntologyPrecomputationItem();
-
-#ifdef __EMSCRIPTEN__
-					std::fprintf(stderr, "[konclude wasm] precompute: completed saturation job type=%d item=%p\n",
-							testingItem ? (int)testingItem->getPrecomputationTestingType() : -1,
-							static_cast<void*>(testingItem));
-					std::fflush(stderr);
-#endif
 
 					ontPreCompItem->getPrecomputationTestingItemSet()->remove(testingItem);
 
@@ -336,10 +338,6 @@ namespace Konclude {
 
 					return true;
 				} else if (type == CRescheduleJobCreationEvent::EVENTTYPE) {
-					#ifdef __EMSCRIPTEN__
-						std::fprintf(stderr, "[konclude wasm] precompute: CRescheduleJobCreationEvent\n");
-						std::fflush(stderr);
-					#endif
 					doNextPendingTests();
 					return true;
 				}

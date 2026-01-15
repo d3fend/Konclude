@@ -25,11 +25,6 @@
 
 #include "Logger/CLogger.h"
 
-#ifdef __EMSCRIPTEN__
-#include <cstdio>
-#endif
-
-
 namespace Konclude {
 
 	namespace Concurrent {
@@ -117,10 +112,6 @@ namespace Konclude {
 			bool registerd = false;
 
 			try {
-#ifdef __EMSCRIPTEN__
-				std::fprintf(stderr, "[konclude wasm] thread run start name=%s\n", threadName.toUtf8().constData());
-				std::fflush(stderr);
-#endif
 				// get thread id
 				syncThreadID->acquire();
 				threadID = nextThreadID++;
@@ -138,7 +129,7 @@ namespace Konclude {
 
 				threadStarted();
 				threadRuns = true;
-				exec();
+				runThreadLoop();
 				threadRuns = false;
 				threadStopped();
 
@@ -149,10 +140,6 @@ namespace Konclude {
 					mWatchDog->checkoutThread(this);
 				}
 
-#ifdef __EMSCRIPTEN__
-				std::fprintf(stderr, "[konclude wasm] thread run end name=%s\n", threadName.toUtf8().constData());
-				std::fflush(stderr);
-#endif
 			} catch (...) {
 				if (mWatchDog) {
 					mWatchDog->crashedThread(this);
@@ -248,20 +235,13 @@ namespace Konclude {
 		void CThread::threadStopped() {
 		}
 
+		void CThread::runThreadLoop() {
+			exec();
+		}
+
 		void CThread::startThread(Priority priority) {
-#ifdef __EMSCRIPTEN__
-			std::fprintf(stderr, "[konclude wasm] startThread name=%s\n", threadName.toUtf8().constData());
-			std::fflush(stderr);
-#endif
 			start(priority);
 			moveToThread(this);
-#ifdef __EMSCRIPTEN__
-			std::fprintf(stderr, "[konclude wasm] startThread after start name=%s running=%d finished=%d\n",
-					threadName.toUtf8().constData(),
-					isRunning() ? 1 : 0,
-					isFinished() ? 1 : 0);
-			std::fflush(stderr);
-#endif
 		}
 
 		void CThread::stopThread(bool waitStopped) {

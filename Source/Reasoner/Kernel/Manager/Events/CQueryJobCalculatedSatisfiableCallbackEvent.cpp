@@ -20,6 +20,12 @@
 
 #include "CQueryJobCalculatedSatisfiableCallbackEvent.h"
 
+#ifdef __EMSCRIPTEN__
+#include <QCoreApplication>
+#include <QThread>
+#include "WasmBridge/konclude_wasm_runtime.h"
+#endif
+
 
 namespace Konclude {
 
@@ -45,6 +51,23 @@ namespace Konclude {
 
 
 					void CQueryJobCalculatedSatisfiableCallbackEvent::doCallback() {
+						if (!recThread) {
+							return;
+						}
+#ifdef __EMSCRIPTEN__
+						QThread* receiverThread = recThread->thread();
+						bool directDispatch = (receiverThread && receiverThread == QThread::currentThread());
+#if defined(KONCLUDE_COMPILE_WASM_INTERFACE)
+						if (!konclude_wasm_threads_enabled() && (!recThread->isThreadRunning() || !receiverThread)) {
+							directDispatch = true;
+						}
+#endif
+						if (directDispatch) {
+							QCoreApplication::sendEvent(recThread, this);
+							delete this;
+							return;
+						}
+#endif
 						recThread->postEvent(this);
 					}
 

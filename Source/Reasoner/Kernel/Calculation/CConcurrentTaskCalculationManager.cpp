@@ -21,7 +21,7 @@
 #include "CConcurrentTaskCalculationManager.h"
 
 #ifdef __EMSCRIPTEN__
-#include <cstdio>
+#include "Reasoner/Query/CApproximatedSaturationCalculationJob.h"
 #endif
 
 namespace Konclude {
@@ -41,13 +41,6 @@ namespace Konclude {
 				}
 
 				CCalculationManager *CConcurrentTaskCalculationManager::calculateTask(CSatisfiableCalculationTask* task) {
-#ifdef __EMSCRIPTEN__
-					std::fprintf(stderr, "[konclude wasm] calculateTask task=%p taskEnv=%s scheduler=%p\n",
-							static_cast<void*>(task),
-							mTaskCalcEn ? "set" : "null",
-							mTaskCalcEn ? static_cast<void*>(mTaskCalcEn->getSchedulerTaskProcessorUnit()->getEventHandler()) : nullptr);
-					std::fflush(stderr);
-#endif
 					if (mTaskCalcEn) {
 						CTaskEventCommunicator::postSendTaskScheduleEvent(mTaskCalcEn->getSchedulerTaskProcessorUnit()->getEventHandler(),task,mTemMemMan);
 					}
@@ -55,16 +48,41 @@ namespace Konclude {
 				}
 
 				CCalculationManager *CConcurrentTaskCalculationManager::calculateJob(CCalculationJob* job, CCallbackData* callbackData) {
+#ifdef __EMSCRIPTEN__
+					if (!mTaskCalcEn) {
+						LOG(ERROR, "::Konclude::Wasm", QString("Calculation manager missing task environment."), this);
+						return this;
+					}
+#endif
 					CSatisfiableCalculationTaskFromCalculationJobGenerator gen(mGenTaskHandleContext);
 					CSatisfiableCalculationTask* task = gen.createSatisfiableCalculationTask(job,callbackData);
-#ifdef __EMSCRIPTEN__
-					std::fprintf(stderr, "[konclude wasm] calculateJob job=%p task=%p\n",
-							static_cast<void*>(job),
-							static_cast<void*>(task));
-					std::fflush(stderr);
-#endif
 					if (task) {
+#ifdef __EMSCRIPTEN__
+						static int sCalcJobLogCount = 0;
+						if (sCalcJobLogCount < 3) {
+							++sCalcJobLogCount;
+							QString jobType = QStringLiteral("calculation");
+							if (dynamic_cast<CApproximatedSaturationCalculationJob*>(job)) {
+								jobType = QStringLiteral("approx-saturation");
+							} else if (dynamic_cast<CSatisfiableCalculationJob*>(job)) {
+								jobType = QStringLiteral("satisfiable");
+							}
+							LOG(INFO, "::Konclude::Wasm",
+									QString("Scheduling %1 calculation task.").arg(jobType),
+									this);
+						}
+#endif
 						calculateTask(task);
+#ifdef __EMSCRIPTEN__
+					} else {
+						QString jobType = QStringLiteral("calculation");
+						if (dynamic_cast<CApproximatedSaturationCalculationJob*>(job)) {
+							jobType = QStringLiteral("approx-saturation");
+						} else if (dynamic_cast<CSatisfiableCalculationJob*>(job)) {
+							jobType = QStringLiteral("satisfiable");
+						}
+						LOG(ERROR, "::Konclude::Wasm", QString("Calculation task generator returned null (%1).").arg(jobType), this);
+#endif
 					}
 					return this;
 				}

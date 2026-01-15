@@ -20,6 +20,12 @@
 
 #include "CCommandProcessedCallbackEvent.h"
 
+#include <QCoreApplication>
+#include <QThread>
+#ifdef __EMSCRIPTEN__
+#include <cstdio>
+#endif
+
 
 namespace Konclude {
 
@@ -49,6 +55,13 @@ namespace Konclude {
 
 				void CCommandProcessedCallbackEvent::doCallback() {
 					if (receiver) {
+#ifdef __EMSCRIPTEN__
+						if (receiver->thread() == QThread::currentThread()) {
+							QCoreApplication::sendEvent(receiver, this);
+							delete this;
+							return;
+						}
+#endif
 						receiver->postEvent(this);
 					}
 				}

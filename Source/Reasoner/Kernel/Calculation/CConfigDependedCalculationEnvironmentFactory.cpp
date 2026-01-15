@@ -75,6 +75,7 @@ namespace Konclude {
 
 						qint64 taskProcessorCount = 1;
 
+						configErrorFlag = false;
 						QString taskProcessorCountString = CConfigDataReader::readConfigString(config,"Konclude.Calculation.ProcessorCount",QString(),&configErrorFlag);
 						if (!configErrorFlag) {
 							if (taskProcessorCountString == "AUTO") {
@@ -86,13 +87,8 @@ namespace Konclude {
 							}
 						}
 #ifdef __EMSCRIPTEN__
-						std::fprintf(stderr, "[konclude wasm] calc env processorCountString=%s resolved=%lld\n",
-								taskProcessorCountString.toUtf8().constData(),
-								static_cast<long long>(taskProcessorCount));
-						std::fflush(stderr);
+						LOG(INFO, "::Konclude::Wasm", QString("Calculation task processor count=%1").arg(taskProcessorCount), this);
 #endif
-
-
 						CCentralizedAllocationConfigProvidedDependendLimitation* allocLimitation = new CCentralizedAllocationConfigProvidedDependendLimitation(configProvider,"Konclude.Calculation.Memory");
 						taskContext->setAllocationLimitation(allocLimitation);
 

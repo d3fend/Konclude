@@ -18,6 +18,9 @@
  *
  */
 #include "CLogger.h"
+#ifdef __EMSCRIPTEN__
+#include <cstdio>
+#endif
 
 
 QString logTr(const char *sourceText, const char *comment, int n) {
@@ -107,6 +110,19 @@ namespace Konclude {
 
 
 		void CLogger::addLogMessage(QString message, double level, QString domain, void *object) {
+#ifdef __EMSCRIPTEN__
+			(void)level;
+			(void)object;
+			const QByteArray domainBytes = domain.toUtf8();
+			const QByteArray messageBytes = message.toUtf8();
+			if (!domainBytes.isEmpty()) {
+				std::fprintf(stdout, "[konclude] %s %s\n", domainBytes.constData(), messageBytes.constData());
+			} else {
+				std::fprintf(stdout, "[konclude] %s\n", messageBytes.constData());
+			}
+			std::fflush(stdout);
+			return;
+#endif
 			postEvent(new CLoggingEvent(new CLogMessage(domain,message,level,object)));
 		}
 

@@ -19,8 +19,6 @@
  */
 
 #include "CFinishProcessCommandRecord.h"
-
-
 namespace Konclude {
 
 	namespace Control {

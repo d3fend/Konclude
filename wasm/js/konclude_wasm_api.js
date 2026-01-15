@@ -4,14 +4,21 @@
 //   const api = await createKoncludeApi(createKoncludeModule, { locateFile });
 //
 export async function createKoncludeApi(createKoncludeModule, options = {}) {
+  const basePrint = options.print ?? ((...args) => console.log(...args));
+  const basePrintErr = options.printErr ?? basePrint;
   const module = await createKoncludeModule({
     noInitialRun: true,
     ...options,
+    print: basePrint,
+    printErr: basePrintErr,
   });
 
+  const submitJob = module.cwrap("konclude_submit_job", "number", ["string", "string", "string"]);
   const submitClassifyFiles = module.cwrap("konclude_submit_classify_files", "number", ["string", "string"]);
   const submitRealizeFiles = module.cwrap("konclude_submit_realize_files", "number", ["string", "string"]);
   const submitRealiseFiles = module.cwrap("konclude_submit_realise_files", "number", ["string", "string"]);
+  const submitConsistencyFiles = (inputPath, outputPath) =>
+    submitJob("consistency", inputPath, outputPath);
   const jobStatus = module.cwrap("konclude_job_status", "number", ["number"]);
   const jobExitCode = module.cwrap("konclude_job_exit_code", "number", ["number"]);
   const jobFree = module.cwrap("konclude_job_free", null, ["number"]);
@@ -74,13 +81,38 @@ export async function createKoncludeApi(createKoncludeModule, options = {}) {
     }
   }
 
+  async function consistencyOwl2XmlString(owlXml, inPath = "/tmp/in.owl.xml", outPath = "/tmp/out.txt") {
+    module.FS.writeFile(inPath, owlXml);
+    const jobId = submitConsistencyFiles(inPath, outPath);
+    if (jobId <= 0) {
+      throw new Error("Failed to submit consistency job");
+    }
+    try {
+      const { status, code } = await waitForJob(jobId);
+      let output = "";
+      try {
+        output = module.FS.readFile(outPath, { encoding: "utf8" });
+      } catch (readErr) {
+        console.warn("Konclude output read failed", readErr);
+      }
+      const normalized = output.trim().toLowerCase();
+      const consistent = normalized === "true";
+      return { status, code, output, consistent };
+    } finally {
+      jobFree(jobId);
+    }
+  }
+
   return {
     module,
+    submitJob,
     submitClassifyFiles,
     submitRealizeFiles,
     submitRealiseFiles,
+    submitConsistencyFiles,
     waitForJob,
     classifyOwl2XmlString,
     realizeOwl2XmlString,
+    consistencyOwl2XmlString,
   };
 }

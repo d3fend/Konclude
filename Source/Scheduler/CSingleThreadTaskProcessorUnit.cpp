@@ -22,6 +22,7 @@
 
 #ifdef __EMSCRIPTEN__
 #include <cstdio>
+#include "WasmBridge/konclude_wasm_runtime.h"
 #endif
 
 namespace Konclude {
@@ -64,6 +65,9 @@ namespace Konclude {
 			mDebugLastProcessedTask = nullptr;
 			mDebugLastCompletedTask = nullptr;
 			mTaskSchedulingQueue = nullptr;
+#ifdef __EMSCRIPTEN__
+			mWasmProcessingLogged = false;
+#endif
 		}
 
 		CSingleThreadTaskProcessorUnit::~CSingleThreadTaskProcessorUnit() {
@@ -240,6 +244,14 @@ namespace Konclude {
 			return mEventHandler;
 		}
 
+		void CSingleThreadTaskProcessorUnit::runThreadLoop() {
+#ifdef __EMSCRIPTEN__
+			processingLoop();
+#else
+			CThread::runThreadLoop();
+#endif
+		}
+
 		CTaskEventHandlerBasedProcessor* CSingleThreadTaskProcessorUnit::installScheduler(CTaskEventHandlerBasedScheduler* scheduler) {
 			return this;
 		}
@@ -255,12 +267,18 @@ namespace Konclude {
 
 		CSingleThreadTaskProcessorUnit* CSingleThreadTaskProcessorUnit::startProcessing() {
 			if (!isRunning()) {
-#if defined(KONCLUDE_COMPILE_WASM_INTERFACE)
-				// In wasm builds without threads, keep the processor on the main thread.
+#ifdef __EMSCRIPTEN__
+				if (konclude_wasm_threads_enabled()) {
+					startThread();
+				} else {
+					// In wasm builds without runtime threads, keep the processor on the main thread.
+				}
 #else
 				startThread();
 #endif
+#ifndef __EMSCRIPTEN__
 				postEvent(new Concurrent::Events::CHandleEventsEvent());
+#endif
 			}
 			return this;
 		}
@@ -275,8 +293,13 @@ namespace Konclude {
 			if (mProcessingBlocked) {
 				// reactivate processing
 				if (mLastProcessingStartedTag == mLastProcessingStartRequestTag) {
-#if defined(KONCLUDE_COMPILE_WASM_INTERFACE)
-					postEvent(new Concurrent::Events::CHandleEventsEvent());
+#ifdef __EMSCRIPTEN__
+					if (!konclude_wasm_threads_enabled()) {
+						postEvent(new Concurrent::Events::CHandleEventsEvent());
+					} else {
+						++mLastProcessingStartRequestTag;
+						mProcessingWakeUpSemaphore.release();
+					}
 #else
 					++mLastProcessingStartRequestTag;
 					mProcessingWakeUpSemaphore.release();
@@ -306,10 +329,27 @@ namespace Konclude {
 			bool eventSafeguardProcessed = false;
 			while (!mProcessingStopped) {
 				if (!mTaskProcessingQueue && mProcessingBlocked) {
-#if defined(KONCLUDE_COMPILE_WASM_INTERFACE)
-					if (!mEventSignalized) {
+#ifdef __EMSCRIPTEN__
+					if (!konclude_wasm_threads_enabled()) {
+						if (!mEventSignalized) {
+							mThreadBlocked = true;
+							return eventSafeguardProcessed;
+						}
+					} else {
+						// block until new events or task are available
+#ifdef KONCLUDE_SCHEDULER_TASK_THREADS_TIME_STATISTICS
+						mStatComputionTime += mComputionTimer.elapsed();
+						mBlockingTimer.start();
+#endif
+						INCTASKPROCESSINGSTAT(mStats.incStatisticThreadsBlockedCount(1));
 						mThreadBlocked = true;
-						return eventSafeguardProcessed;
+						mProcessingWakeUpSemaphore.acquire(1);
+						mThreadBlocked = false;
+#ifdef KONCLUDE_SCHEDULER_TASK_THREADS_TIME_STATISTICS
+						mStatBlockingTime += mBlockingTimer.elapsed();
+						mComputionTimer.start();
+#endif
+						mLastProcessingStartedTag = mLastProcessingStartRequestTag;
 					}
 #else
 					// block until new events or task are available
@@ -334,15 +374,15 @@ namespace Konclude {
 					bool eventsProcessed = handleEvents();
 				}
 				if (mTaskProcessingQueue) {
+#ifdef __EMSCRIPTEN__
+					if (!mWasmProcessingLogged) {
+						mWasmProcessingLogged = true;
+						LOG(INFO, "::Konclude::Wasm", QString("Single task processor started processing tasks."), this);
+					}
+#endif
 					CTask* processingTask = mTaskProcessingQueue;
 					mTaskProcessingQueue = mTaskProcessingQueue->getNext();
 					cint64 taskDepth = processingTask->getTaskDepth();
-#ifdef __EMSCRIPTEN__
-					std::fprintf(stderr, "[konclude wasm] taskprocessor dequeue task=%p depth=%lld\n",
-							static_cast<void*>(processingTask),
-							static_cast<long long>(taskDepth));
-					std::fflush(stderr);
-#endif
 
 					//cint64 memoryPoolCount1 = countProcessingTasksMemoryPools();
 					//cint64 memoryPoolCount2 = countProcessedOpenTasksMemoryPools();
@@ -395,20 +435,12 @@ namespace Konclude {
 			cint64 eventID = event->getEventTypeID();
 			if (eventID == CSendTaskProcessEvent::EVENTTYPEID) {				
 				CTask* task = ((CSendTaskProcessEvent*)event)->getTask();
-#ifdef __EMSCRIPTEN__
-				std::fprintf(stderr, "[konclude wasm] taskprocessor process task=%p\n", static_cast<void*>(task));
-				std::fflush(stderr);
-#endif
 				addProcessingTask(task);
 				mMemoryAllocator->releaseMemoryPoolContainer(event);
 				return true;
 			} else if (eventID == CSendTaskScheduleEvent::EVENTTYPEID) {
 				++mStatRecievedScheduleTasks;
 				CTask* task = ((CSendTaskScheduleEvent*)event)->getTask();
-#ifdef __EMSCRIPTEN__
-				std::fprintf(stderr, "[konclude wasm] taskprocessor schedule task=%p\n", static_cast<void*>(task));
-				std::fflush(stderr);
-#endif
 				if (!mTaskProcessingQueue) {
 					addProcessingTask(task);
 				} else {
@@ -431,10 +463,6 @@ namespace Konclude {
 				return true;
 			} else if (eventID == CSendTaskCompleteEvent::EVENTTYPEID) {
 				CTask* task = ((CSendTaskCompleteEvent*)event)->getTask();
-#ifdef __EMSCRIPTEN__
-				std::fprintf(stderr, "[konclude wasm] taskprocessor complete task=%p\n", static_cast<void*>(task));
-				std::fflush(stderr);
-#endif
 				completeTask(task);
 				mMemoryAllocator->releaseMemoryPoolContainer(event);
 				return true;
@@ -612,21 +640,10 @@ namespace Konclude {
 
 
 		bool CSingleThreadTaskProcessorUnit::processTask(CTask* task) {
-#ifdef __EMSCRIPTEN__
-			std::fprintf(stderr, "[konclude wasm] taskprocessor processTask start task=%p\n",
-					static_cast<void*>(task));
-			std::fflush(stderr);
-#endif
 			mDebugLastProcessedTask = task;
 			task->clearNext();
 			task->getTaskStatus()->setTaskPROCESSINGState();
 			const bool continueProcessing = mTaskHandleAlgo->handleTask(mTaskProcessorContext,task);
-#ifdef __EMSCRIPTEN__
-			std::fprintf(stderr, "[konclude wasm] taskprocessor processTask done task=%p continue=%d\n",
-					static_cast<void*>(task),
-					continueProcessing ? 1 : 0);
-			std::fflush(stderr);
-#endif
 			return continueProcessing;
 		}
 

@@ -22,6 +22,9 @@
 
 #ifdef __EMSCRIPTEN__
 #include <cstdio>
+#include <QCoreApplication>
+#include <QThread>
+#include "WasmBridge/konclude_wasm_runtime.h"
 #endif
 
 
@@ -41,13 +44,12 @@ namespace Konclude {
 				mStatCalculatingJobs = 0;
 				mClassifierActive = false;
 				statistics = new CClassifierStatistics();
-#if !defined(KONCLUDE_COMPILE_WASM_INTERFACE)
+#ifndef __EMSCRIPTEN__
 				startThread(QThread::HighPriority);
 #else
-				#ifdef __EMSCRIPTEN__
-				std::fprintf(stderr, "[konclude wasm] classifier thread running inline\n");
-				std::fflush(stderr);
-				#endif
+				if (konclude_wasm_threads_enabled()) {
+					startThread(QThread::HighPriority);
+				}
 #endif
 			}
 
@@ -58,6 +60,19 @@ namespace Konclude {
 
 
 			bool CSubsumptionClassifierThread::classify(CConcreteOntology *ontology, CConfigurationBase *config, const QList<COntologyProcessingRequirement*>& requirementList, CCallbackData* callback) {				
+#ifdef __EMSCRIPTEN__
+				bool directDispatch = (thread() == QThread::currentThread());
+#if defined(KONCLUDE_COMPILE_WASM_INTERFACE)
+				if (!konclude_wasm_threads_enabled() && !isThreadRunning()) {
+					directDispatch = true;
+				}
+#endif
+				if (directDispatch) {
+					CClassifyOntologyEvent event(ontology, config, requirementList, callback);
+					QCoreApplication::sendEvent(this, &event);
+					return true;
+				}
+#endif
 				postEvent(new CClassifyOntologyEvent(ontology,config,requirementList,callback));
 				return true;
 			}
@@ -65,7 +80,23 @@ namespace Konclude {
 
 			bool CSubsumptionClassifierThread::classify(CConcreteOntology *ontology, CConfigurationBase *config, const QList<COntologyProcessingRequirement*>& requirementList) {
 				CBlockingCallbackData callback;
-				postEvent(new CClassifyOntologyEvent(ontology,config,requirementList,&callback));
+				bool handled = false;
+#ifdef __EMSCRIPTEN__
+				bool directDispatch = (thread() == QThread::currentThread());
+#if defined(KONCLUDE_COMPILE_WASM_INTERFACE)
+				if (!konclude_wasm_threads_enabled() && !isThreadRunning()) {
+					directDispatch = true;
+				}
+#endif
+				if (directDispatch) {
+					CClassifyOntologyEvent event(ontology, config, requirementList, &callback);
+					QCoreApplication::sendEvent(this, &event);
+					handled = true;
+				}
+#endif
+				if (!handled) {
+					postEvent(new CClassifyOntologyEvent(ontology,config,requirementList,&callback));
+				}
 				callback.waitForCallback();
 				return true;
 			}
@@ -81,7 +112,22 @@ namespace Konclude {
 					}
 				} else {
 					CBlockingCallbackData callbackBlock;
+#ifdef __EMSCRIPTEN__
+					bool directDispatch = (thread() == QThread::currentThread());
+#if defined(KONCLUDE_COMPILE_WASM_INTERFACE)
+					if (!konclude_wasm_threads_enabled() && !isThreadRunning()) {
+						directDispatch = true;
+					}
+#endif
+					if (directDispatch) {
+						CCallbackClassifiedOntologyEvent event(ontology, &callbackBlock, callback);
+						QCoreApplication::sendEvent(this, &event);
+					} else {
+						postEvent(new CCallbackClassifiedOntologyEvent(ontology,&callbackBlock,callback));
+					}
+#else
 					postEvent(new CCallbackClassifiedOntologyEvent(ontology,&callbackBlock,callback));
+#endif
 					callbackBlock.waitForCallback();
 					CClassifyingCallbackDataContext *classifyingContext = dynamic_cast<CClassifyingCallbackDataContext *>(callbackBlock.getCallbackDataContext());
 					if (classifyingContext) {

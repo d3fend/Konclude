@@ -156,11 +156,17 @@ namespace Konclude {
 					CCommandRecordRouter commandRecordRouter(command,this);
 
 					CStartProcessCommandRecord::makeRecord(&commandRecordRouter);
+#ifdef __EMSCRIPTEN__
+					LOG(INFO, getLogDomain(), logTr("Creating knowledge base '%1'.").arg(cKBC->getKnowledgeBaseName()), this);
+#endif
 
 					QString kbName = cKBC->getKnowledgeBaseName();
 					kbName = createNewOntology(kbName, cKBC->getPrefixList(), commandRecordRouter);
 					cKBC->setKnowledgeBaseName(kbName);
 
+#ifdef __EMSCRIPTEN__
+					LOG(INFO, getLogDomain(), logTr("Created knowledge base '%1'.").arg(kbName), this);
+#endif
 
 					CStopProcessCommandRecord::makeRecord(&commandRecordRouter);
 					CFinishProcessCommandRecord::makeRecord(&commandRecordRouter);

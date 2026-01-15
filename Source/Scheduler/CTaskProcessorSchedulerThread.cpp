@@ -20,7 +20,6 @@
 
 #include "CTaskProcessorSchedulerThread.h"
 
-
 namespace Konclude {
 
 	namespace Scheduler {

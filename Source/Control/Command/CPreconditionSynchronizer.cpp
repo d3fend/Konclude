@@ -20,6 +20,10 @@
 
 #include "CPreconditionSynchronizer.h"
 
+#include <QCoreApplication>
+#ifdef __EMSCRIPTEN__
+#include <QThread>
+#endif
 
 namespace Konclude {
 
@@ -30,7 +34,7 @@ namespace Konclude {
 
 			CPreconditionSynchronizer::CPreconditionSynchronizer(CCommandDelegater *commandDelegater) : CThread("CommandPreconditionSynchronizer") {
 				delegater = commandDelegater;
-#ifndef KONCLUDE_COMPILE_WASM_INTERFACE
+#if !defined(KONCLUDE_COMPILE_WASM_INTERFACE)
 				startThread();
 #endif
 			}
@@ -41,7 +45,17 @@ namespace Konclude {
 
 
 			CCommandDelegater *CPreconditionSynchronizer::delegateCommand(CCommand *command) {
+#ifdef __EMSCRIPTEN__
+				if (!isThreadRunning() || thread() == QThread::currentThread()) {
+					CCommandPreconditionChangeEvent* event = new CCommandPreconditionChangeEvent(0, command);
+					QCoreApplication::sendEvent(this, event);
+					delete event;
+				} else {
+					postEvent(new CCommandPreconditionChangeEvent(0, command));
+				}
+#else
 				postEvent(new CCommandPreconditionChangeEvent(0,command));
+#endif
 				return this;
 			}
 
@@ -53,10 +67,6 @@ namespace Konclude {
 						if (commandEvent) {
 							CCommand *command = commandEvent->getCommand();
 							if (command) {
-#ifdef __EMSCRIPTEN__
-								std::fprintf(stderr, "[konclude wasm] precondition event for command tag=%d\n", command->getCommandTag());
-								std::fflush(stderr);
-#endif
 								CPreconditionCommand *preComm = dynamic_cast<CPreconditionCommand *>(command);
 								if (preComm) {
 									bool processable = false;

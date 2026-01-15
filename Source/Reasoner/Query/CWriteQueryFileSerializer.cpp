@@ -60,24 +60,10 @@ namespace Konclude {
 				forcedPathCreated(mFileString);
 				QFile* outputFile = new QFile(mFileString);
 				mCurrentOutputFile = nullptr;
-#ifdef __EMSCRIPTEN__
-				std::fprintf(stderr, "[konclude wasm] startWritingOutput file=%s cwd=%s\n",
-						mFileString.toUtf8().constData(),
-						QDir::currentPath().toUtf8().constData());
-				std::fflush(stderr);
-#endif
 				if (outputFile->open(QIODevice::WriteOnly)) {
 					mCurrentOutputFile = outputFile;
-#ifdef __EMSCRIPTEN__
-					std::fprintf(stderr, "[konclude wasm] startWritingOutput opened ok\n");
-					std::fflush(stderr);
-#endif
 					return true;
 				}
-#ifdef __EMSCRIPTEN__
-				std::fprintf(stderr, "[konclude wasm] startWritingOutput open failed\n");
-				std::fflush(stderr);
-#endif
 				return false;
 			}
 
@@ -87,16 +73,8 @@ namespace Konclude {
 				if (mCurrentOutputFile) {
 					mCurrentOutputFile->close();
 					delete mCurrentOutputFile;
-#ifdef __EMSCRIPTEN__
-					std::fprintf(stderr, "[konclude wasm] endWritingOutput ok\n");
-					std::fflush(stderr);
-#endif
 					return true;
 				}
-#ifdef __EMSCRIPTEN__
-				std::fprintf(stderr, "[konclude wasm] endWritingOutput no file\n");
-				std::fflush(stderr);
-#endif
 				return false;
 			}
 

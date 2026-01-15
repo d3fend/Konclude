@@ -22,7 +22,9 @@
 
 #ifdef __EMSCRIPTEN__
 #include <cstdio>
+#include "WasmBridge/konclude_wasm_runtime.h"
 #endif
+#include "Control/Command/CCommandExecutedBlocker.h"
 
 
 namespace Konclude {
@@ -67,14 +69,18 @@ namespace Konclude {
 
 			CLoader *CDefaultReasonerLoader::load() {
 
-				reasonerCommander->realizeCommand(new CInitializeConfigurationCommand(configuration));
+				CInitializeConfigurationCommand* initConfigCommand = new CInitializeConfigurationCommand(configuration);
+				reasonerCommander->realizeCommand(initConfigCommand);
 
-				reasonerCommander->realizeCommand(new CInitializeReasonerCommand(new CDefaultCommanderInitializationFactory()));
+				CInitializeReasonerCommand* initReasonerCommand = new CInitializeReasonerCommand(new CDefaultCommanderInitializationFactory());
+				reasonerCommander->realizeCommand(initReasonerCommand);
 
 #ifdef __EMSCRIPTEN__
-				std::fprintf(stderr, "[konclude wasm] reasonerCommander thread running=%d\n",
-						reasonerCommander->isThreadRunning() ? 1 : 0);
-				std::fflush(stderr);
+				if (konclude_wasm_threads_enabled()) {
+					CCommandExecutedBlocker blocker;
+					blocker.waitExecutedCommand(initConfigCommand);
+					blocker.waitExecutedCommand(initReasonerCommand);
+				}
 #endif
 
 				return this;

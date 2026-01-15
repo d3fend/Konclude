@@ -22,6 +22,7 @@
 
 #ifdef __EMSCRIPTEN__
 #include <cstdio>
+#include "WasmBridge/konclude_wasm_runtime.h"
 #endif
 
 
@@ -300,10 +301,12 @@ namespace Konclude {
 
 
 			CLoader *CCommandLineLoader::load() {
-#if defined(KONCLUDE_COMPILE_WASM_INTERFACE) && !defined(__EMSCRIPTEN_PTHREADS__)
-				// In wasm builds without threads, run loader initialization inline.
-				threadStarted();
-				return this;
+#ifdef __EMSCRIPTEN__
+				if (!konclude_wasm_threads_enabled()) {
+					// In wasm builds without runtime threads, run loader initialization inline.
+					threadStarted();
+					return this;
+				}
 #endif
 				startThread();
 				return this;
@@ -315,22 +318,10 @@ namespace Konclude {
 			}
 
 			void CCommandLineLoader::threadStarted() {
-				#ifdef __EMSCRIPTEN__
-				fprintf(stderr, "[konclude wasm] CommandLineLoader threadStarted, loaders=%d\n", loaderContainer.count());
-				fflush(stderr);
-				#endif
 				containerSync.lock();
 				int loaderIndex = 0;
 				foreach (CLoader *loader, loaderContainer) {
-					#ifdef __EMSCRIPTEN__
-					fprintf(stderr, "[konclude wasm] loader[%d] load begin\n", loaderIndex);
-					fflush(stderr);
-					#endif
 					loader->load();
-					#ifdef __EMSCRIPTEN__
-					fprintf(stderr, "[konclude wasm] loader[%d] load end\n", loaderIndex);
-					fflush(stderr);
-					#endif
 					++loaderIndex;
 				}
 				containerSync.unlock();

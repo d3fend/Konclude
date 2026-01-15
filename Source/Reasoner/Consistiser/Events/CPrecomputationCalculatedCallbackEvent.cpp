@@ -20,6 +20,10 @@
 
 #include "CPrecomputationCalculatedCallbackEvent.h"
 
+#ifdef __EMSCRIPTEN__
+#include <QCoreApplication>
+#include <QThread>
+#endif
 
 namespace Konclude {
 
@@ -44,7 +48,17 @@ namespace Konclude {
 				}
 
 				void CPrecomputationCalculatedCallbackEvent::doCallback() {
-					mRecThread->postEvent(this);
+#ifdef __EMSCRIPTEN__
+					QThread* receiverThread = mRecThread ? mRecThread->thread() : nullptr;
+					if (mRecThread && receiverThread && receiverThread == QThread::currentThread()) {
+						QCoreApplication::sendEvent(mRecThread, this);
+						delete this;
+						return;
+					}
+#endif
+					if (mRecThread) {
+						mRecThread->postEvent(this);
+					}
 				}
 
 				bool CPrecomputationCalculatedCallbackEvent::getTestResultSatisfiable() {

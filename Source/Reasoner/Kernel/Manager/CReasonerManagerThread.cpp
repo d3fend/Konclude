@@ -22,6 +22,9 @@
 
 #ifdef __EMSCRIPTEN__
 #include <cstdio>
+#include <QCoreApplication>
+#include <QThread>
+#include "WasmBridge/konclude_wasm_runtime.h"
 #endif
 
 
@@ -42,6 +45,7 @@ namespace Konclude {
 					mRealizationManager = 0;
 					mAnswererManager = 0;
 					mManualThreadStart = false;
+					mThreadPoolMaxCount = 0;
 				}
 
 
@@ -81,7 +85,8 @@ namespace Konclude {
 					mWorkControllerCount = qMax(processorCount,mWorkControllerCount);
 
 					mConfgAdaptThreadPoolToWorkerCount = CConfigDataReader::readConfigBoolean(configProvider, "Konclude.Calculation.AdaptThreadPoolSizeProcessorCount", true);
-					mBlockThreadPoolThreadCount = CConfigDataReader::readConfigBoolean(configProvider, "Konclude.Calculation.BlockingThreadPoolThreadsCount", 1);
+					mThreadPoolMaxCount = CConfigDataReader::readConfigInteger(configProvider, "Konclude.Calculation.ThreadPoolMaxCount", 0, &configErrorFlag);
+					mBlockThreadPoolThreadCount = CConfigDataReader::readConfigInteger(configProvider, "Konclude.Calculation.BlockingThreadPoolThreadsCount", 1, &configErrorFlag);
 
 
 					//if (!isRunning()) {
@@ -96,10 +101,14 @@ namespace Konclude {
 					mRealizationManager = new CRealizationManager(this);
 					mRequirementExpander = new COntologyProcessingRequirementExpander();
 
-#if defined(KONCLUDE_COMPILE_WASM_INTERFACE)
+#ifdef __EMSCRIPTEN__
 					if (!mManualThreadStart) {
-						mManualThreadStart = true;
-						threadStarted();
+						if (konclude_wasm_threads_enabled()) {
+							startThread();
+						} else {
+							mManualThreadStart = true;
+							threadStarted();
+						}
 					}
 #else
 					startThread();
@@ -111,13 +120,16 @@ namespace Konclude {
 
 
 				CReasonerManagerThread::~CReasonerManagerThread() {
-#if defined(KONCLUDE_COMPILE_WASM_INTERFACE)
+#ifdef __EMSCRIPTEN__
 					if (mManualThreadStart) {
 						threadStopped();
 						mManualThreadStart = false;
+					} else {
+						stopThread();
 					}
-#endif
+#else
 					stopThread();
+#endif
 				}
 
 				CReasonerManager* CReasonerManagerThread::reasoningSatisfiableCalcualtionJob(CSatisfiableCalculationJob* satCalcJob, CCallbackData* callback) {
@@ -139,8 +151,17 @@ namespace Konclude {
 
 				CReasonerManager *CReasonerManagerThread::reasoningQuery(CQuery *query, CCallbackData *callback) {
 #ifdef __EMSCRIPTEN__
-					std::fprintf(stderr, "[konclude wasm] ReasonerManagerThread::reasoningQuery called\n");
-					std::fflush(stderr);
+					bool directDispatch = (thread() == QThread::currentThread());
+#if defined(KONCLUDE_COMPILE_WASM_INTERFACE)
+					if (!konclude_wasm_threads_enabled() && !isThreadRunning()) {
+						directDispatch = true;
+					}
+#endif
+					if (directDispatch) {
+						CCalcQueryEvent event(query, callback);
+						QCoreApplication::sendEvent(this, &event);
+						return this;
+					}
 #endif
 					postEvent(new CCalcQueryEvent(query,callback));
 					return this;
@@ -149,21 +170,69 @@ namespace Konclude {
 
 				CReasonerManager *CReasonerManagerThread::reasoningQuery(CQuery *query) {
 					CBlockingCallbackData callback;
-					postEvent(new CCalcQueryEvent(query,&callback));
+					bool handled = false;
+#ifdef __EMSCRIPTEN__
+					bool directDispatch = (thread() == QThread::currentThread());
+#if defined(KONCLUDE_COMPILE_WASM_INTERFACE)
+					if (!konclude_wasm_threads_enabled() && !isThreadRunning()) {
+						directDispatch = true;
+					}
+#endif
+					if (directDispatch) {
+						CCalcQueryEvent event(query, &callback);
+						QCoreApplication::sendEvent(this, &event);
+						handled = true;
+					}
+#endif
+					if (!handled) {
+						postEvent(new CCalcQueryEvent(query,&callback));
+					}
 					callback.waitForCallback();
 					return this;
 				}
 
 
 				CReasonerManager *CReasonerManagerThread::prepareOntology(CConcreteOntology* ontology, const QList<COntologyProcessingRequirement*>& reqList, CCallbackData *callback) {
-					postEvent(new CPrepareOntologyEvent(ontology,reqList,callback));
+					bool handled = false;
+#ifdef __EMSCRIPTEN__
+					bool directDispatch = (thread() == QThread::currentThread());
+#if defined(KONCLUDE_COMPILE_WASM_INTERFACE)
+					if (!konclude_wasm_threads_enabled() && !isThreadRunning()) {
+						directDispatch = true;
+					}
+#endif
+					if (directDispatch) {
+						CPrepareOntologyEvent event(ontology, reqList, callback);
+						QCoreApplication::sendEvent(this, &event);
+						handled = true;
+					}
+#endif
+					if (!handled) {
+						postEvent(new CPrepareOntologyEvent(ontology,reqList,callback));
+					}
 					return this;
 				}
 
 
 				CReasonerManager *CReasonerManagerThread::prepareOntology(CConcreteOntology* ontology, const QList<COntologyProcessingRequirement*>& reqList) {
 					CBlockingCallbackData callback;
-					postEvent(new CPrepareOntologyEvent(ontology,reqList,&callback));
+					bool handled = false;
+#ifdef __EMSCRIPTEN__
+					bool directDispatch = (thread() == QThread::currentThread());
+#if defined(KONCLUDE_COMPILE_WASM_INTERFACE)
+					if (!konclude_wasm_threads_enabled() && !isThreadRunning()) {
+						directDispatch = true;
+					}
+#endif
+					if (directDispatch) {
+						CPrepareOntologyEvent event(ontology, reqList, &callback);
+						QCoreApplication::sendEvent(this, &event);
+						handled = true;
+					}
+#endif
+					if (!handled) {
+						postEvent(new CPrepareOntologyEvent(ontology,reqList,&callback));
+					}
 					callback.waitForCallback();
 					return this;
 				}
@@ -186,6 +255,16 @@ namespace Konclude {
 
 
 				CBackendCache* CReasonerManagerThread::getBackendAssociationCache() {
+					if (!mBackendAssCache) {
+						CConfigurationBase* currentConfig = configProvider ? configProvider->getCurrentConfiguration() : nullptr;
+						bool useBackendCache = currentConfig ? CConfigDataReader::readConfigBoolean(currentConfig, "Konclude.Calculation.Optimization.IndividualsBackendCacheLoading", true) : true;
+#ifdef __EMSCRIPTEN__
+						useBackendCache = true;
+#endif
+						if (useBackendCache) {
+							mBackendAssCache = new CBackendRepresentativeMemoryCache(currentConfig);
+						}
+					}
 					return mBackendAssCache;
 				}
 
@@ -266,7 +345,9 @@ namespace Konclude {
 					// generate worker framework
 					LOG(INFO,"::Konclude::Reasoner::Kernel::ReasonerManager",logTr("Initializing reasoner. Creating calculation context."),this);
 
-					if (mConfgAdaptThreadPoolToWorkerCount) {
+					if (mThreadPoolMaxCount > 0) {
+						QThreadPool::globalInstance()->setMaxThreadCount(mThreadPoolMaxCount);
+					} else if (mConfgAdaptThreadPoolToWorkerCount) {
 						QThreadPool::globalInstance()->setMaxThreadCount(mWorkControllerCount);
 					}
 					if (mBlockThreadPoolThreadCount > 0) {
@@ -278,20 +359,54 @@ namespace Konclude {
 						}
 					}
 
-					unsatCache = new COccurrenceUnsatisfiableCache(mWorkControllerCount+2);
-					mSatExpCache = new CSignatureSatisfiableExpanderCache(configProvider->getCurrentConfiguration());
-					mReuseCompGraphCache = new CReuseCompletionGraphCache();
-					mSatNodeExpCache = new CSaturationNodeAssociatedExpansionCache(configProvider->getCurrentConfiguration());
-					mCompConsCache = new CComputedConsequencesCache(configProvider->getCurrentConfiguration());
-					mBackendAssCache = new CBackendRepresentativeMemoryCache(configProvider->getCurrentConfiguration());
-					mOccStatsCache = new COccurrenceStatisticsCache(configProvider->getCurrentConfiguration());
+					CConfigurationBase* currentConfig = configProvider ? configProvider->getCurrentConfiguration() : nullptr;
+					auto readBool = [&](const QString& key, bool defaultValue) -> bool {
+						return currentConfig ? CConfigDataReader::readConfigBoolean(currentConfig, key, defaultValue) : defaultValue;
+					};
+
+					const bool useUnsatCache = readBool("Konclude.Calculation.Optimization.UnsatisfiableCacheRetrieval", true)
+							|| readBool("Konclude.Calculation.Optimization.UnsatisfiableCacheSingleLevelWriting", true)
+							|| readBool("Konclude.Calculation.Optimization.UnsatisfiableCacheTestingConceptWriting", true);
+					const bool useSatExpCache = readBool("Konclude.Calculation.Optimization.SatisfiableCacheRetrieval", true)
+							|| readBool("Konclude.Calculation.Optimization.SatisfiableCacheSingleLevelWriting", true)
+							|| readBool("Konclude.Calculation.Optimization.SatisfiableExpansionCacheRetrieval", true)
+							|| readBool("Konclude.Calculation.Optimization.SatisfiableExpansionCacheWriting", true)
+							|| readBool("Konclude.Calculation.Optimization.SatisfiableExpansionCacheConceptExpansion", true)
+							|| readBool("Konclude.Calculation.Optimization.SatisfiableExpansionCacheSatisfiableBlocking", true);
+					const bool useReuseCompGraphCache = readBool("Konclude.Calculation.Optimization.CompletionGraphCaching", true)
+							|| readBool("Konclude.Calculation.Optimization.CompletionGraphReuseCachingRetrieval", true)
+							|| readBool("Konclude.Calculation.Optimization.CompletionGraphDeterministicReuse", true)
+							|| readBool("Konclude.Calculation.Optimization.CompletionGraphNonDeterministicReuse", true)
+							|| readBool("Konclude.Calculation.Optimization.SignatureSaving", true)
+							|| readBool("Konclude.Calculation.Optimization.SignatureMirroringBlocking", true);
+					const bool useSatNodeExpCache = readBool("Konclude.Calculation.Optimization.SaturationExpansionSatisfiabilityCacheWriting", true)
+							|| readBool("Konclude.Calculation.Optimization.SaturationUnsatisfiabilityCacheWriting", true);
+					const bool useCompConsCache = readBool("Konclude.Calculation.Optimization.ComputedTypesCaching", true);
+					bool useBackendCache = readBool("Konclude.Calculation.Optimization.IndividualsBackendCacheLoading", true);
+#ifdef __EMSCRIPTEN__
+					// Backend cache is required for wasm precomputation flow.
+					useBackendCache = true;
+#endif
+					const bool useOccStatsCache = readBool("Konclude.Calculation.Optimization.OccurrenceStatisticsCollecting", true);
+
+					unsatCache = useUnsatCache ? new COccurrenceUnsatisfiableCache(mWorkControllerCount+2) : nullptr;
+					mSatExpCache = useSatExpCache ? new CSignatureSatisfiableExpanderCache(currentConfig) : nullptr;
+					mReuseCompGraphCache = useReuseCompGraphCache ? new CReuseCompletionGraphCache() : nullptr;
+					mSatNodeExpCache = useSatNodeExpCache ? new CSaturationNodeAssociatedExpansionCache(currentConfig) : nullptr;
+					mCompConsCache = useCompConsCache ? new CComputedConsequencesCache(currentConfig) : nullptr;
+					if (!mBackendAssCache && useBackendCache) {
+						mBackendAssCache = new CBackendRepresentativeMemoryCache(currentConfig);
+					}
+					mOccStatsCache = useOccStatsCache ? new COccurrenceStatisticsCache(currentConfig) : nullptr;
 
 					CConfigDependedCalculationFactory* calcFactory = new CConfigDependedCalculationFactory(this);
 					CCalculationManager* calculationManager = calcFactory->createCalculationManager(configProvider);
 					calcFactory->initializeManager(calculationManager,configProvider);
 					mCalculationManager = calculationManager;
 
+#ifndef __EMSCRIPTEN__
 					LOG(INFO,"::Konclude::Reasoner::Kernel::ReasonerManager",logTr("Reasoner initialized with %1 processing unit(s).").arg(mWorkControllerCount),this);
+#endif
 
 					startTimerWithInterval(PROGRESSQUERYTIMER,10000);
 				}
@@ -354,6 +469,11 @@ namespace Konclude {
 
 				const QList<COntologyRequirementPair> CReasonerManagerThread::getRequirementsForQuery(CQuery* query) {
 					QList<COntologyRequirementPair> ontReqList;
+#ifdef __EMSCRIPTEN__
+					LOG(INFO, "::Konclude::Wasm",
+							QString("getRequirementsForQuery start: %1").arg(query ? query->getQueryName() : QStringLiteral("null")),
+							this);
+#endif
 					CSatisfiableCalculationJobsQuery* jobQuery = dynamic_cast<CSatisfiableCalculationJobsQuery*>(query);
 					if (jobQuery) {
 						QList<COntologyProcessingRequirement*> reqList;
@@ -399,7 +519,13 @@ namespace Konclude {
 						CConcreteOntology* ontology = taxQuery->getOntology();
 						QList<COntologyProcessingRequirement*> reqList;
 						reqList.append(mRequirementExpander->getCompletedDefaultOntologyProcessingStepRequirement(COntologyProcessingStep::OPSCLASSCLASSIFY));
+#ifdef __EMSCRIPTEN__
+						LOG(INFO, "::Konclude::Wasm", QString("taxonomy requirements before expand: %1").arg(reqList.size()), this);
+#endif
 						reqList = mRequirementExpander->getUnsatisfiedRequirementsExpanded(reqList,ontology);
+#ifdef __EMSCRIPTEN__
+						LOG(INFO, "::Konclude::Wasm", QString("taxonomy requirements after expand: %1").arg(reqList.size()), this);
+#endif
 						foreach (COntologyProcessingRequirement* ontReq, reqList) {
 							ontReqList.append(COntologyRequirementPair(ontology,ontReq));
 						}
@@ -417,7 +543,13 @@ namespace Konclude {
 						if (classQuery->isDataRoleClassificationRequired()) {
 							reqList.append(mRequirementExpander->getCompletedDefaultOntologyProcessingStepRequirement(COntologyProcessingStep::OPSDATAROPERTYCLASSIFY));
 						}
+#ifdef __EMSCRIPTEN__
+						LOG(INFO, "::Konclude::Wasm", QString("classification requirements before expand: %1").arg(reqList.size()), this);
+#endif
 						reqList = mRequirementExpander->getUnsatisfiedRequirementsExpanded(reqList,ontology);
+#ifdef __EMSCRIPTEN__
+						LOG(INFO, "::Konclude::Wasm", QString("classification requirements after expand: %1").arg(reqList.size()), this);
+#endif
 						foreach (COntologyProcessingRequirement* ontReq, reqList) {
 							ontReqList.append(COntologyRequirementPair(ontology,ontReq));
 						}
@@ -486,9 +618,29 @@ namespace Konclude {
 
 				void CReasonerManagerThread::continueRequirementProcessing(CRequirementPreparingData* reqData, CConcreteOntology* ontology) {
 					COntologyRequirementPreparingData* ontReqPrepData = reqData->getOntologyRequirementPreparingData(ontology);
+#ifdef __EMSCRIPTEN__
+					if (ontReqPrepData) {
+						LOG(INFO, "::Konclude::Wasm",
+								QString("Requirement processing '%1': checking=%2 pre=%3 precomp=%4 class=%5 obj=%6 data=%7 real=%8 answer=%9 dep=%10")
+										.arg(ontology ? ontology->getOntologyName() : QStringLiteral("null"))
+										.arg(ontReqPrepData->mCheckingReqList.size())
+										.arg(ontReqPrepData->mPreprocessorReqList.size())
+										.arg(ontReqPrepData->mPrecomputorReqList.size())
+										.arg(ontReqPrepData->mClassClassifierReqList.size())
+										.arg(ontReqPrepData->mObjectPropertyClassifierReqList.size())
+										.arg(ontReqPrepData->mDataPropertyClassifierReqList.size())
+										.arg(ontReqPrepData->mRealizerReqList.size())
+										.arg(ontReqPrepData->mAnswererReqList.size())
+										.arg(reqData ? reqData->mDepCount : -1),
+								this);
+					}
+#endif
 					if (!ontReqPrepData->mCheckingReqList.isEmpty()) {
 
-						cint64 checkingTime = ontReqPrepData->mCheckingTimer.elapsed();
+						cint64 checkingTime = 0;
+#ifndef __EMSCRIPTEN__
+						checkingTime = ontReqPrepData->mCheckingTimer.elapsed();
+#endif
 						if (ontReqPrepData->mCheckingProcessorType == COntologyProcessingStep::OPPREPROCESSOR) {
 							if (!mProcessingEndMessageSet.contains(QPair<CConcreteOntology*,COntologyProcessingStep::PROCESSORTYPE>(ontology,COntologyProcessingStep::OPPREPROCESSOR))) {
 								mProcessingEndMessageSet.insert(QPair<CConcreteOntology*,COntologyProcessingStep::PROCESSORTYPE>(ontology,COntologyProcessingStep::OPPREPROCESSOR));
@@ -554,84 +706,102 @@ namespace Konclude {
 								mProcessingStartMessageSet.insert(QPair<CConcreteOntology*,COntologyProcessingStep::PROCESSORTYPE>(ontology,COntologyProcessingStep::OPPREPROCESSOR));
 								LOG(INFO,"::Konclude::Reasoner::Kernel::ReasonerManager",logTr("Preprocessing ontology '%1'.").arg(ontology->getOntologyName()),this);
 							}
+							const QList<COntologyProcessingRequirement*> preprocessorReqList = ontReqPrepData->mPreprocessorReqList;
+							ontReqPrepData->mCheckingReqList = preprocessorReqList;
+							ontReqPrepData->mPreprocessorReqList.clear();
+							ontReqPrepData->mCheckingProcessorType = COntologyProcessingStep::OPPREPROCESSOR;
+#ifndef __EMSCRIPTEN__
+							ontReqPrepData->mCheckingTimer.start();
+#endif
 							CConfigurationBase* config = ontology->getConfiguration();
 							CPreprocessor* preprocessor = mPreprocessingManager->getPreprocessor(ontology,config);
 							CRequirementProcessedCallbackEvent* reqProcCallbackEvent = new CRequirementProcessedCallbackEvent(this,ontology,reqData, COntologyProcessingStep::OPPREPROCESSOR);
-							preprocessor->preprocess(ontology,config,ontReqPrepData->mPreprocessorReqList,reqProcCallbackEvent);
-							ontReqPrepData->mCheckingReqList = ontReqPrepData->mPreprocessorReqList;
-							ontReqPrepData->mPreprocessorReqList.clear();
-							ontReqPrepData->mCheckingProcessorType = COntologyProcessingStep::OPPREPROCESSOR;
-							ontReqPrepData->mCheckingTimer.start();
+							preprocessor->preprocess(ontology,config,preprocessorReqList,reqProcCallbackEvent);
 						} else if (!ontReqPrepData->mPrecomputorReqList.isEmpty()) {
 							QString exprString = QString(", expressiveness '%2'").arg(ontology->getStructureSummary()->getExpressivenessString());
 							if (!mProcessingStartMessageSet.contains(QPair<CConcreteOntology*,COntologyProcessingStep::PROCESSORTYPE>(ontology,COntologyProcessingStep::OPPRECOMPUTER))) {
 								mProcessingStartMessageSet.insert(QPair<CConcreteOntology*,COntologyProcessingStep::PROCESSORTYPE>(ontology,COntologyProcessingStep::OPPRECOMPUTER));
 								LOG(INFO,"::Konclude::Reasoner::Kernel::ReasonerManager",logTr("Precomputing ontology '%1'%2.").arg(ontology->getOntologyName()).arg(exprString),this);
 							}
+							const QList<COntologyProcessingRequirement*> precomputorReqList = ontReqPrepData->mPrecomputorReqList;
+							ontReqPrepData->mCheckingReqList = precomputorReqList;
+							ontReqPrepData->mCheckingProcessorType = COntologyProcessingStep::OPPRECOMPUTER;
+#ifndef __EMSCRIPTEN__
+							ontReqPrepData->mCheckingTimer.start();
+#endif
+							ontReqPrepData->mPrecomputorReqList.clear();
 							CConfigurationBase* config = ontology->getConfiguration();
 							CPrecomputator* precomputer = mPrecomputationManager->getPrecomputator(ontology,config);
 							CRequirementProcessedCallbackEvent* reqProcCallbackEvent = new CRequirementProcessedCallbackEvent(this,ontology,reqData, COntologyProcessingStep::OPPRECOMPUTER);
-							precomputer->precompute(ontology,config,ontReqPrepData->mPrecomputorReqList,reqProcCallbackEvent);
-							ontReqPrepData->mCheckingReqList = ontReqPrepData->mPrecomputorReqList;
-							ontReqPrepData->mCheckingProcessorType = COntologyProcessingStep::OPPRECOMPUTER;
-							ontReqPrepData->mCheckingTimer.start();
-							ontReqPrepData->mPrecomputorReqList.clear();
+							precomputer->precompute(ontology,config,precomputorReqList,reqProcCallbackEvent);
 						} else if (!ontReqPrepData->mClassClassifierReqList.isEmpty()) {
 							QString exprString = QString(", expressiveness '%2'").arg(ontology->getStructureSummary()->getExpressivenessString());
 							if (!mProcessingStartMessageSet.contains(QPair<CConcreteOntology*,COntologyProcessingStep::PROCESSORTYPE>(ontology,COntologyProcessingStep::OPCLASSCLASSIFIER))) {
 								mProcessingStartMessageSet.insert(QPair<CConcreteOntology*,COntologyProcessingStep::PROCESSORTYPE>(ontology,COntologyProcessingStep::OPCLASSCLASSIFIER));
 								LOG(INFO,"::Konclude::Reasoner::Kernel::ReasonerManager",logTr("Classifying ontology '%1'%2.").arg(ontology->getOntologyName()).arg(exprString),this);
 							}
+							const QList<COntologyProcessingRequirement*> classReqList = ontReqPrepData->mClassClassifierReqList;
+							ontReqPrepData->mCheckingReqList = classReqList;
+							ontReqPrepData->mCheckingProcessorType = COntologyProcessingStep::OPCLASSCLASSIFIER;
+#ifndef __EMSCRIPTEN__
+							ontReqPrepData->mCheckingTimer.start();
+#endif
+							ontReqPrepData->mClassClassifierReqList.clear();
 							CConfigurationBase* config = ontology->getConfiguration();
 							CSubsumptionClassifier* classClassifier = classificationMan->getClassClassifier(ontology,config);
 							CRequirementProcessedCallbackEvent* reqProcCallbackEvent = new CRequirementProcessedCallbackEvent(this,ontology,reqData, COntologyProcessingStep::OPCLASSCLASSIFIER);
-							classClassifier->classify(ontology,config,ontReqPrepData->mClassClassifierReqList,reqProcCallbackEvent);
-							ontReqPrepData->mCheckingReqList = ontReqPrepData->mClassClassifierReqList;
-							ontReqPrepData->mCheckingProcessorType = COntologyProcessingStep::OPCLASSCLASSIFIER;
-							ontReqPrepData->mCheckingTimer.start();
-							ontReqPrepData->mClassClassifierReqList.clear();
+							classClassifier->classify(ontology,config,classReqList,reqProcCallbackEvent);
 						} else if (!ontReqPrepData->mObjectPropertyClassifierReqList.isEmpty()) {
 							QString exprString = QString(", expressiveness '%2'").arg(ontology->getStructureSummary()->getExpressivenessString());
 							if (!mProcessingStartMessageSet.contains(QPair<CConcreteOntology*,COntologyProcessingStep::PROCESSORTYPE>(ontology,COntologyProcessingStep::OPOBJECTPROPERTYCLASSIFIER))) {
 								mProcessingStartMessageSet.insert(QPair<CConcreteOntology*,COntologyProcessingStep::PROCESSORTYPE>(ontology,COntologyProcessingStep::OPOBJECTPROPERTYCLASSIFIER));
 								LOG(INFO,"::Konclude::Reasoner::Kernel::ReasonerManager",logTr("Classifying object properties for ontology '%1'%2.").arg(ontology->getOntologyName()).arg(exprString),this);
 							}
+							const QList<COntologyProcessingRequirement*> objectPropertyReqList = ontReqPrepData->mObjectPropertyClassifierReqList;
+							ontReqPrepData->mCheckingReqList = objectPropertyReqList;
+							ontReqPrepData->mCheckingProcessorType = COntologyProcessingStep::OPOBJECTPROPERTYCLASSIFIER;
+#ifndef __EMSCRIPTEN__
+							ontReqPrepData->mCheckingTimer.start();
+#endif
+							ontReqPrepData->mObjectPropertyClassifierReqList.clear();
 							CConfigurationBase* config = ontology->getConfiguration();
 							CSubsumptionClassifier* objectPropertyClassifier = classificationMan->getObjectPropertyClassifier(ontology,config);
 							CRequirementProcessedCallbackEvent* reqProcCallbackEvent = new CRequirementProcessedCallbackEvent(this,ontology,reqData, COntologyProcessingStep::OPOBJECTPROPERTYCLASSIFIER);
-							objectPropertyClassifier->classify(ontology,config,ontReqPrepData->mObjectPropertyClassifierReqList,reqProcCallbackEvent);
-							ontReqPrepData->mCheckingReqList = ontReqPrepData->mObjectPropertyClassifierReqList;
-							ontReqPrepData->mCheckingProcessorType = COntologyProcessingStep::OPOBJECTPROPERTYCLASSIFIER;
-							ontReqPrepData->mCheckingTimer.start();
-							ontReqPrepData->mObjectPropertyClassifierReqList.clear();
+							objectPropertyClassifier->classify(ontology,config,objectPropertyReqList,reqProcCallbackEvent);
 						} else if (!ontReqPrepData->mDataPropertyClassifierReqList.isEmpty()) {
 							QString exprString = QString(", expressiveness '%2'").arg(ontology->getStructureSummary()->getExpressivenessString());
 							if (!mProcessingStartMessageSet.contains(QPair<CConcreteOntology*,COntologyProcessingStep::PROCESSORTYPE>(ontology,COntologyProcessingStep::OPDATAPROPERTYCLASSIFIER))) {
 								mProcessingStartMessageSet.insert(QPair<CConcreteOntology*,COntologyProcessingStep::PROCESSORTYPE>(ontology,COntologyProcessingStep::OPDATAPROPERTYCLASSIFIER));
 								LOG(INFO,"::Konclude::Reasoner::Kernel::ReasonerManager",logTr("Classifying data properties for ontology '%1'%2.").arg(ontology->getOntologyName()).arg(exprString),this);
 							}
+							const QList<COntologyProcessingRequirement*> dataPropertyReqList = ontReqPrepData->mDataPropertyClassifierReqList;
+							ontReqPrepData->mCheckingReqList = dataPropertyReqList;
+							ontReqPrepData->mCheckingProcessorType = COntologyProcessingStep::OPDATAPROPERTYCLASSIFIER;
+#ifndef __EMSCRIPTEN__
+							ontReqPrepData->mCheckingTimer.start();
+#endif
+							ontReqPrepData->mDataPropertyClassifierReqList.clear();
 							CConfigurationBase* config = ontology->getConfiguration();
 							CSubsumptionClassifier* dataPropertyClassifier = classificationMan->getDataPropertyClassifier(ontology,config);
 							CRequirementProcessedCallbackEvent* reqProcCallbackEvent = new CRequirementProcessedCallbackEvent(this,ontology,reqData, COntologyProcessingStep::OPDATAPROPERTYCLASSIFIER);
-							dataPropertyClassifier->classify(ontology,config,ontReqPrepData->mDataPropertyClassifierReqList,reqProcCallbackEvent);
-							ontReqPrepData->mCheckingReqList = ontReqPrepData->mDataPropertyClassifierReqList;
-							ontReqPrepData->mCheckingProcessorType = COntologyProcessingStep::OPDATAPROPERTYCLASSIFIER;
-							ontReqPrepData->mCheckingTimer.start();
-							ontReqPrepData->mDataPropertyClassifierReqList.clear();
+							dataPropertyClassifier->classify(ontology,config,dataPropertyReqList,reqProcCallbackEvent);
 						} else if (!ontReqPrepData->mRealizerReqList.isEmpty()) {
 							QString exprString = QString(", expressiveness '%2'").arg(ontology->getStructureSummary()->getExpressivenessString());
 							if (!mProcessingStartMessageSet.contains(QPair<CConcreteOntology*,COntologyProcessingStep::PROCESSORTYPE>(ontology,COntologyProcessingStep::OPREALIZER))) {
 								mProcessingStartMessageSet.insert(QPair<CConcreteOntology*,COntologyProcessingStep::PROCESSORTYPE>(ontology,COntologyProcessingStep::OPREALIZER));
 								LOG(INFO,"::Konclude::Reasoner::Kernel::ReasonerManager",logTr("Realizing ontology '%1'%2.").arg(ontology->getOntologyName()).arg(exprString),this);
 							}
+							const QList<COntologyProcessingRequirement*> realizerReqList = ontReqPrepData->mRealizerReqList;
+							ontReqPrepData->mCheckingReqList = realizerReqList;
+							ontReqPrepData->mCheckingProcessorType = COntologyProcessingStep::OPREALIZER;
+#ifndef __EMSCRIPTEN__
+							ontReqPrepData->mCheckingTimer.start();
+#endif
+							ontReqPrepData->mRealizerReqList.clear();
 							CConfigurationBase* config = ontology->getConfiguration();
 							CRealizer* realizer = mRealizationManager->getRealizer(ontology,config);
 							CRequirementProcessedCallbackEvent* reqProcCallbackEvent = new CRequirementProcessedCallbackEvent(this,ontology,reqData, COntologyProcessingStep::OPREALIZER);
-							realizer->realize(ontology,config,ontReqPrepData->mRealizerReqList,reqProcCallbackEvent);
-							ontReqPrepData->mCheckingReqList = ontReqPrepData->mRealizerReqList;
-							ontReqPrepData->mCheckingProcessorType = COntologyProcessingStep::OPREALIZER;
-							ontReqPrepData->mCheckingTimer.start();
-							ontReqPrepData->mRealizerReqList.clear();
+							realizer->realize(ontology,config,realizerReqList,reqProcCallbackEvent);
 						} else if (!ontReqPrepData->mAnswererReqList.isEmpty()) {
 							QString exprString = QString(", expressiveness '%2'").arg(ontology->getStructureSummary()->getExpressivenessString());
 							if (!mProcessingStartMessageSet.contains(QPair<CConcreteOntology*, COntologyProcessingStep::PROCESSORTYPE>(ontology, COntologyProcessingStep::OPANSWERER))) {
@@ -649,7 +819,9 @@ namespace Konclude {
 							ontology->getProcessingSteps()->getOntologyProcessingStepDataVector()->getProcessingStepData(COntologyProcessingStep::OPSANSWERCOMPLEXQUERY)->getProcessingStatus()->setErrorFlags(COntologyProcessingStatus::PSSUCESSFULL);
 							ontReqPrepData->mCheckingReqList = ontReqPrepData->mAnswererReqList;
 							ontReqPrepData->mCheckingProcessorType = COntologyProcessingStep::OPANSWERER;
+#ifndef __EMSCRIPTEN__
 							ontReqPrepData->mCheckingTimer.start();
+#endif
 							ontReqPrepData->mAnswererReqList.clear();
 							if (created) {
 								mAnswererManager->prepareAnswering(ontology, reqProcCallbackEvent);
@@ -712,10 +884,24 @@ namespace Konclude {
 				void CReasonerManagerThread::prepareQueryReasoning(CCalcQueryEvent *cqe) {
 					CQuery* query = cqe->getQuery();
 					CCallbackData* callbackData = cqe->getCallbackData();
+#ifdef __EMSCRIPTEN__
+					if (query) {
+						LOG(INFO, "::Konclude::Wasm",
+								QString("Reasoner manager received query event '%1'.").arg(query->getQueryName()),
+								this);
+					} else {
+						LOG(INFO, "::Konclude::Wasm", QString("Reasoner manager received null query event."), this);
+					}
+#endif
 
 					CReasoningTaskData* reasoningData = new CReasoningTaskData();
 
 					QList<COntologyRequirementPair> reqList(getRequirementsForQuery(query));
+#ifdef __EMSCRIPTEN__
+					LOG(INFO, "::Konclude::Wasm",
+							QString("Query requirements for '%1': %2").arg(query ? query->getQueryName() : QStringLiteral("null")).arg(reqList.size()),
+							this);
+#endif
 					if (reqList.isEmpty()) {
 						initiateQueryReasoning(query,callbackData,reasoningData,QList<COntologyRequirementPair>());
 					} else {
@@ -748,7 +934,9 @@ namespace Konclude {
 
 
 				void CReasonerManagerThread::initiateQueryReasoning(CQuery* query, CCallbackData* callbackData, CReasoningTaskData* reasoningData, const QList<COntologyRequirementPair>& failedRequirementList) {
+#ifndef __EMSCRIPTEN__
 					reasoningData->mStartTime.start();
+#endif
 					updateBeginingCalculationStatistics(reasoningData);
 
 					if (!failedRequirementList.isEmpty()) {
@@ -826,7 +1014,10 @@ namespace Konclude {
 							CConcreteOntology* ontology = trivConsQuery->getOntology();
 							trivConsQuery->constructResult(ontology->getBuildData());
 
-							qint64 mSecs = reasoningData->mStartTime.elapsed();
+							qint64 mSecs = 0;
+#ifndef __EMSCRIPTEN__
+							mSecs = reasoningData->mStartTime.elapsed();
+#endif
 							LOG(INFO,"::Konclude::Reasoner::Kernel::ReasonerManager",logTr("Query '%1' processed in '%2' ms.").arg(trivConsQuery->getQueryName()).arg(mSecs),this);
 
 							CCallbackData* callback = reasoningData->mCallback;
@@ -854,7 +1045,10 @@ namespace Konclude {
 
 							consQuery->constructResult(ontology->getConsistence());
 
-							qint64 mSecs = reasoningData->mStartTime.elapsed();
+							qint64 mSecs = 0;
+#ifndef __EMSCRIPTEN__
+							mSecs = reasoningData->mStartTime.elapsed();
+#endif
 							LOG(INFO,"::Konclude::Reasoner::Kernel::ReasonerManager",logTr("Query '%1' processed in '%2' ms.").arg(consQuery->getQueryName()).arg(mSecs),this);
 
 							CCallbackData* callback = reasoningData->mCallback;
@@ -871,12 +1065,6 @@ namespace Konclude {
 
 							CQueryStatistics* queryStats = taxQuery->getQueryStatistics();
 							CConcreteOntology* ontology = taxQuery->getOntology();
-#ifdef __EMSCRIPTEN__
-							std::fprintf(stderr, "[konclude wasm] initiateQueryReasoning taxonomy query=%s ontology=%s\n",
-									taxQuery->getQueryName().toUtf8().constData(),
-									ontology ? ontology->getOntologyName().toUtf8().constData() : "(null)");
-							std::fflush(stderr);
-#endif
 							if (queryStats) {
 								CClassConceptClassification* classConClassif = ontology->getClassification()->getClassConceptClassification();
 								if (classConClassif) {
@@ -892,12 +1080,11 @@ namespace Konclude {
 							updateFinishingCalculationStatistics(reasoningData,queryStats,ontology->getConfiguration());
 
 							taxQuery->constructResult(ontology->getClassification()->getClassConceptClassification()->getClassConceptTaxonomy());
-#ifdef __EMSCRIPTEN__
-							std::fprintf(stderr, "[konclude wasm] initiateQueryReasoning taxonomy query done\n");
-							std::fflush(stderr);
-#endif
 
-							qint64 mSecs = reasoningData->mStartTime.elapsed();
+							qint64 mSecs = 0;
+#ifndef __EMSCRIPTEN__
+							mSecs = reasoningData->mStartTime.elapsed();
+#endif
 							LOG(INFO,"::Konclude::Reasoner::Kernel::ReasonerManager",logTr("Query '%1' processed in '%2' ms.").arg(taxQuery->getQueryName()).arg(mSecs),this);
 
 
@@ -920,7 +1107,10 @@ namespace Konclude {
 
 							classQuery->constructResult(ontology->getClassification());
 
-							qint64 mSecs = reasoningData->mStartTime.elapsed();
+							qint64 mSecs = 0;
+#ifndef __EMSCRIPTEN__
+							mSecs = reasoningData->mStartTime.elapsed();
+#endif
 							LOG(INFO,"::Konclude::Reasoner::Kernel::ReasonerManager",logTr("Query '%1' processed in '%2' ms.").arg(classQuery->getQueryName()).arg(mSecs),this);
 
 							CCallbackData* callback = reasoningData->mCallback;
@@ -942,7 +1132,10 @@ namespace Konclude {
 
 							realQuery->constructResult(ontology->getRealization());
 
-							qint64 mSecs = reasoningData->mStartTime.elapsed();
+							qint64 mSecs = 0;
+#ifndef __EMSCRIPTEN__
+							mSecs = reasoningData->mStartTime.elapsed();
+#endif
 							LOG(INFO,"::Konclude::Reasoner::Kernel::ReasonerManager",logTr("Query '%1' processed in '%2' ms.").arg(realQuery->getQueryName()).arg(mSecs),this);
 
 
@@ -1032,7 +1225,11 @@ namespace Konclude {
 								}
 								delete mFinishStatHash;
 							}
-							queryStat->addProcessingStatistics("calculation-reasoning-time",reaTaskData->mStartTime.elapsed());
+							cint64 reasoningTime = 0;
+#ifndef __EMSCRIPTEN__
+							reasoningTime = reaTaskData->mStartTime.elapsed();
+#endif
+							queryStat->addProcessingStatistics("calculation-reasoning-time",reasoningTime);
 						}
 						if (CConfigDataReader::readConfigBoolean(config,"Konclude.Query.Statistics.CollectProcessingStepsStatistics",false) && reaTaskData->mReqPrepData) {
 							QSet<COntologyProcessingStatistics*> addedStatSet;
@@ -1203,7 +1400,10 @@ namespace Konclude {
 					} else {
 						LOG(INFO, "::Konclude::Reasoner::Kernel::ReasonerManager", logTr("Query '%1' processed. Question '%2' answered with '%3'.\r\n").arg(cqe->getQueryName()).arg(cqe->getQueryString()).arg(cqe->getAnswerString()), this);
 
-						qint64 mSecs = reasoningData->mStartTime.elapsed();
+						qint64 mSecs = 0;
+#ifndef __EMSCRIPTEN__
+						mSecs = reasoningData->mStartTime.elapsed();
+#endif
 						LOG(INFO, "::Konclude::Reasoner::Kernel::ReasonerManager", logTr("Query '%1' processed in '%2' ms.").arg(cqe->getQueryName()).arg(mSecs), this);
 					}
 					
@@ -1242,10 +1442,6 @@ namespace Konclude {
 
 					} else if (type == CCalcQueryEvent::EVENTTYPE) {
  						CCalcQueryEvent *cqe = static_cast<CCalcQueryEvent *>(event);
-#ifdef __EMSCRIPTEN__
-						std::fprintf(stderr, "[konclude wasm] reasoner manager: CCalcQueryEvent\n");
-						std::fflush(stderr);
-#endif
 
 						prepareQueryReasoning(cqe);	
 
@@ -1253,10 +1449,6 @@ namespace Konclude {
 
 					} else if (type == CPrepareOntologyEvent::EVENTTYPE) {
 						CPrepareOntologyEvent* poe = static_cast<CPrepareOntologyEvent *>(event);
-#ifdef __EMSCRIPTEN__
-						std::fprintf(stderr, "[konclude wasm] reasoner manager: CPrepareOntologyEvent\n");
-						std::fflush(stderr);
-#endif
 
 						prepareOntologyReasoning(poe);	
 
@@ -1264,10 +1456,6 @@ namespace Konclude {
 
 					} else if (type == CCalcedQueryEvent::EVENTTYPE) {
 						CCalcedQueryEvent *cqe = static_cast<CCalcedQueryEvent *>(event);
-#ifdef __EMSCRIPTEN__
-						std::fprintf(stderr, "[konclude wasm] reasoner manager: CCalcedQueryEvent\n");
-						std::fflush(stderr);
-#endif
 
 						finishQueryReasoning(cqe);
 
@@ -1277,12 +1465,6 @@ namespace Konclude {
 						CRequirementProcessedCallbackEvent* rpce = static_cast<CRequirementProcessedCallbackEvent *>(event);
 						CConcreteOntology* ontology = rpce->getOntology();
 						CRequirementPreparingData* reqPrepData = rpce->getRequirementPreparingData();
-#ifdef __EMSCRIPTEN__
-						std::fprintf(stderr, "[konclude wasm] reasoner manager: RequirementProcessed procType=%lld ontology=%s\n",
-								static_cast<long long>(rpce->mProcType),
-								ontology ? ontology->getOntologyName().toUtf8().constData() : "(null)");
-						std::fflush(stderr);
-#endif
 
 						continueRequirementProcessing(reqPrepData, ontology);
 

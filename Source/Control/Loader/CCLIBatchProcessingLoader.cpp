@@ -22,6 +22,7 @@
 
 #ifdef __EMSCRIPTEN__
 #include <cstdio>
+#include "WasmBridge/konclude_wasm_runtime.h"
 #endif
 
 
@@ -59,10 +60,6 @@ namespace Konclude {
 			CLoader *CCLIBatchProcessingLoader::init(CLoaderFactory *loaderFactory, CConfiguration *config) {
 				mLoaderConfig = config;
 				reasonerCommander = CConfigManagerReader::readCommanderManagerConfig(config);
-#ifdef __EMSCRIPTEN__
-				std::fprintf(stderr, "[konclude wasm] cli init reasonerCommander=%s\n", reasonerCommander ? "set" : "null");
-				std::fflush(stderr);
-#endif
 
 				mCloseAfterOutput = CConfigDataReader::readConfigBoolean(mLoaderConfig, "Konclude.CLI.CloseAfterProcessedRequest", true);
 				mBlockUntilProcessed = CConfigDataReader::readConfigBoolean(mLoaderConfig, "Konclude.CLI.BlockUntilProcessedRequest", true);
@@ -79,13 +76,6 @@ namespace Konclude {
 
 
 			CLoader *CCLIBatchProcessingLoader::load() {
-				#ifdef __EMSCRIPTEN__
-				QByteArray reqPath = mRequestFileString.toUtf8();
-				QByteArray resPath = mResponseFileString.toUtf8();
-				fprintf(stderr, "[konclude wasm] CCLIBatchProcessingLoader load, request=%s response=%s\n",
-						reqPath.constData(), resPath.constData());
-				fflush(stderr);
-				#endif
 				startProcessing();
 				if (mBlockUntilProcessed) {
 					mBlockingSemaphore.acquire();
@@ -178,6 +168,7 @@ namespace Konclude {
 
 			void CCLIBatchProcessingLoader::finishCommandProcessing() {
 				if (mProcessingCommandData) {
+					logOutputMessage(QString("Finished '%1' command").arg(mProcessingCommandData->mCommand->getBriefCommandDescription()));
 					if (mProcessingCommandData->mMeasureTime) {
 						QString outputString = mProcessingCommandData->mMeasuredOutputString;
 						cint64 timeElapsed = mMeasurementTime.elapsed();
@@ -198,21 +189,18 @@ namespace Konclude {
 			void CCLIBatchProcessingLoader::processNextCommand() {
 				mProcessingCommandData = mProcessCommandList.takeFirst();
 				CCommand* command = mProcessingCommandData->mCommand;
+				logOutputMessage(QString("Starting '%1' command").arg(command->getBriefCommandDescription()));
 #ifdef __EMSCRIPTEN__
-				std::fprintf(stderr, "[konclude wasm] processNextCommand tag=%d desc=%s\n",
-						command ? command->getCommandTag() : -1,
-						command ? command->getBriefCommandDescription().toUtf8().constData() : "(null)");
-				std::fflush(stderr);
-#endif
-				logOutputNotice(QString("Starting '%1' command").arg(command->getBriefCommandDescription()));
+				// Disable command recorder callbacks in WASM to avoid function pointer signature issues.
+				command->setRecorder(nullptr);
+#else
 				command->setRecorder(this);
+#endif
 				command->setReportErrorFromSubCommands(false);
 				CCommandProcessedCallbackEvent *proComm = new CCommandProcessedCallbackEvent(this,command);
 				command->addProcessedCallback(proComm);
+#ifndef __EMSCRIPTEN__
 				mMeasurementTime.start();
-#ifdef __EMSCRIPTEN__
-				std::fprintf(stderr, "[konclude wasm] delegating to preSynchronizer\n");
-				std::fflush(stderr);
 #endif
 				preSynchronizer->delegateCommand(command);
 			}
@@ -232,10 +220,7 @@ namespace Konclude {
 				}
 
 #ifdef __EMSCRIPTEN__
-				std::fprintf(stderr, "[konclude wasm] terminateProcessing closeAfterOutput=%d blockUntilProcessed=%d\n",
-						mCloseAfterOutput ? 1 : 0,
-						mBlockUntilProcessed ? 1 : 0);
-				std::fflush(stderr);
+				konclude_wasm_notify_processing_complete();
 #endif
 
 				if (mBlockUntilProcessed) {
@@ -243,8 +228,10 @@ namespace Konclude {
 				}
 
 				if (mCloseAfterOutput) {
+#ifndef __EMSCRIPTEN__
 					CLogger::getInstance()->waitSynchronization();
-                    QCoreApplication::exit();
+#endif
+					QCoreApplication::exit();
 				}
 			}
 

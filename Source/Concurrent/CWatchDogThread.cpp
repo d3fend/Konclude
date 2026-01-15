@@ -229,13 +229,17 @@ namespace Konclude {
 
 
 		void CWatchDogThread::sendRequestFeedbackEvent(CThread *thread, qint64 uNr) {
-			thread->postEvent(new CRequestFeedbackEvent(this,uNr));
+			if (thread) {
+				thread->postEvent(new CRequestFeedbackEvent(this,uNr));
+			}
 		}
 
 		void CWatchDogThread::updateThreadData(CThread *thread, CWatchDogThreadData *threadData) {
-			threadData->setTaskDescription(thread->getTaskDescription());
-			threadData->setRunTime(thread->getRunTimeSecs());
-			threadData->setWaitTime(thread->getWaitTimeSecs());
+			if (thread) {
+				threadData->setTaskDescription(thread->getTaskDescription());
+				threadData->setRunTime(thread->getRunTimeSecs());
+				threadData->setWaitTime(thread->getWaitTimeSecs());
+			}
 		}
 
 

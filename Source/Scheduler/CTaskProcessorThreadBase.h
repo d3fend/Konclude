@@ -118,6 +118,7 @@ namespace Konclude {
 
 			// protected methods
 			protected:
+				virtual void runThreadLoop() override;
 				virtual bool processControlEvents(QEvent::Type type, CControlEvent *event);
 
 				virtual bool processEvent(CEvent *event, CContext* handlerContext);

@@ -84,6 +84,9 @@ namespace Konclude {
 				private:
 					CIsConsistentQueryCommand* mConsistencyKBCommand;
 					CIsTriviallyConsistentQueryCommand* mTriviallyConsistencyKBCommand;
+					QString mTestKB;
+					bool mReleaseScheduled = false;
+					bool mTrivialOnly = false;
 
 
 				// private variables

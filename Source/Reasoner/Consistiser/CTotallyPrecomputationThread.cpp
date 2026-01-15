@@ -498,10 +498,6 @@ namespace Konclude {
 								totallyPreCompItem->isSaturationComputationRunning() ||
 								totallyPreCompItem->hasIndividualSaturationRunning();
 						if (!hasRemainingSaturationWork) {
-							std::fprintf(stderr, "[konclude wasm] precompute: forcing remaining steps to finished (tests=%lld)\n",
-									(long long)totallyPreCompItem->getCurrentPrecomputationTestingCount());
-							std::fflush(stderr);
-
 							CPrecomputationTestingStep* preStep = nullptr;
 
 							preStep = totallyPreCompItem->getConsistencePrecomputationStep();
@@ -548,15 +544,6 @@ namespace Konclude {
 #endif
 
 					if (!workTestCreated) {
-#ifdef __EMSCRIPTEN__
-						std::fprintf(stderr, "[konclude wasm] precompute: idle remaining=%d running=%lld tests=%lld satRun=%d indiRun=%d\n",
-								totallyPreCompItem->hasRemainingProcessingRequirements() ? 1 : 0,
-								(long long)mCurrRunningTestParallelCount,
-								(long long)totallyPreCompItem->getCurrentPrecomputationTestingCount(),
-								totallyPreCompItem->isSaturationComputationRunning() ? 1 : 0,
-								totallyPreCompItem->isIndividualComputationRunning() ? 1 : 0);
-						std::fflush(stderr);
-#endif
 						if (!totallyPreCompItem->hasRemainingProcessingRequirements()) {
 							finishOntologyPrecomputation(totallyPreCompItem);
 							mProcessingOntItemList.removeFirst();
@@ -1374,6 +1361,16 @@ namespace Konclude {
 				return false;
 			}
 
+			CBackendRepresentativeMemoryCache* CTotallyPrecomputationThread::getBackendAssociationCache() {
+				if (!mBackendAssocCache && mReasoner) {
+					CBackendCache* backendCache = mReasoner->getBackendAssociationCache();
+					if (backendCache) {
+						mBackendAssocCache = dynamic_cast<CBackendRepresentativeMemoryCache*>(backendCache);
+					}
+				}
+				return mBackendAssocCache;
+			}
+
 
 
 			bool CTotallyPrecomputationThread::addRequiredSaturationIndividuals(CTotallyOntologyPrecomputationItem* totallyPreCompItem) {
@@ -1383,8 +1380,14 @@ namespace Konclude {
 				bool saturateConcepts = CConfigDataReader::readConfigBoolean(totallyPreCompItem->getCalculationConfiguration(),"Konclude.Calculation.Optimization.ConceptSaturation",true);
 				bool individualSaturation = CConfigDataReader::readConfigBoolean(totallyPreCompItem->getCalculationConfiguration(),"Konclude.Calculation.Optimization.IndividualSaturation",false);
 				cint64 maxId = totallyPreCompItem->getOntology()->getABox()->getNextIndividualId(false);
-				mBackendAssocCache->mDebugOntology = totallyPreCompItem->getOntology();
-				mBackendAssocCache->initializeIndividualsAssociationCaching(totallyPreCompItem->getOntology()->getOntologyID(), maxId);
+				CBackendRepresentativeMemoryCache* backendCache = getBackendAssociationCache();
+				if (backendCache) {
+					backendCache->mDebugOntology = totallyPreCompItem->getOntology();
+					backendCache->initializeIndividualsAssociationCaching(totallyPreCompItem->getOntology()->getOntologyID(), maxId);
+				} else {
+					LOG(WARN, getLogDomain(), logTr("Backend association cache unavailable; skipping individual association cache initialization."), getLogObject());
+					return false;
+				}
 				if (saturateConcepts && individualSaturation) {
 					if (indiVec) {
 						cint64 indiCount = indiVec->getItemCount();
@@ -2332,8 +2335,6 @@ namespace Konclude {
 						if (hasRemainingSaturationWork) {
 							return;
 						}
-						std::fprintf(stderr, "[konclude wasm] precompute: forcing remaining steps after saturation event\n");
-						std::fflush(stderr);
 
 						CPrecomputationTestingStep* preStep = nullptr;
 
@@ -2430,15 +2431,11 @@ namespace Konclude {
 									if (!procCoordHash || procCoordHash->isEmpty()) {
 #ifdef __EMSCRIPTEN__
 										if (!totallyPreCompItem->hasInsufficientSaturationIndividuals()) {
-											std::fprintf(stderr, "[konclude wasm] precompute: skipping insufficient individuals retrieval (none required)\n");
-											std::fflush(stderr);
 											totallyPreCompItem->setIndividualsSaturationCacheSynchronisation(true);
 											totallyPreCompItem->setIndividualsSaturationAllOrderedCacheRetrieved(true);
 											totallyPreCompItem->setFirstIncompletelyHandledIndividualsRetrieved(true);
 											totallyPreCompItem->setAllIncompletelyHandledIndividualsRetrieved(true);
 										} else {
-											std::fprintf(stderr, "[konclude wasm] precompute: request insufficient individuals retrieval\n");
-											std::fflush(stderr);
 											requestIndividualsPrecomputationRetrieval(totallyPreCompItem, true);
 										}
 #else
@@ -2503,11 +2500,17 @@ namespace Konclude {
 				if (fullCompletionGraphConstruction) {
 					limit = -1;
 				}
+				CBackendRepresentativeMemoryCache* backendCache = getBackendAssociationCache();
+				if (!backendCache) {
+					LOG(ERROR, getLogDomain(), logTr("Backend association cache unavailable; skipping insufficient individual retrieval."), getLogObject());
+					totallyPreCompItem->setAllIncompletelyHandledIndividualsRetrieved(true);
+					return;
+				}
 				totallyPreCompItem->setPrecompuationRetrievingIncompletelyHandledIndividuals(true);
 				totallyPreCompItem->setFirstIncompletelyHandledIndividualsRetrieved(true);
 				CIndividualPrecomputationCoordinationHash* newRetrievalCoordHash = new CIndividualPrecomputationCoordinationHash();
 				newRetrievalCoordHash->incUsageCount();
-				mBackendAssocCache->getIncompletlyAssociationCachedIndividuals(ontPreCompItem->getOntology()->getOntologyID(), nullptr, newRetrievalCoordHash, true, false, limit);
+				backendCache->getIncompletlyAssociationCachedIndividuals(ontPreCompItem->getOntology()->getOntologyID(), nullptr, newRetrievalCoordHash, true, false, limit);
 				totallyPreCompItem->setPrecompuationRetrievingIncompletelyHandledIndividuals(false);
 				if (newRetrievalCoordHash->size() > 0) {
 					totallyPreCompItem->setRemainingIncompletelyHandlingIndividualComputationLimitIncreasingCount(newRetrievalCoordHash->getApproximateTotalIncompletelyHandledCount());
@@ -2537,13 +2540,19 @@ namespace Konclude {
 
 			bool CTotallyPrecomputationThread::retrieveIndividualsPrecomputation(CTotallyOntologyPrecomputationItem* totallyPreCompItem) {
 				if (!totallyPreCompItem->isPrecompuationRetrievingIncompletelyHandledIndividuals()) {
+					CBackendRepresentativeMemoryCache* backendCache = getBackendAssociationCache();
+					if (!backendCache) {
+						LOG(ERROR, getLogDomain(), logTr("Backend association cache unavailable; cannot retrieve insufficient individuals."), getLogObject());
+						totallyPreCompItem->setAllIncompletelyHandledIndividualsRetrieved(true);
+						return false;
+					}
 					totallyPreCompItem->setPrecompuationRetrievingIncompletelyHandledIndividuals(true);
 					cint64 limit = totallyPreCompItem->getCurrentIncompletelyHandledIndividualRetrievalLimit();
 					CIndividualPrecomputationCoordinationHash* newRetrievalCoordHash = new CIndividualPrecomputationCoordinationHash();
 					newRetrievalCoordHash->incUsageCount();
 					totallyPreCompItem->setPrecomputationRetrievalCoordinationHash(newRetrievalCoordHash);
 					bool refillRetrievalCoordHash = totallyPreCompItem->getNonPrecompuationDirectIncompletelyHandledIndividualsRetrievingStreakSize() > 1;
-					mBackendAssocCache->getIncompletlyAssociationCachedIndividuals(totallyPreCompItem->getOntology()->getOntologyID(), totallyPreCompItem->getPrecomputationProcessingCoordinationHash(), newRetrievalCoordHash, true, refillRetrievalCoordHash, limit);
+					backendCache->getIncompletlyAssociationCachedIndividuals(totallyPreCompItem->getOntology()->getOntologyID(), totallyPreCompItem->getPrecomputationProcessingCoordinationHash(), newRetrievalCoordHash, true, refillRetrievalCoordHash, limit);
 					precomputationIndividualsRetrieved(totallyPreCompItem, true);
 					return true;
 				} else {
@@ -2555,13 +2564,19 @@ namespace Konclude {
 
 			bool CTotallyPrecomputationThread::requestIndividualsPrecomputationRetrieval(CTotallyOntologyPrecomputationItem* totallyPreCompItem, bool allIndividualsSaturated) {
 				if (!totallyPreCompItem->isPrecompuationRetrievingIncompletelyHandledIndividuals()) {
+					CBackendRepresentativeMemoryCache* backendCache = getBackendAssociationCache();
+					if (!backendCache) {
+						LOG(ERROR, getLogDomain(), logTr("Backend association cache unavailable; cannot request insufficient individuals."), getLogObject());
+						totallyPreCompItem->setAllIncompletelyHandledIndividualsRetrieved(true);
+						return false;
+					}
 					totallyPreCompItem->setPrecompuationRetrievingIncompletelyHandledIndividuals(true);
 					cint64 limit = totallyPreCompItem->getCurrentIncompletelyHandledIndividualRetrievalLimit();
 					CIndividualPrecomputationCoordinationHash* newRetrievalCoordHash = new CIndividualPrecomputationCoordinationHash();
 					newRetrievalCoordHash->incUsageCount();
 					totallyPreCompItem->setPrecomputationRetrievalCoordinationHash(newRetrievalCoordHash);
 					CIndividualPrecomputationCoordinationHash* procCoordHash = totallyPreCompItem->getPrecomputationProcessingCoordinationHash();
-					mBackendAssocCache->getIncompletlyAssociationCachedIndividuals(totallyPreCompItem->getOntology()->getOntologyID(), procCoordHash, newRetrievalCoordHash, allIndividualsSaturated, false, limit, new CRetrievedPrecomputationIndividualsCallbackEvent(this, totallyPreCompItem));
+					backendCache->getIncompletlyAssociationCachedIndividuals(totallyPreCompItem->getOntology()->getOntologyID(), procCoordHash, newRetrievalCoordHash, allIndividualsSaturated, false, limit, new CRetrievedPrecomputationIndividualsCallbackEvent(this, totallyPreCompItem));
 					if (procCoordHash) {
 						LOG(INFO, getLogDomain(), logTr("Requesting more insufficiently handled individuals from representative cache, only %1 of appxoximately %2 remaining, %3 computing, %4 processed.").arg(totallyPreCompItem->getPrecomputationProcessingCoordinationHash()->getHashRemainingCount())
 							.arg(totallyPreCompItem->getPrecomputationProcessingCoordinationHash()->getApproximateRemainingIncompletelyHandledCount()).arg(totallyPreCompItem->getPrecomputationProcessingCoordinationHash()->getHashComputationCount()).arg(totallyPreCompItem->getPrecomputationProcessingCoordinationHash()->getHashProcessedCount()), getLogObject());
@@ -2622,7 +2637,17 @@ namespace Konclude {
 					if (!totallyPreCompItem->hasIndividualSaturationRunning()) {
 
 						if (newHash->getHashRemainingCount() <= 0) {
+#ifdef __EMSCRIPTEN__
+							if (!totallyPreCompItem->hasInsufficientSaturationIndividuals()) {
+								totallyPreCompItem->setIndividualsSaturationCacheSynchronisation(true);
+								totallyPreCompItem->setIndividualsSaturationAllOrderedCacheRetrieved(true);
+								totallyPreCompItem->setAllIncompletelyHandledIndividualsRetrieved(true);
+							} else {
+								requestIndividualsPrecomputationRetrieval(totallyPreCompItem, true);
+							}
+#else
 							synchronouslyRetrieveIndividualsPrecomputation(totallyPreCompItem, ontPreCompItem);
+#endif
 						} else {
 
 							QTime*& indiPrecTimer = totallyPreCompItem->getIndividualPrecomputationTime();
@@ -2705,7 +2730,10 @@ namespace Konclude {
 						if (consistence->isOntologyConsistent()) {
 #ifndef __EMSCRIPTEN__
 							CIndividualPrecomputationCoordinationHash* newRetrievalCoordHash = new CIndividualPrecomputationCoordinationHash();
-							mBackendAssocCache->getIncompletlyAssociationCachedIndividuals(totallyPreCompItem->getOntology()->getOntologyID(), nullptr, newRetrievalCoordHash, true, false, -1);
+							CBackendRepresentativeMemoryCache* backendCache = getBackendAssociationCache();
+							if (backendCache) {
+								backendCache->getIncompletlyAssociationCachedIndividuals(totallyPreCompItem->getOntology()->getOntologyID(), nullptr, newRetrievalCoordHash, true, false, -1);
+							}
 							if (!newRetrievalCoordHash->isEmpty()) {
 								LOG(WARN, getLogDomain(), logTr("Representative cache has incompletely processed individuals although individual computation finished and ontology is consistent."), getLogObject());
 							}
@@ -2733,7 +2761,10 @@ namespace Konclude {
 					if (totallyPreCompItem->getMaxHandledRecomputationIdRemainingReporting() <= 0 && !recomIdTestingItemMap->isEmpty()) {
 						cint64 firstRecomputationId = recomIdTestingItemMap->constBegin().key();
 						totallyPreCompItem->setMaxHandledRecomputationIdRemainingReporting(50);
-						mBackendAssocCache->reportMaximumHandledRecomputationId(totallyPreCompItem->getOntology()->getOntologyID(), firstRecomputationId-1);
+						CBackendRepresentativeMemoryCache* backendCache = getBackendAssociationCache();
+						if (backendCache) {
+							backendCache->reportMaximumHandledRecomputationId(totallyPreCompItem->getOntology()->getOntologyID(), firstRecomputationId-1);
+						}
 					}
 
 					CIndividualPrecomputationCoordinationHash* precomputationProcessingCoordinationHash = totallyPreCompItem->getPrecomputationProcessingCoordinationHash();
@@ -2833,11 +2864,6 @@ namespace Konclude {
 
 			bool CTotallyPrecomputationThread::finishOntologyPrecomputation(CTotallyOntologyPrecomputationItem* totallyPreCompItem) {
 				CConcreteOntology* ontology = totallyPreCompItem->getOntology();
-#ifdef __EMSCRIPTEN__
-				std::fprintf(stderr, "[konclude wasm] precompute: finishOntologyPrecomputation allFinished=%d\n",
-						totallyPreCompItem->areAllStepFinished() ? 1 : 0);
-				std::fflush(stderr);
-#endif
 				if (totallyPreCompItem->areAllStepFinished()) {
 					totallyPreCompItem->setPrecomputationFinished(true);
 

@@ -20,6 +20,10 @@
 
 #include "CSaturationPrecomputationCalculatedCallbackEvent.h"
 
+#ifdef __EMSCRIPTEN__
+#include <QCoreApplication>
+#include <QThread>
+#endif
 
 namespace Konclude {
 
@@ -44,7 +48,17 @@ namespace Konclude {
 
 
 				void CSaturationPrecomputationCalculatedCallbackEvent::doCallback() {
-					recThread->postEvent(this);
+#ifdef __EMSCRIPTEN__
+					QThread* receiverThread = recThread ? recThread->thread() : nullptr;
+					if (recThread && receiverThread && receiverThread == QThread::currentThread()) {
+						QCoreApplication::sendEvent(recThread, this);
+						delete this;
+						return;
+					}
+#endif
+					if (recThread) {
+						recThread->postEvent(this);
+					}
 				}
 
 				CApproximatedSaturationCalculationJob *CSaturationPrecomputationCalculatedCallbackEvent::getSaturationCalculationJob() {

@@ -276,6 +276,7 @@ namespace Konclude {
 
 					cint64 mWorkControllerCount;
 					bool mConfgAdaptThreadPoolToWorkerCount;
+					cint64 mThreadPoolMaxCount;
 					cint64 mBlockThreadPoolThreadCount;
 					QSemaphore mBlockThreadPoolThreadsBlockingSemaphore;
 					QSemaphore mBlockThreadPoolThreadsReleasingSemaphore;
