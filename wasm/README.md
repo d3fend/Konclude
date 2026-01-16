@@ -1,6 +1,12 @@
 # Konclude WebAssembly (Qt 5.15, no Redland)
 
-This directory builds a Konclude WebAssembly module for browser/JS usage. The WASM build omits Redland and focuses on OWL 2 XML/Functional inputs. The runtime is multi-threaded (MT) only and relies on COOP/COEP headers.
+This directory builds a Konclude WebAssembly module for browser/JS usage. The WASM build omits Redland and focuses on OWL 2 XML/Functional inputs. The demo and default build target the multi-threaded (MT/pthreads) runtime and require COOP/COEP headers; a single-thread (ST) build script exists but is not wired into the web demo.
+
+## Current Status (2026-01-16)
+- **Main-thread runner (default) works** for `DATASET=sample` in Chromium.
+- **Worker runner (`main=0`) still hangs** after query dispatch (job status remains `0`).
+- E2E tests now default to the main-thread runner to keep CI stable.
+- **ST build is optional** (`KONCLUDE_WASM_BUILD_ST=1`), but the web demo/tests only load MT artifacts.
 
 ## Quick Start
 ```bash
@@ -9,13 +15,14 @@ node ./wasm/scripts/serve_coop_coep.js
 ```
 
 Open:
-- `http://localhost:8000/web/index.html?mode=mt`
+- `http://localhost:8000/web/index.html?mode=mt` (defaults to main thread)
 - add `&debug=1` to log worker/pthread setup
-- add `&main=0` to force the worker runner (experimental)
+- add `&main=0` to force the worker runner (experimental / currently hangs)
 
 ## Outputs
 Build artifacts land in:
 - `wasm/dist/mt/` (MT build, requires COOP/COEP)
+- `wasm/dist/st/` (ST build, only if `KONCLUDE_WASM_BUILD_ST=1`)
 - `wasm/dist/build-info.json`
 
 The MT directory contains `konclude_*.js`, `konclude_*.wasm`, and a `*.worker.js`.
@@ -46,6 +53,11 @@ IMAGE_TAG=konclude-wasm-build:qt5.15 \
   ./wasm/scripts/docker_build.sh
 ```
 
+To also build the (unsupported) ST artifact:
+```bash
+KONCLUDE_WASM_BUILD_ST=1 ./wasm/scripts/docker_build.sh
+```
+
 ## Local Build (If You Already Have Qt WASM)
 Requirements:
 - emsdk installed and activated
@@ -57,14 +69,19 @@ export QT_WASM_DIR=/opt/qt-wasm
 ./wasm/scripts/build_wasm_all.sh
 ```
 
+Build ST as well (not used by the demo):
+```bash
+KONCLUDE_WASM_BUILD_ST=1 ./wasm/scripts/build_wasm_all.sh
+```
+
 ## Runtime Model and API
-- MT only (no ST build supported).
-- Requires COOP/COEP headers:
+- The web demo/tests load the MT build and require COOP/COEP headers:
   - `Cross-Origin-Opener-Policy: same-origin`
   - `Cross-Origin-Embedder-Policy: require-corp`
+- An ST build is optional (`KONCLUDE_WASM_BUILD_ST=1`), but it is not wired into the demo; you must load `wasm/dist/st/` yourself and bypass the `crossOriginIsolated` guard in `wasm/web/app.js`.
 - The WASM runtime keeps a single reasoner/configuration instance and runs jobs sequentially.
-- Use the async job API (`konclude_submit_*`, `konclude_job_status`, `konclude_tick`, `konclude_job_free`).
-- The synchronous C API (`konclude_classify_files`, `konclude_realize_files`) is not supported in WASM.
+- Use the async job API (`konclude_submit_*`, `konclude_job_status`, `konclude_tick`, `konclude_job_free`) from JS.
+- The synchronous C API (`konclude_classify_files`, `konclude_realize_files`) exists in WASM, but it blocks the calling thread; prefer the async API in browsers.
 
 Minimal file-based flow:
 ```js
@@ -79,10 +96,10 @@ const output = Module.FS.readFile("out.owl.xml", { encoding: "utf8" });
 ```
 
 ## JS Usage (Bundler-Agnostic)
-Emscripten 1.39.x emits a global factory named `createKoncludeModule`. Load `konclude_mt.js` via `<script>` and then call the API.
+Emscripten 1.39.x emits a global factory named `createKoncludeModule`. Load `konclude_mt.js` via `<script>` and then call the API. Helper bindings live in `wasm/js/konclude_wasm_api.js`.
 
 ```js
-import { createKoncludeApi } from "./konclude_wasm_api.js";
+import { createKoncludeApi } from "../js/konclude_wasm_api.js";
 const createKoncludeModule = window.createKoncludeModule;
 
 const api = await createKoncludeApi(createKoncludeModule, {
@@ -104,9 +121,9 @@ Update to the latest MITRE D3FEND release:
 This refreshes the `d3fend*.owl.xml` files and their `d3fend*.meta.json` metadata (version, release date, hashes, retrieval time).
 
 ## Thread Pool Sizing
-The pthread pool size is set by `KONCLUDE_WASM_PTHREAD_POOL` (default: `auto`).
+The pthread pool size is set by `KONCLUDE_WASM_PTHREAD_POOL` (default: `auto` from `wasm/versions.env`).
 When `auto`, the pool size is computed from `navigator.hardwareConcurrency` plus
-`KONCLUDE_WASM_PTHREAD_OVERHEAD` (default: 16) to leave room for Konclude's internal threads.
+`KONCLUDE_WASM_PTHREAD_OVERHEAD` (default: 16 in `wasm/versions.env`) to leave room for Konclude's internal threads.
 
 Internal worker count defaults to all detected cores; override with `KONCLUDE_WASM_PROCESSOR_COUNT`
 if you need to cap concurrency. For debugging, set `KONCLUDE_WASM_PTHREAD_STRICT=2` to fail fast
@@ -120,55 +137,32 @@ npx playwright install --with-deps chromium firefox
 BROWSERS=chromium,firefox node e2e.js
 ```
 
+The E2E runner **defaults to main-thread execution** (stable).
+Force worker mode (expected to hang today):
+```bash
+MAIN_THREAD=0 BROWSERS=chromium node e2e.js
+```
+
 To exercise the D3FEND datasets:
 ```bash
 DATASET=d3fend BROWSERS=chromium node e2e.js
 DATASET=d3fend-full TIMEOUT_MS=300000 BROWSERS=chromium node e2e.js
 ```
 
-CI runs the same test flow with Chromium by default.
-
-## Notes
-- No Redland (no OWLLINK/RDF parsing).
-- Memory sizing is pinned in `wasm/konclude_wasm_flags.pri` and can be overridden with
-  `KONCLUDE_WASM_TOTAL_MEMORY` or qmake variables.
-
 ## Troubleshooting
 - `crossOriginIsolated` is `false`: COOP/COEP headers are missing.
 - Jobs stuck at status `0`: ensure you call `konclude_tick` while polling and that the output file path is correct.
-  - If running via the worker runner (`main=0`), try the main-thread runner (default) to confirm the module works.
+- Worker runner hangs (`main=0`): use the main-thread runner (default) to validate correctness; the worker path is still under investigation.
+- ST build won’t run in the demo without edits: `wasm/web/app.js` enforces `crossOriginIsolated` and loads `wasm/dist/mt/` only.
 
-## Current Status / Handoff (2026-01-15)
-This section summarizes the latest state and open issues so another agent can resume quickly.
-
-### What was updated
-- D3FEND ontologies refreshed to version `1.3.0` via `./wasm/scripts/update_d3fend_owlxml.sh` (see `wasm/web/ontologies/d3fend*.meta.json`).
-- WASM thread/logging tweaks (see `Source/WasmBridge/konclude_wasm_api.cpp`, `Source/Logger/CLogger.cpp`) now route info logs to stdout via the logger.
-
-### Known/previous failure
-- Worker runner (`main=0`) still hangs after query dispatch (job status remains `0`).
-- Main-thread runner (default) completes `DATASET=sample` in Chromium.
-
-### Suspected root cause + attempted fix
-- Worker mode instability is likely tied to running the Qt wasm runtime inside a Web Worker.
-  As a mitigation, the demo now defaults to the main-thread runner and exposes `main=0`
-  to force the worker.
-
-### Validation still needed
-1. Build WASM:
-   ```bash
-   ./wasm/scripts/docker_build.sh
-   ```
-2. Run E2E (sample first):
-   ```bash
-   DATASET=sample BROWSERS=chromium node wasm/tests/e2e.js
-   ```
-3. Then D3FEND datasets:
-   ```bash
-   DATASET=d3fend BROWSERS=chromium node wasm/tests/e2e.js
-   DATASET=d3fend-full TIMEOUT_MS=300000 BROWSERS=chromium node wasm/tests/e2e.js
-   ```
-4. Optional: force worker mode (expected to hang today):
-   ```bash
-   MAIN_THREAD=0 DATASET=sample BROWSERS=chromium node wasm/tests/e2e.js
-   ```
+## Handoff Notes for Another Agent
+- Main-thread runner is stable and used by default.
+- Worker runner (`main=0`) hangs after query dispatch (job status remains `0`).
+- Key wasm runtime flow lives in `Source/WasmBridge/konclude_wasm_api.cpp` and `wasm/web/*` (notably `wasm/web/konclude_worker.js`).
+- Debug logging was added around requirement expansion and processing in
+  `Source/Reasoner/Kernel/Manager/CReasonerManagerThread.cpp` to pinpoint stalls.
+- If investigating worker hangs, reproduce with:
+  ```bash
+  MAIN_THREAD=0 DATASET=sample BROWSERS=chromium node wasm/tests/e2e.js
+  ```
+  Compare logs to the main-thread runner to isolate where events stop flowing.
