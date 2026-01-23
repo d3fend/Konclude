@@ -481,7 +481,19 @@ namespace {
 				const bool enableReuseCompGraphCache = cacheEnabled;
 				const bool enableSatNodeExpCache = cacheEnabled;
 				const bool enableCompConsCache = cacheEnabled;
-				const bool enableBackendCache = true;
+				bool enableBackendCache = true;
+				{
+					QMutexLocker locker(&mConfigMutex);
+					auto it = mConfigOverrides.constFind("Konclude.Calculation.Optimization.IndividualsBackendCacheLoading");
+					if (it != mConfigOverrides.constEnd()) {
+						const QString value = it.value().trimmed().toLower();
+						if (value == "false" || value == "0") {
+							enableBackendCache = false;
+						} else if (value == "true" || value == "1") {
+							enableBackendCache = true;
+						}
+					}
+				}
 				const bool enableOccStatsCache = false;
 				const cint64 cacheThreadReserve =
 						(enableUnsatCache ? 1 : 0) +
@@ -621,8 +633,8 @@ namespace {
 				}
 				// Reduce memory spikes in WASM by shrinking allocation growth.
 				setConfigValue("Konclude.Calculation.Memory.IncreaseAllocationSize", "67108864");
-				// Keep backend cache enabled; precomputation expects it even in wasm.
-				setConfigValue("Konclude.Calculation.Optimization.IndividualsBackendCacheLoading", "true");
+				// Keep backend cache aligned with overrides before applying them.
+				setConfigValue("Konclude.Calculation.Optimization.IndividualsBackendCacheLoading", enableBackendCache ? "true" : "false");
 				// Cache-heavy optimizations: keep them enabled in WASM for better performance.
 				const QString cacheFlag = cacheEnabled ? "true" : "false";
 				setConfigValue("Konclude.Calculation.Optimization.OccurrenceStatisticsCollecting", "false");

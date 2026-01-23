@@ -123,7 +123,7 @@ This refreshes the `d3fend*.owl.xml` files and their `d3fend*.meta.json` metadat
 ## Thread Pool Sizing
 The WASM heap is set by `KONCLUDE_WASM_TOTAL_MEMORY` (default: `2GB` in `wasm/versions.env`) to keep
 large ontologies like D3FEND stable with multiple workers.
-The pthread pool size is set by `KONCLUDE_WASM_PTHREAD_POOL` (default: `8` from `wasm/versions.env`).
+The pthread pool size is set by `KONCLUDE_WASM_PTHREAD_POOL` (default: `16` from `wasm/versions.env`).
 Set it to `auto` to size the pool at runtime from `navigator.hardwareConcurrency`; the pool can be expanded
 by `KONCLUDE_WASM_PTHREAD_OVERHEAD` (default: `0` in `wasm/versions.env`).
 Pthread stack size defaults to `KONCLUDE_WASM_PTHREAD_STACK_SIZE=16777216` (16MB) and can be overridden at build time.
@@ -156,26 +156,26 @@ DATASET=d3fend-full TIMEOUT_MS=300000 BROWSERS=chromium node e2e.js
 The web demo applies a conservative multi-threaded profile for large datasets (including D3FEND)
 to reduce threading pressure while still using multiple workers. The D3FEND profile caps
 classification/precomputation parallelism, switches to a less aggressive classifier, and defaults
-to 3 workers for D3FEND; explicit `workers=` overrides are clamped to available hardware
+to `min(16, hardware concurrency)` workers for D3FEND; explicit `workers=` overrides are clamped to available hardware
 concurrency.
 
 Override via URL params:
 - `profile=default|large|d3fend` (default: `auto`)
 - `workers=<N>` to force Konclude worker/processor counts
 
-Example (explicitly pin 3 workers):
+Example (explicitly pin 16 workers):
 ```
-http://localhost:8000/web/index.html?mode=mt&dataset=d3fend&profile=d3fend&workers=3
+http://localhost:8000/web/index.html?mode=mt&dataset=d3fend&profile=d3fend&workers=16
 ```
 
-Example (use the full 8-thread pool):
+Example (use the full 16-thread pool):
 ```
-http://localhost:8000/web/index.html?mode=mt&dataset=d3fend&profile=d3fend&workers=8
+http://localhost:8000/web/index.html?mode=mt&dataset=d3fend&profile=d3fend&workers=16
 ```
 
 With the default 2GB heap and the D3FEND parallelism cap at 1, D3FEND classification is stable
-through 8 workers (thread pool size). A 3GB heap build crashes in Chromium for D3FEND, so 2GB is
-currently the practical max. To go beyond 8 workers, rebuild with a larger thread pool
+through 16 workers (thread pool size). A 3GB heap build crashes in Chromium for D3FEND, so 2GB is
+currently the practical max. To go beyond 16 workers, rebuild with a larger thread pool
 (`KONCLUDE_WASM_PTHREAD_POOL`) and validate memory limits in your target browsers.
 
 The WASM bridge also exposes runtime config overrides:

@@ -150,7 +150,11 @@ function selectProfile(dataset) {
   return "default";
 }
 
-const DEFAULT_D3FEND_WORKERS = 3;
+const DEFAULT_D3FEND_WORKERS_MAX = 16;
+const DEFAULT_D3FEND_WORKERS = Math.min(
+  DEFAULT_D3FEND_WORKERS_MAX,
+  Number.isFinite(navigator?.hardwareConcurrency) ? navigator.hardwareConcurrency : DEFAULT_D3FEND_WORKERS_MAX
+);
 const D3FEND_PARALLELISM_CAP = 1;
 const DEFAULT_LARGE_WORKERS = 2;
 
