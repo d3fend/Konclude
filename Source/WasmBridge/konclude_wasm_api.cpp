@@ -532,7 +532,15 @@ namespace {
 					}
 				}
 				const cint64 reserveCount = cacheThreadReserve + baseThreadReserve + safetyThreadReserve;
-				cint64 maxProc = poolCount - reserveCount;
+				cint64 poolAvailable = poolCount - reserveCount;
+				if (poolAvailable < 1) {
+					poolAvailable = 1;
+				}
+				cint64 threadPoolReserve = qMin<cint64>(4, qMax<cint64>(2, poolAvailable / 8));
+				if (threadPoolReserve >= poolAvailable) {
+					threadPoolReserve = qMax<cint64>(1, poolAvailable - 1);
+				}
+				cint64 maxProc = poolAvailable - threadPoolReserve;
 				if (maxProc < 1) {
 					maxProc = 1;
 				}
@@ -540,15 +548,15 @@ namespace {
 				if (procCountReduced) {
 					procCount = maxProc;
 				}
-				cint64 threadPoolMax = poolCount - reserveCount - procCount;
-				if (threadPoolMax < 0) {
-					threadPoolMax = 0;
+				cint64 threadPoolMax = poolAvailable - procCount;
+				if (threadPoolMax < 1) {
+					threadPoolMax = 1;
 				}
 #ifdef __EMSCRIPTEN__
 				if (procCountReduced) {
 					LOG(INFO, "::Konclude::Wasm",
 							QString("Thread reserve=%1 reduces procCount to %2 (pool=%3)")
-									.arg(reserveCount + threadPoolMax)
+									.arg(reserveCount + threadPoolReserve)
 									.arg(procCount)
 									.arg(poolCount),
 							0);
@@ -562,17 +570,18 @@ namespace {
 				const QString procCountString = QString::number(procCount);
 				setConfigValue("Konclude.Calculation.ProcessorCount", procCountString);
 				setConfigValue("Konclude.Calculation.WorkerCount", procCountString);
-				setConfigValue("Konclude.Calculation.AdaptThreadPoolSizeProcessorCount", threadPoolMax > 0 ? "false" : "true");
+				setConfigValue("Konclude.Calculation.AdaptThreadPoolSizeProcessorCount", "false");
 				setConfigValue("Konclude.Calculation.ThreadPoolMaxCount", QString::number(threadPoolMax));
 #ifdef __EMSCRIPTEN__
 				LOG(INFO, "::Konclude::Wasm",
-						QString("Thread config cmd=%1 detectedCores=%2 overhead=%3 pool=%4 proc=%5 reserve=%6 poolMax=%7 useAll=%8 threadsEnabled=%9")
+						QString("Thread config cmd=%1 detectedCores=%2 overhead=%3 pool=%4 proc=%5 reserve=%6 poolAvail=%7 poolMax=%8 useAll=%9 threadsEnabled=%10")
 								.arg(job->command)
 								.arg(detectedCores)
 								.arg(threadOverhead)
 								.arg(poolCount)
 								.arg(procCount)
-								.arg(cacheThreadReserve + baseThreadReserve + safetyThreadReserve + threadPoolMax)
+								.arg(reserveCount)
+								.arg(poolAvailable)
 								.arg(threadPoolMax)
 								.arg(useAllThreads ? "true" : "false")
 								.arg(wasmThreadsEnabled ? "true" : "false"),
@@ -658,13 +667,24 @@ namespace {
 				setConfigValue("Konclude.Calculation.Optimization.SignatureMirroringBlocking", cacheFlag);
 				// Scale parallel subsumption for classification runs to available workers.
 #if defined(__EMSCRIPTEN_PTHREADS__)
-				if (commandLower == "classification") {
-					setConfigValue("Konclude.Calculation.Classification.MaximumParallelSubsumptionCalculationCount", procCountString);
-				} else {
-					setConfigValue("Konclude.Calculation.Classification.MaximumParallelSubsumptionCalculationCount", "1");
-				}
+				const QString parallelCountString = wasmThreadsEnabled ? procCountString : QStringLiteral("1");
+				setConfigValue("Konclude.Calculation.Classification.MaximumParallelSubsumptionCalculationCount", parallelCountString);
+				setConfigValue("Konclude.Calculation.Classification.OptimizedKPSetClassSubsumptionClassifier.MaximumParallelSatisfiableCalculationCount", parallelCountString);
+				setConfigValue("Konclude.Calculation.Classification.OptimizedKPSetClassSubsumptionClassifier.MultipliedUnitsParallelSatisfiableCalculationCount", "1");
+				setConfigValue("Konclude.Calculation.Classification.OptimizedSubClassSubsumptionClassifier.MaximumParallelSatisfiableCalculationCount", parallelCountString);
+				setConfigValue("Konclude.Calculation.Classification.OptimizedSubClassSubsumptionClassifier.MultipliedUnitsParallelSatisfiableCalculationCount", "1");
+				setConfigValue("Konclude.Calculation.Precomputation.TotalPrecomputor.MaximumParallelCalculationCount", parallelCountString);
+				setConfigValue("Konclude.Calculation.Precomputation.TotalPrecomputor.MaximumBatchJobCreationCount", parallelCountString);
+				setConfigValue("Konclude.Calculation.Precomputation.TotalPrecomputor.MultipliedUnitsParallelCalculationCount", "1");
 #else
 				setConfigValue("Konclude.Calculation.Classification.MaximumParallelSubsumptionCalculationCount", "1");
+				setConfigValue("Konclude.Calculation.Classification.OptimizedKPSetClassSubsumptionClassifier.MaximumParallelSatisfiableCalculationCount", "1");
+				setConfigValue("Konclude.Calculation.Classification.OptimizedKPSetClassSubsumptionClassifier.MultipliedUnitsParallelSatisfiableCalculationCount", "1");
+				setConfigValue("Konclude.Calculation.Classification.OptimizedSubClassSubsumptionClassifier.MaximumParallelSatisfiableCalculationCount", "1");
+				setConfigValue("Konclude.Calculation.Classification.OptimizedSubClassSubsumptionClassifier.MultipliedUnitsParallelSatisfiableCalculationCount", "1");
+				setConfigValue("Konclude.Calculation.Precomputation.TotalPrecomputor.MaximumParallelCalculationCount", "1");
+				setConfigValue("Konclude.Calculation.Precomputation.TotalPrecomputor.MaximumBatchJobCreationCount", "1");
+				setConfigValue("Konclude.Calculation.Precomputation.TotalPrecomputor.MultipliedUnitsParallelCalculationCount", "1");
 #endif
 				{
 					QMutexLocker locker(&mConfigMutex);

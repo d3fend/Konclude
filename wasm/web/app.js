@@ -211,112 +211,48 @@ function selectProfile(dataset) {
   return "default";
 }
 
-const DEFAULT_D3FEND_WORKERS_MAX = 16;
-const DEFAULT_D3FEND_WORKERS = Math.min(
-  DEFAULT_D3FEND_WORKERS_MAX,
-  Number.isFinite(hardwareConcurrency) ? hardwareConcurrency : DEFAULT_D3FEND_WORKERS_MAX
-);
-const DEFAULT_D3FEND_PARALLELISM = 1;
-const D3FEND_PARALLELISM_OPTIONS = { precomputeScale: 2, batchScale: 1 };
-const DEFAULT_LARGE_WORKERS = 2;
 const parallelOverrideRaw = Number.parseInt(parallelParam || "", 10);
 const parallelOverride = Number.isFinite(parallelOverrideRaw) && parallelOverrideRaw > 0 ? parallelOverrideRaw : null;
 
-function resolveParallelCap(workers, profile) {
-  const cap =
-    parallelOverride ??
-    (profile === "d3fend" ? DEFAULT_D3FEND_PARALLELISM : workers);
-  return Math.max(1, Math.min(workers, cap));
-}
-
-function applyParallelismCaps(overrides, workers, options = {}) {
-  const parallel = Math.max(1, workers);
-  const precomputeScale = options.precomputeScale ?? 4;
-  const batchScale = options.batchScale ?? 2;
-  overrides["Konclude.Calculation.Classification.MaximumParallelSubsumptionCalculationCount"] = String(parallel);
+function applyParallelOverride(overrides, parallelOverrideValue) {
+  const parallel = Number.parseInt(String(parallelOverrideValue), 10);
+  if (!Number.isFinite(parallel) || parallel <= 0) {
+    return;
+  }
+  const parallelCount = Math.max(1, parallel);
+  overrides["Konclude.Calculation.Classification.MaximumParallelSubsumptionCalculationCount"] = String(parallelCount);
   overrides["Konclude.Calculation.Classification.OptimizedKPSetClassSubsumptionClassifier.MaximumParallelSatisfiableCalculationCount"] =
-    String(parallel);
+    String(parallelCount);
   overrides["Konclude.Calculation.Classification.OptimizedKPSetClassSubsumptionClassifier.MultipliedUnitsParallelSatisfiableCalculationCount"] =
     "1";
   overrides["Konclude.Calculation.Classification.OptimizedSubClassSubsumptionClassifier.MaximumParallelSatisfiableCalculationCount"] =
-    String(parallel);
+    String(parallelCount);
   overrides["Konclude.Calculation.Classification.OptimizedSubClassSubsumptionClassifier.MultipliedUnitsParallelSatisfiableCalculationCount"] =
     "1";
-  overrides["Konclude.Calculation.Precomputation.TotalPrecomputor.MaximumParallelCalculationCount"] = String(
-    Math.max(4, parallel * precomputeScale)
-  );
+  overrides["Konclude.Calculation.Precomputation.TotalPrecomputor.MaximumParallelCalculationCount"] = String(parallelCount);
   overrides["Konclude.Calculation.Precomputation.TotalPrecomputor.MultipliedUnitsParallelCalculationCount"] = "1";
-  overrides["Konclude.Calculation.Precomputation.TotalPrecomputor.MaximumBatchJobCreationCount"] = String(
-    Math.max(2, parallel * batchScale)
-  );
+  overrides["Konclude.Calculation.Precomputation.TotalPrecomputor.MaximumBatchJobCreationCount"] = String(parallelCount);
 }
 
-function buildOverrides(profile) {
-  if (profile === "d3fend") {
-    const overrides = {
-      "Konclude.Calculation.ProcessorCount": String(DEFAULT_D3FEND_WORKERS),
-      "Konclude.Calculation.WorkerCount": String(DEFAULT_D3FEND_WORKERS),
-      "Konclude.Calculation.AdaptThreadPoolSizeProcessorCount": "false",
-      "Konclude.Calculation.ThreadPoolMaxCount": "1",
-      "Konclude.Calculation.Classification.Classifier":
-        "Konclude.Calculation.Classification.Classifier.OptimizedSubClassClassifier",
-      "Konclude.Calculation.Optimization.BranchTriggering": "false",
-      "Konclude.Calculation.Preprocessing.BranchingStatisticsExtender": "false",
-      "Konclude.Calculation.Preprocessing.DisjunctSorting": "false",
-      "Konclude.Calculation.Preprocessing.CommonDisjunctConceptExtraction": "false",
-      "Konclude.Calculation.Optimization.IndividualsBackendCacheLoading": "false",
-    };
-    applyParallelismCaps(
-      overrides,
-      resolveParallelCap(DEFAULT_D3FEND_WORKERS, "d3fend"),
-      D3FEND_PARALLELISM_OPTIONS
-    );
-    return overrides;
-  }
-  if (profile === "large") {
-    const overrides = {
-      "Konclude.Calculation.ProcessorCount": String(DEFAULT_LARGE_WORKERS),
-      "Konclude.Calculation.WorkerCount": String(DEFAULT_LARGE_WORKERS),
-      "Konclude.Calculation.AdaptThreadPoolSizeProcessorCount": "false",
-    };
-    applyParallelismCaps(overrides, resolveParallelCap(DEFAULT_LARGE_WORKERS, "large"));
-    return overrides;
-  }
-  return {};
-}
-
-function applyWorkerOverride(overrides, workersOverride, profile) {
+function applyWorkerOverride(overrides, workersOverride) {
   const workers = Number.parseInt(workersOverride || "", 10);
   if (Number.isFinite(workers) && workers > 0) {
     const maxCores = Number.isFinite(hardwareConcurrency) ? hardwareConcurrency : null;
-    const cappedWorkers =
-      profile === "d3fend" && maxCores ? Math.min(workers, maxCores) : workers;
+    const cappedWorkers = maxCores ? Math.min(workers, maxCores) : workers;
     if (cappedWorkers !== workers) {
-      console.warn("capping d3fend workers to", cappedWorkers);
+      console.warn("capping workers to", cappedWorkers);
     }
     overrides["Konclude.Calculation.ProcessorCount"] = String(cappedWorkers);
     overrides["Konclude.Calculation.WorkerCount"] = String(cappedWorkers);
-    overrides["Konclude.Calculation.AdaptThreadPoolSizeProcessorCount"] = "false";
-    if (profile === "d3fend") {
-      overrides["Konclude.Calculation.ThreadPoolMaxCount"] = "1";
-    }
-    if (profile === "d3fend" || profile === "large") {
-      if (profile === "d3fend") {
-        applyParallelismCaps(
-          overrides,
-          resolveParallelCap(cappedWorkers, profile),
-          D3FEND_PARALLELISM_OPTIONS
-        );
-      } else {
-        applyParallelismCaps(overrides, resolveParallelCap(cappedWorkers, profile));
-      }
-    }
   }
 }
 
-function buildOverridesWithWorkers(profile, workersOverride) {
-  const overrides = buildOverrides(profile);
-  applyWorkerOverride(overrides, workersOverride, profile);
+function buildOverrides(workersOverride, parallelOverrideValue) {
+  const overrides = {};
+  applyWorkerOverride(overrides, workersOverride);
+  if (parallelOverrideValue) {
+    applyParallelOverride(overrides, parallelOverrideValue);
+  }
   return overrides;
 }
 
@@ -365,7 +301,7 @@ function applyWasmOverrides(moduleResolved, overrides) {
 
 function applyProfileOverrides(moduleResolved, dataset) {
   const profile = selectProfile(dataset);
-  const overrides = buildOverridesWithWorkers(profile, workersParam);
+  const overrides = buildOverrides(workersParam, parallelOverride);
   if (debug) {
     console.log("[konclude] applying profile", { profile, overrides });
   }
