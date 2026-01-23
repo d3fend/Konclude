@@ -665,9 +665,9 @@ namespace {
 				setConfigValue("Konclude.Calculation.Optimization.CompletionGraphNonDeterministicReuse", cacheFlag);
 				setConfigValue("Konclude.Calculation.Optimization.SignatureSaving", cacheFlag);
 				setConfigValue("Konclude.Calculation.Optimization.SignatureMirroringBlocking", cacheFlag);
-				// Scale parallel subsumption for classification runs to available workers.
+				// Default to single parallel subsumption/precompute; overrides can raise this when safe.
 #if defined(__EMSCRIPTEN_PTHREADS__)
-				const QString parallelCountString = wasmThreadsEnabled ? procCountString : QStringLiteral("1");
+				const QString parallelCountString = QStringLiteral("1");
 				setConfigValue("Konclude.Calculation.Classification.MaximumParallelSubsumptionCalculationCount", parallelCountString);
 				setConfigValue("Konclude.Calculation.Classification.OptimizedKPSetClassSubsumptionClassifier.MaximumParallelSatisfiableCalculationCount", parallelCountString);
 				setConfigValue("Konclude.Calculation.Classification.OptimizedKPSetClassSubsumptionClassifier.MultipliedUnitsParallelSatisfiableCalculationCount", "1");
