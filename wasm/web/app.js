@@ -68,6 +68,7 @@ window.__koncludeResult = {
   profile: null,
   crossOriginIsolated: window.crossOriginIsolated,
   classification: null,
+  realization: null,
   consistency: null,
   output: "",
   error: null,
@@ -95,9 +96,23 @@ function formatResult(result) {
     lines.push(
       `classification: status=${result.classification.status} code=${result.classification.code} time=${result.classification.elapsedMs}ms size=${sizeText}`
     );
-    if (result.classification.outputSnippet) {
+    const snippet = result.classification.outputSnippet || result.classification.output;
+    if (snippet) {
       lines.push("-- classify output snippet --");
-      lines.push(result.classification.outputSnippet);
+      lines.push(snippet);
+    }
+  }
+  if (result.realization) {
+    const sizeText = Number.isFinite(result.realization.outputSize)
+      ? `${result.realization.outputSize} bytes`
+      : "n/a";
+    lines.push(
+      `realization: status=${result.realization.status} code=${result.realization.code} time=${result.realization.elapsedMs}ms size=${sizeText}`
+    );
+    const snippet = result.realization.outputSnippet || result.realization.output;
+    if (snippet) {
+      lines.push("-- realization output snippet --");
+      lines.push(snippet);
     }
   }
   if (result.consistency) {
@@ -128,6 +143,7 @@ function finalize(result) {
     profile: result.profile || null,
     crossOriginIsolated: window.crossOriginIsolated,
     classification: result.classification || null,
+    realization: result.realization || null,
     consistency: result.consistency || null,
     output: summary,
     error: result.error || null,
@@ -187,12 +203,12 @@ function buildOverrides(profile) {
       "Konclude.Calculation.ThreadPoolMaxCount": "1",
       "Konclude.Calculation.Classification.Classifier":
         "Konclude.Calculation.Classification.Classifier.OptimizedSubClassClassifier",
-    "Konclude.Calculation.Optimization.BranchTriggering": "false",
-    "Konclude.Calculation.Preprocessing.BranchingStatisticsExtender": "false",
-    "Konclude.Calculation.Preprocessing.DisjunctSorting": "false",
-    "Konclude.Calculation.Preprocessing.CommonDisjunctConceptExtraction": "false",
-    "Konclude.Calculation.Optimization.IndividualsBackendCacheLoading": "false",
-  };
+      "Konclude.Calculation.Optimization.BranchTriggering": "false",
+      "Konclude.Calculation.Preprocessing.BranchingStatisticsExtender": "false",
+      "Konclude.Calculation.Preprocessing.DisjunctSorting": "false",
+      "Konclude.Calculation.Preprocessing.CommonDisjunctConceptExtraction": "false",
+      "Konclude.Calculation.Optimization.IndividualsBackendCacheLoading": "false",
+    };
     applyParallelismCaps(overrides, Math.min(DEFAULT_D3FEND_WORKERS, D3FEND_PARALLELISM_CAP));
     return overrides;
   }
@@ -568,10 +584,11 @@ async function runOnMainThread(dataset) {
   const runJob = createJobRunner(moduleResolved);
   const classifyOutputPath = "classify.owl.xml";
   let classify = null;
+  let realization = null;
   let consistency = null;
   let consistent = null;
 
-  if (onlyParam !== "consistency") {
+  if (onlyParam !== "consistency" && onlyParam !== "realization" && onlyParam !== "realisation") {
     if (debug) {
       console.log("[konclude] runOnMainThread submitting classification");
     }
@@ -581,7 +598,7 @@ async function runOnMainThread(dataset) {
     });
   }
 
-  if (onlyParam !== "classification") {
+  if (onlyParam !== "classification" && onlyParam !== "realization" && onlyParam !== "realisation") {
     if (classify) {
       consistency = readConsistencySidecar(moduleResolved, consistencySidecarFor(classifyOutputPath));
       if (consistency) {
@@ -597,10 +614,21 @@ async function runOnMainThread(dataset) {
     }
   }
 
+  if (onlyParam === "realization" || onlyParam === "realisation") {
+    if (debug) {
+      console.log("[konclude] runOnMainThread submitting realization");
+    }
+    realization = await runJob("realization", inPath, "realize.owl.xml", {
+      timeoutMs,
+      readBytes: 2048,
+    });
+  }
+
   const classifyOk = !classify || (classify.status === 1 && classify.code === 0);
+  const realizationOk = !realization || (realization.status === 1 && realization.code === 0);
   const consistencyOk =
     !consistency || (consistency.status === 1 && consistency.code === 0 && consistent);
-  const ok = classifyOk && consistencyOk;
+  const ok = classifyOk && consistencyOk && realizationOk;
   const consistencyPayload = consistency ? { ...consistency, consistent } : null;
 
   finalize({
@@ -608,61 +636,16 @@ async function runOnMainThread(dataset) {
     dataset: { name: dataset.name, label: dataset.label, version: dataset.meta?.version || null },
     profile: profileInfo?.profile || null,
     classification: classify,
+    realization,
     consistency: consistencyPayload,
-    error: ok ? null : "konclude classify/consistency failed",
+    error: ok ? null : "konclude job failed",
   });
 }
 
 async function runInWorker(dataset) {
-  if (!canUseThreads) {
-    finalize({ ok: false, error: "SharedArrayBuffer not available (missing COOP/COEP)" });
-    return;
-  }
-  if (typeof Worker !== "function") {
-    finalize({ ok: false, error: "Worker not available" });
-    return;
-  }
-
-  setStatus("running mt in worker");
-
-  const workerUrl = new URL("./konclude_worker.js", import.meta.url);
-  const worker = new Worker(workerUrl);
-  const workerTimeout = Math.max(timeoutMs + 60000, 180000);
-  const timeout = setTimeout(() => {
-    worker.terminate();
-    finalize({ ok: false, error: "worker timeout" });
-  }, workerTimeout);
-
-  worker.onmessage = (event) => {
-    clearTimeout(timeout);
-    const data = event.data || {};
-    finalize({
-      ok: Boolean(data.ok),
-      dataset:
-        data.dataset || { name: dataset.name, label: dataset.label, version: dataset.meta?.version || null },
-      classification: data.classification || null,
-      consistency: data.consistency || null,
-      error: data.error || null,
-    });
-    worker.terminate();
-  };
-
-  worker.onerror = (err) => {
-    clearTimeout(timeout);
-    worker.terminate();
-    finalize({ ok: false, error: err?.message || "worker failure" });
-  };
-
-  worker.postMessage({
-    owlXml: dataset.owlXml,
-    mode,
-    debug,
-    timeoutMs,
-    only: onlyParam,
-    profile: selectProfile(dataset),
-    workers: workersParam,
-    dataset: { name: dataset.name, label: dataset.label, version: dataset.meta?.version || null },
-  });
+  console.warn("worker runner is not reliable in Qt 5.15 wasm; falling back to main thread");
+  setStatus("worker unsupported; running on main thread");
+  await runOnMainThread(dataset);
 }
 
 async function main() {

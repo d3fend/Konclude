@@ -15,6 +15,7 @@ export async function createKoncludeApi(createKoncludeModule, options = {}) {
 
   const submitJob = module.cwrap("konclude_submit_job", "number", ["string", "string", "string"]);
   const submitClassifyFiles = module.cwrap("konclude_submit_classify_files", "number", ["string", "string"]);
+  const consistencyFiles = module.cwrap("konclude_consistency_files", "number", ["string", "string"]);
   const submitRealizeFiles = module.cwrap("konclude_submit_realize_files", "number", ["string", "string"]);
   const submitRealiseFiles = module.cwrap("konclude_submit_realise_files", "number", ["string", "string"]);
   const submitConsistencyFiles = (inputPath, outputPath) =>
@@ -116,6 +117,7 @@ export async function createKoncludeApi(createKoncludeModule, options = {}) {
     module,
     submitJob,
     submitClassifyFiles,
+    consistencyFiles,
     submitRealizeFiles,
     submitRealiseFiles,
     submitConsistencyFiles,

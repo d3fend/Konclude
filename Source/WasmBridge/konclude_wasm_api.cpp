@@ -798,6 +798,14 @@ int konclude_classify_files(const char* input_path, const char* output_path) {
 #endif
 }
 
+int konclude_consistency_files(const char* input_path, const char* output_path) {
+#ifdef __EMSCRIPTEN__
+	return runJobBlocking("consistency", input_path, output_path);
+#else
+	return runSimpleCommand("consistency", input_path, output_path);
+#endif
+}
+
 int konclude_realise_files(const char* input_path, const char* output_path) {
 #ifdef __EMSCRIPTEN__
 	return runJobBlocking("realisation", input_path, output_path);
@@ -819,6 +827,14 @@ int konclude_classify_owl2xml(const char* data, size_t len, char** output, size_
 	return runCommandWithInputBuffer("classification", data, len, output, out_len);
 #else
 	return runCommandWithInputBuffer("classification", data, len, output, out_len);
+#endif
+}
+
+int konclude_consistency_owl2xml(const char* data, size_t len, char** output, size_t* out_len) {
+#ifdef __EMSCRIPTEN__
+	return runCommandWithInputBuffer("consistency", data, len, output, out_len);
+#else
+	return runCommandWithInputBuffer("consistency", data, len, output, out_len);
 #endif
 }
 

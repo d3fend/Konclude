@@ -2,10 +2,11 @@
 
 This directory builds a Konclude WebAssembly module for browser/JS usage. The WASM build omits Redland and focuses on OWL 2 XML/Functional inputs. The demo and default build target the multi-threaded (MT/pthreads) runtime and require COOP/COEP headers; a single-thread (ST) build script exists but is not wired into the web demo.
 
-## Current Status (2026-01-16)
-- **Main-thread runner (default) works** for `DATASET=sample` in Chromium.
-- **Worker runner (`main=0`) still hangs** after query dispatch (job status remains `0`).
-- E2E tests now default to the main-thread runner to keep CI stable.
+## Current Status (2026-01-23)
+- **Main-thread runner (default) works** for `DATASET=sample` and D3FEND in Chromium.
+- **Worker runner (`main=0`) is disabled in the demo** and falls back to the main thread; running the module
+  directly inside a dedicated worker still hangs after query dispatch (job status remains `0`).
+- E2E tests default to the main-thread runner to keep CI stable.
 - **ST build is optional** (`KONCLUDE_WASM_BUILD_ST=1`), but the web demo/tests only load MT artifacts.
 
 ## Quick Start
@@ -17,7 +18,8 @@ node ./wasm/scripts/serve_coop_coep.js
 Open:
 - `http://localhost:8000/web/index.html?mode=mt` (defaults to main thread)
 - add `&debug=1` to log worker/pthread setup
-- add `&main=0` to force the worker runner (experimental / currently hangs)
+- add `&main=0` to request the worker runner (falls back to main thread today)
+- add `&only=classification|consistency|realization` to run a single task
 
 ## Outputs
 Build artifacts land in:
@@ -81,7 +83,8 @@ KONCLUDE_WASM_BUILD_ST=1 ./wasm/scripts/build_wasm_all.sh
 - An ST build is optional (`KONCLUDE_WASM_BUILD_ST=1`), but it is not wired into the demo; you must load `wasm/dist/st/` yourself and bypass the `crossOriginIsolated` guard in `wasm/web/app.js`.
 - The WASM runtime keeps a single reasoner/configuration instance and runs jobs sequentially.
 - Use the async job API (`konclude_submit_*`, `konclude_job_status`, `konclude_tick`, `konclude_job_free`) from JS.
-- The synchronous C API (`konclude_classify_files`, `konclude_realize_files`) exists in WASM, but it blocks the calling thread; prefer the async API in browsers.
+- The synchronous C API (`konclude_classify_files`, `konclude_consistency_files`, `konclude_realise_files`,
+  `konclude_realize_files`) exists in WASM, but it blocks the calling thread; prefer the async API in browsers.
 
 Minimal file-based flow:
 ```js
@@ -141,7 +144,7 @@ BROWSERS=chromium,firefox node e2e.js
 ```
 
 The E2E runner **defaults to main-thread execution** (stable).
-Force worker mode (expected to hang today):
+Request worker mode (falls back to the main thread in the demo):
 ```bash
 MAIN_THREAD=0 BROWSERS=chromium node e2e.js
 ```
@@ -187,12 +190,12 @@ These apply Konclude config keys before each job is started (persisting until re
 ## Troubleshooting
 - `crossOriginIsolated` is `false`: COOP/COEP headers are missing.
 - Jobs stuck at status `0`: ensure you call `konclude_tick` while polling and that the output file path is correct.
-- Worker runner hangs (`main=0`): use the main-thread runner (default) to validate correctness; the worker path is still under investigation.
+- Worker runner hangs (`main=0`): the demo falls back to the main-thread runner; direct worker execution is still under investigation.
 - ST build won’t run in the demo without edits: `wasm/web/app.js` enforces `crossOriginIsolated` and loads `wasm/dist/mt/` only.
 
 ## Handoff Notes for Another Agent
 - Main-thread runner is stable and used by default.
-- Worker runner (`main=0`) hangs after query dispatch (job status remains `0`).
+- Worker runner (`main=0`) hangs after query dispatch (job status remains `0`); the demo now falls back to main thread.
 - Key wasm runtime flow lives in `Source/WasmBridge/konclude_wasm_api.cpp` and `wasm/web/*` (notably `wasm/web/konclude_worker.js`).
 - Debug logging was added around requirement expansion and processing in
   `Source/Reasoner/Kernel/Manager/CReasonerManagerThread.cpp` to pinpoint stalls.

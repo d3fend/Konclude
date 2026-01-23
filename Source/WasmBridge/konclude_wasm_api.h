@@ -18,11 +18,13 @@ KONCLUDE_WASM_EXPORT int konclude_run_command(int argc, const char** argv);
 
 // Convenience wrappers for file-based classification/realisation.
 KONCLUDE_WASM_EXPORT int konclude_classify_files(const char* input_path, const char* output_path);
+KONCLUDE_WASM_EXPORT int konclude_consistency_files(const char* input_path, const char* output_path);
 KONCLUDE_WASM_EXPORT int konclude_realise_files(const char* input_path, const char* output_path);
 KONCLUDE_WASM_EXPORT int konclude_realize_files(const char* input_path, const char* output_path);
 
 // Convenience wrappers for in-memory OWL 2 XML payloads.
 KONCLUDE_WASM_EXPORT int konclude_classify_owl2xml(const char* data, size_t len, char** output, size_t* out_len);
+KONCLUDE_WASM_EXPORT int konclude_consistency_owl2xml(const char* data, size_t len, char** output, size_t* out_len);
 KONCLUDE_WASM_EXPORT int konclude_realise_owl2xml(const char* data, size_t len, char** output, size_t* out_len);
 KONCLUDE_WASM_EXPORT int konclude_realize_owl2xml(const char* data, size_t len, char** output, size_t* out_len);
 

@@ -4,6 +4,7 @@ self.onmessage = async (event) => {
   const mode = payload.mode || "mt";
   const debug = Boolean(payload.debug);
   const only = payload.only || "";
+  const preferBlocking = payload.blocking === true || payload.blocking === "1";
   const profile = payload.profile || "default";
   const workersParam = payload.workers || "";
   const totalMemory = Number.isFinite(payload.totalMemory) ? payload.totalMemory : null;
@@ -234,7 +235,7 @@ self.onmessage = async (event) => {
         console.log("[konclude]", ...args);
       },
       onAbort: (reason) => {
-      console.error("[konclude] abort", reason);
+        console.error("[konclude] abort", reason);
         if (abortReject) {
           abortReject(new Error(String(reason)));
         }
@@ -333,6 +334,21 @@ self.onmessage = async (event) => {
     const jobFree = moduleResolved.cwrap("konclude_job_free", null, ["number"]);
     const tick = moduleResolved.cwrap("konclude_tick", null, ["number"]);
     const consistencySidecarFor = (classifyPath) => `${classifyPath}.consistency.txt`;
+    const safeCwrap = (name, ret, args) => {
+      try {
+        return moduleResolved.cwrap(name, ret, args);
+      } catch (err) {
+        return null;
+      }
+    };
+    const classifyFiles = preferBlocking
+      ? safeCwrap("konclude_classify_files", "number", ["string", "string"])
+      : null;
+    const consistencyFiles = preferBlocking
+      ? safeCwrap("konclude_consistency_files", "number", ["string", "string"])
+      : null;
+    const realiseFiles = preferBlocking ? safeCwrap("konclude_realise_files", "number", ["string", "string"]) : null;
+    const realizeFiles = preferBlocking ? safeCwrap("konclude_realize_files", "number", ["string", "string"]) : null;
 
     const overrides = buildOverrides(profile);
     applyWorkerOverride(overrides, workersParam, profile);
@@ -433,18 +449,45 @@ self.onmessage = async (event) => {
       };
     };
 
+    const runBlockingCommand = (label, fn, outputPath, readBytes) => {
+      const start = Date.now();
+      const code = fn(inPath, outputPath);
+      const status = code === 0 ? 1 : -1;
+      let output = "";
+      let outputSize = null;
+      try {
+        outputSize = moduleResolved.FS.stat(outputPath).size;
+        if (readBytes && outputSize > 0) {
+          output = readFileSnippet(moduleResolved, outputPath, readBytes);
+        }
+      } catch (readErr) {
+        console.warn("worker failed to read output", readErr);
+      }
+      return {
+        status,
+        code,
+        output,
+        outputSize,
+        elapsedMs: Date.now() - start,
+      };
+    };
+
     let classify = null;
     let consistency = null;
     let consistent = null;
     const classifyOutputPath = "classify.owl.xml";
 
-    if (only !== "consistency") {
+    if (only !== "consistency" && only !== "realization" && only !== "realisation") {
       console.log("worker submitting classify job");
-      classify = await runJob("classification", classifyOutputPath, 2048);
+      if (classifyFiles) {
+        classify = runBlockingCommand("classification", classifyFiles, classifyOutputPath, 2048);
+      } else {
+        classify = await runJob("classification", classifyOutputPath, 2048);
+      }
       console.log("worker classify done", classify);
     }
 
-    if (only !== "classification") {
+    if (only !== "classification" && only !== "realization" && only !== "realisation") {
       if (classify) {
         const sidecarPath = consistencySidecarFor(classifyOutputPath);
         consistency = readConsistencySidecar(sidecarPath);
@@ -458,17 +501,33 @@ self.onmessage = async (event) => {
       }
       if (!consistency) {
         console.log("worker submitting consistency job");
-        consistency = await runJob("consistency", "consistency.txt", 256);
+        if (consistencyFiles) {
+          consistency = runBlockingCommand("consistency", consistencyFiles, "consistency.txt", 256);
+        } else {
+          consistency = await runJob("consistency", "consistency.txt", 256);
+        }
         console.log("worker consistency done", consistency);
         consistent = consistency.output.trim().toLowerCase() === "true";
       }
     }
 
+    let realization = null;
+    if (only === "realization" || only === "realisation") {
+      console.log("worker submitting realization job");
+      const realizeFn = realizeFiles || realiseFiles;
+      if (!realizeFn) {
+        throw new Error("realization not available in wasm module");
+      }
+      realization = runBlockingCommand("realization", realizeFn, "realize.owl.xml", 2048);
+      console.log("worker realization done", realization);
+    }
+
     const classifyOk = !classify || (classify.status === 1 && classify.code === 0);
     const consistencyOk =
       !consistency || (consistency.status === 1 && consistency.code === 0 && consistent);
-    const ok = classifyOk && consistencyOk;
-    const error = ok ? null : "konclude classify/consistency failed";
+    const realizationOk = !realization || (realization.status === 1 && realization.code === 0);
+    const ok = classifyOk && consistencyOk && realizationOk;
+    const error = ok ? null : "konclude job failed";
     const consistencyPayload = consistency ? { ...consistency, consistent } : null;
 
     self.postMessage({
@@ -476,6 +535,7 @@ self.onmessage = async (event) => {
       profile,
       dataset,
       classification: classify,
+      realization,
       consistency: consistencyPayload,
       error,
     });
