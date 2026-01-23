@@ -4,6 +4,8 @@ self.onmessage = async (event) => {
   const mode = payload.mode || "mt";
   const debug = Boolean(payload.debug);
   const only = payload.only || "";
+  const profile = payload.profile || "default";
+  const workersParam = payload.workers || "";
   const totalMemory = Number.isFinite(payload.totalMemory) ? payload.totalMemory : null;
   const timeoutMs = Number.isFinite(payload.timeoutMs) ? payload.timeoutMs : 120000;
   const dataset = payload.dataset || null;
@@ -50,6 +52,107 @@ self.onmessage = async (event) => {
           // ignore
         }
       }
+    }
+  }
+
+  const DEFAULT_D3FEND_WORKERS = 3;
+  const D3FEND_PARALLELISM_CAP = 1;
+  const DEFAULT_LARGE_WORKERS = 2;
+
+  function applyParallelismCaps(overrides, workers) {
+    const parallel = Math.max(1, workers);
+    overrides["Konclude.Calculation.Classification.MaximumParallelSubsumptionCalculationCount"] = String(parallel);
+    overrides["Konclude.Calculation.Classification.OptimizedKPSetClassSubsumptionClassifier.MaximumParallelSatisfiableCalculationCount"] =
+      String(parallel);
+    overrides["Konclude.Calculation.Classification.OptimizedKPSetClassSubsumptionClassifier.MultipliedUnitsParallelSatisfiableCalculationCount"] =
+      "1";
+    overrides["Konclude.Calculation.Classification.OptimizedSubClassSubsumptionClassifier.MaximumParallelSatisfiableCalculationCount"] =
+      String(parallel);
+    overrides["Konclude.Calculation.Classification.OptimizedSubClassSubsumptionClassifier.MultipliedUnitsParallelSatisfiableCalculationCount"] =
+      "1";
+    overrides["Konclude.Calculation.Precomputation.TotalPrecomputor.MaximumParallelCalculationCount"] = String(
+      Math.max(4, workers * 4)
+    );
+    overrides["Konclude.Calculation.Precomputation.TotalPrecomputor.MultipliedUnitsParallelCalculationCount"] = "1";
+    overrides["Konclude.Calculation.Precomputation.TotalPrecomputor.MaximumBatchJobCreationCount"] = String(
+      Math.max(2, workers * 2)
+    );
+  }
+
+  function buildOverrides(profileName) {
+    if (profileName === "d3fend") {
+      const overrides = {
+        "Konclude.Calculation.ProcessorCount": String(DEFAULT_D3FEND_WORKERS),
+        "Konclude.Calculation.WorkerCount": String(DEFAULT_D3FEND_WORKERS),
+        "Konclude.Calculation.AdaptThreadPoolSizeProcessorCount": "false",
+        "Konclude.Calculation.ThreadPoolMaxCount": "1",
+        "Konclude.Calculation.Classification.Classifier":
+          "Konclude.Calculation.Classification.Classifier.OptimizedSubClassClassifier",
+        "Konclude.Calculation.Optimization.BranchTriggering": "false",
+        "Konclude.Calculation.Preprocessing.BranchingStatisticsExtender": "false",
+        "Konclude.Calculation.Preprocessing.DisjunctSorting": "false",
+        "Konclude.Calculation.Preprocessing.CommonDisjunctConceptExtraction": "false",
+        "Konclude.Calculation.Optimization.IndividualsBackendCacheLoading": "false",
+      };
+      applyParallelismCaps(overrides, Math.min(DEFAULT_D3FEND_WORKERS, D3FEND_PARALLELISM_CAP));
+      return overrides;
+    }
+    if (profileName === "large") {
+      const overrides = {
+        "Konclude.Calculation.ProcessorCount": String(DEFAULT_LARGE_WORKERS),
+        "Konclude.Calculation.WorkerCount": String(DEFAULT_LARGE_WORKERS),
+        "Konclude.Calculation.AdaptThreadPoolSizeProcessorCount": "false",
+      };
+      applyParallelismCaps(overrides, DEFAULT_LARGE_WORKERS);
+      return overrides;
+    }
+    return {};
+  }
+
+  function applyWorkerOverride(overrides, workersOverride, profileName) {
+    const workers = Number.parseInt(workersOverride || "", 10);
+    if (Number.isFinite(workers) && workers > 0) {
+      const maxCores = Number.isFinite(self.navigator?.hardwareConcurrency)
+        ? self.navigator.hardwareConcurrency
+        : null;
+      const cappedWorkers =
+        profileName === "d3fend" && maxCores ? Math.min(workers, maxCores) : workers;
+      if (cappedWorkers !== workers) {
+        console.warn("capping d3fend workers to", cappedWorkers);
+      }
+      overrides["Konclude.Calculation.ProcessorCount"] = String(cappedWorkers);
+      overrides["Konclude.Calculation.WorkerCount"] = String(cappedWorkers);
+      overrides["Konclude.Calculation.AdaptThreadPoolSizeProcessorCount"] = "false";
+      if (profileName === "d3fend") {
+        overrides["Konclude.Calculation.ThreadPoolMaxCount"] = "1";
+      }
+      if (profileName === "d3fend") {
+        applyParallelismCaps(overrides, Math.min(cappedWorkers, D3FEND_PARALLELISM_CAP));
+      } else if (profileName === "large") {
+        applyParallelismCaps(overrides, cappedWorkers);
+      }
+    }
+  }
+
+  function applyWasmOverrides(moduleResolved, overrides) {
+    if (!moduleResolved || typeof moduleResolved.cwrap !== "function") {
+      return;
+    }
+    let setConfig = null;
+    let resetConfig = null;
+    try {
+      setConfig = moduleResolved.cwrap("konclude_set_config", "number", ["string", "string"]);
+      resetConfig = moduleResolved.cwrap("konclude_reset_config_overrides", "number", []);
+    } catch (err) {
+      console.warn("konclude config overrides not available", err);
+      return;
+    }
+    if (!setConfig || !resetConfig) {
+      return;
+    }
+    resetConfig();
+    for (const [key, value] of Object.entries(overrides || {})) {
+      setConfig(key, String(value));
     }
   }
 
@@ -225,6 +328,13 @@ self.onmessage = async (event) => {
     const tick = moduleResolved.cwrap("konclude_tick", null, ["number"]);
     const consistencySidecarFor = (classifyPath) => `${classifyPath}.consistency.txt`;
 
+    const overrides = buildOverrides(profile);
+    applyWorkerOverride(overrides, workersParam, profile);
+    if (debug) {
+      console.log("[konclude] worker applying profile", { profile, overrides });
+    }
+    applyWasmOverrides(moduleResolved, overrides);
+
     const inPath = "in.owl.xml";
     moduleResolved.FS.writeFile(inPath, owlXml);
 
@@ -357,6 +467,7 @@ self.onmessage = async (event) => {
 
     self.postMessage({
       ok,
+      profile,
       dataset,
       classification: classify,
       consistency: consistencyPayload,
@@ -370,6 +481,6 @@ self.onmessage = async (event) => {
       type: typeof err,
     };
     console.error("worker failure", err, details);
-    self.postMessage({ ok: false, error: err?.message || String(err) || "worker failure" });
+    self.postMessage({ ok: false, profile, error: err?.message || String(err) || "worker failure" });
   }
 };

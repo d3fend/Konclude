@@ -19,6 +19,10 @@
 #include <QEventLoop>
 #include <QFile>
 #include <QFileInfo>
+#include <QHash>
+#include <QMap>
+#include <QMutex>
+#include <QMutexLocker>
 #include <QTemporaryFile>
 #include <QThread>
 #include <QStringList>
@@ -255,20 +259,65 @@ namespace {
 				return manager;
 			}
 
-				int submitJob(const char* command, const char* inputPath, const char* outputPath) {
-					if (!command || !inputPath || !outputPath) {
-						return -1;
+			bool setConfigOverride(const QString& key, const QString& value) {
+				if (key.isEmpty()) {
+					return false;
+				}
+				QMutexLocker locker(&mConfigMutex);
+				mConfigOverrides.insert(key, value);
+				if (mConfiguration) {
+					CConfigData* confData = mConfiguration->createAndSetConfig(key);
+					if (confData) {
+						confData->readFromString(value);
 					}
-					CWasmJob* job = new CWasmJob();
-					job->id = ++mNextJobId;
-					job->command = QString::fromUtf8(command);
-					job->inputPath = QString::fromUtf8(inputPath);
-					job->outputPath = QString::fromUtf8(outputPath);
-					mJobs[job->id] = std::unique_ptr<CWasmJob>(job);
-					mQueue.push_back(job->id);
-					if (mActiveJobId == 0) {
-						startNextJob();
-					}
+				}
+				return true;
+			}
+
+			bool removeConfigOverride(const QString& key) {
+				if (key.isEmpty()) {
+					return false;
+				}
+				QMutexLocker locker(&mConfigMutex);
+				return mConfigOverrides.remove(key) > 0;
+			}
+
+			void clearConfigOverrides() {
+				QMutexLocker locker(&mConfigMutex);
+				mConfigOverrides.clear();
+			}
+
+			int setConfigOverrideUtf8(const char* key, const char* value) {
+				if (!key || std::strlen(key) == 0) {
+					return -1;
+				}
+				const QString qKey = QString::fromUtf8(key);
+				if (!value) {
+					removeConfigOverride(qKey);
+					return 0;
+				}
+				return setConfigOverride(qKey, QString::fromUtf8(value)) ? 0 : -1;
+			}
+
+			int resetConfigOverrides() {
+				clearConfigOverrides();
+				return 0;
+			}
+
+			int submitJob(const char* command, const char* inputPath, const char* outputPath) {
+				if (!command || !inputPath || !outputPath) {
+					return -1;
+				}
+				CWasmJob* job = new CWasmJob();
+				job->id = ++mNextJobId;
+				job->command = QString::fromUtf8(command);
+				job->inputPath = QString::fromUtf8(inputPath);
+				job->outputPath = QString::fromUtf8(outputPath);
+				mJobs[job->id] = std::unique_ptr<CWasmJob>(job);
+				mQueue.push_back(job->id);
+				if (mActiveJobId == 0) {
+					startNextJob();
+				}
 				return job->id;
 			}
 
@@ -418,6 +467,14 @@ namespace {
 				if (poolCount < detectedCores) {
 					poolCount = detectedCores;
 				}
+#ifdef KONCLUDE_WASM_PTHREAD_POOL
+#if KONCLUDE_WASM_PTHREAD_POOL > 0
+				poolCount = KONCLUDE_WASM_PTHREAD_POOL;
+				if (poolCount < 1) {
+					poolCount = 1;
+				}
+#endif
+#endif
 				bool useAllThreads = true;
 				const bool enableUnsatCache = cacheEnabled;
 				const bool enableSatExpCache = cacheEnabled;
@@ -447,30 +504,44 @@ namespace {
 				if (procCount <= 0) {
 					procCount = 1;
 				}
-				cint64 availablePoolReserve = threadOverhead - (cacheThreadReserve + baseThreadReserve + safetyThreadReserve);
-				if (availablePoolReserve < 0) {
-					availablePoolReserve = 0;
+				{
+					QMutexLocker locker(&mConfigMutex);
+					auto it = mConfigOverrides.constFind("Konclude.Calculation.ProcessorCount");
+					if (it == mConfigOverrides.constEnd()) {
+						it = mConfigOverrides.constFind("Konclude.Calculation.WorkerCount");
+					}
+					if (it != mConfigOverrides.constEnd()) {
+						bool ok = false;
+						const cint64 overrideProc = it.value().toLongLong(&ok);
+						if (ok && overrideProc > 0) {
+							useAllThreads = false;
+							procCount = overrideProc;
+						}
+					}
 				}
-				cint64 threadPoolMax = qMin<cint64>(detectedCores / 2, availablePoolReserve);
+				const cint64 reserveCount = cacheThreadReserve + baseThreadReserve + safetyThreadReserve;
+				cint64 maxProc = poolCount - reserveCount;
+				if (maxProc < 1) {
+					maxProc = 1;
+				}
+				const bool procCountReduced = procCount > maxProc;
+				if (procCountReduced) {
+					procCount = maxProc;
+				}
+				cint64 threadPoolMax = poolCount - reserveCount - procCount;
 				if (threadPoolMax < 0) {
 					threadPoolMax = 0;
 				}
-				cint64 maxProc = poolCount - (cacheThreadReserve + baseThreadReserve + safetyThreadReserve + threadPoolMax);
-				if (maxProc < 1) {
-					maxProc = 1;
-					threadPoolMax = qMax<cint64>(0, poolCount - (cacheThreadReserve + baseThreadReserve + safetyThreadReserve + maxProc));
-				}
-				if (procCount > maxProc) {
-					procCount = maxProc;
 #ifdef __EMSCRIPTEN__
+				if (procCountReduced) {
 					LOG(INFO, "::Konclude::Wasm",
 							QString("Thread reserve=%1 reduces procCount to %2 (pool=%3)")
-									.arg(cacheThreadReserve + baseThreadReserve + safetyThreadReserve + threadPoolMax)
+									.arg(reserveCount + threadPoolMax)
 									.arg(procCount)
 									.arg(poolCount),
 							0);
-#endif
 				}
+#endif
 				if (!wasmThreadsEnabled) {
 					procCount = 1;
 					threadPoolMax = 0;
@@ -583,6 +654,12 @@ namespace {
 #else
 				setConfigValue("Konclude.Calculation.Classification.MaximumParallelSubsumptionCalculationCount", "1");
 #endif
+				{
+					QMutexLocker locker(&mConfigMutex);
+					for (auto it = mConfigOverrides.constBegin(); it != mConfigOverrides.constEnd(); ++it) {
+						setConfigValue(it.key(), it.value());
+					}
+				}
 
 				if (!mReasonerLoader) {
 					mReasonerLoader = new CDefaultReasonerLoader();
@@ -659,6 +736,8 @@ namespace {
 			int mActiveJobId = 0;
 			CConfiguration* mConfiguration = nullptr;
 			CDefaultReasonerLoader* mReasonerLoader = nullptr;
+			QMap<QString, QString> mConfigOverrides;
+			QMutex mConfigMutex;
 			std::deque<int> mQueue;
 			std::unordered_map<int, std::unique_ptr<CWasmJob>> mJobs;
 	};
@@ -790,6 +869,14 @@ void konclude_tick(int max_ms) {
 #else
 	CWasmJobManager::instance().tick(max_ms);
 #endif
+}
+
+int konclude_set_config(const char* key, const char* value) {
+	return CWasmJobManager::instance().setConfigOverrideUtf8(key, value);
+}
+
+int konclude_reset_config_overrides() {
+	return CWasmJobManager::instance().resetConfigOverrides();
 }
 #endif
 

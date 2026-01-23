@@ -66,7 +66,7 @@ namespace Konclude {
 					static inline T* allocateAndConstruct(CMemoryAllocationManager* memoryAllocatorManager) {
 						T* object = 0;
 						if (memoryAllocatorManager) {
-							void* memAddr = memoryAllocatorManager->allocate(sizeof(T));
+							void* memAddr = memoryAllocatorManager->allocateAligned(sizeof(T), static_cast<int>(alignof(T)));
 							object = (T*)memAddr;
 							new (object) T();
 						} else {
@@ -78,7 +78,7 @@ namespace Konclude {
 					static inline T* allocate(CMemoryAllocationManager* memoryAllocatorManager) {
 						T* object = 0;
 						if (memoryAllocatorManager) {
-							void* memAddr = memoryAllocatorManager->allocate(sizeof(T));
+							void* memAddr = memoryAllocatorManager->allocateAligned(sizeof(T), static_cast<int>(alignof(T)));
 							object = (T*)memAddr;
 						} else {
 							object = new T();
@@ -89,7 +89,7 @@ namespace Konclude {
 					static inline T* allocateMemory(CMemoryAllocationManager* memoryAllocatorManager) {
 						T* object = 0;
 						if (memoryAllocatorManager) {
-							void* memAddr = memoryAllocatorManager->allocate(sizeof(T));
+							void* memAddr = memoryAllocatorManager->allocateAligned(sizeof(T), static_cast<int>(alignof(T)));
 							object = (T*)memAddr;
 						} else {
 							object = new T();
@@ -100,7 +100,7 @@ namespace Konclude {
 					static inline T* allocateAndConstructArray(CMemoryAllocationManager* memoryAllocatorManager, cint arrayCount) {
 						T* objectArray = 0;
 						if (memoryAllocatorManager) {
-							void* memAddr = memoryAllocatorManager->allocate(sizeof(T)*arrayCount);
+							void* memAddr = memoryAllocatorManager->allocateAligned(sizeof(T)*arrayCount, static_cast<int>(alignof(T)));
 							objectArray = (T*)memAddr;
 							T* nextObject = objectArray;
 							for (cint idx = 0; idx < arrayCount; ++idx) {
@@ -121,7 +121,7 @@ namespace Konclude {
 					static inline T* allocateArray(CMemoryAllocationManager* memoryAllocatorManager, cint arrayCount) {
 						T* objectArray = 0;
 						if (memoryAllocatorManager) {
-							void* memAddr = memoryAllocatorManager->allocate(sizeof(T)*arrayCount);
+							void* memAddr = memoryAllocatorManager->allocateAligned(sizeof(T)*arrayCount, static_cast<int>(alignof(T)));
 							objectArray = (T*)memAddr;
 						} else {
 							objectArray = new T[arrayCount];

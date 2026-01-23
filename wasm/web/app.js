@@ -10,6 +10,8 @@ const forcedMode = params.get("mode");
 const datasetParam = params.get("dataset") || "sample";
 const onlyParam = params.get("only");
 const debug = params.get("debug") === "1";
+const profileParam = params.get("profile");
+const workersParam = params.get("workers");
 const mainParam = params.get("main");
 const useMainThread = mainParam === null ? true : mainParam === "1";
 const canUseThreads = window.crossOriginIsolated && typeof SharedArrayBuffer !== "undefined";
@@ -63,6 +65,7 @@ window.__koncludeResult = {
   ok: false,
   mode,
   dataset: { name: datasetParam, version: null },
+  profile: null,
   crossOriginIsolated: window.crossOriginIsolated,
   classification: null,
   consistency: null,
@@ -81,6 +84,9 @@ function formatResult(result) {
     const versionText = result.dataset.version ? ` (${result.dataset.version})` : "";
     const label = result.dataset.label || result.dataset.name;
     lines.push(`dataset: ${label}${versionText}`);
+  }
+  if (result.profile) {
+    lines.push(`profile: ${result.profile}`);
   }
   if (result.classification) {
     const sizeText = Number.isFinite(result.classification.outputSize)
@@ -119,6 +125,7 @@ function finalize(result) {
     ok: Boolean(result.ok),
     mode,
     dataset: result.dataset || { name: datasetParam, version: null },
+    profile: result.profile || null,
     crossOriginIsolated: window.crossOriginIsolated,
     classification: result.classification || null,
     consistency: result.consistency || null,
@@ -128,6 +135,136 @@ function finalize(result) {
   statusEl.textContent = result.ok ? "ok" : "error";
   outputEl.textContent = summary || String(result.error || "");
   console.log("finalize", { ok: result.ok, error: result.error });
+}
+
+function selectProfile(dataset) {
+  if (profileParam && profileParam !== "auto") {
+    return profileParam;
+  }
+  if (datasetParam.startsWith("d3fend")) {
+    return "d3fend";
+  }
+  if (dataset && dataset.sizeBytes > 2 * 1024 * 1024) {
+    return "large";
+  }
+  return "default";
+}
+
+const DEFAULT_D3FEND_WORKERS = 3;
+const D3FEND_PARALLELISM_CAP = 1;
+const DEFAULT_LARGE_WORKERS = 2;
+
+function applyParallelismCaps(overrides, workers) {
+  const parallel = Math.max(1, workers);
+  overrides["Konclude.Calculation.Classification.MaximumParallelSubsumptionCalculationCount"] = String(parallel);
+  overrides["Konclude.Calculation.Classification.OptimizedKPSetClassSubsumptionClassifier.MaximumParallelSatisfiableCalculationCount"] =
+    String(parallel);
+  overrides["Konclude.Calculation.Classification.OptimizedKPSetClassSubsumptionClassifier.MultipliedUnitsParallelSatisfiableCalculationCount"] =
+    "1";
+  overrides["Konclude.Calculation.Classification.OptimizedSubClassSubsumptionClassifier.MaximumParallelSatisfiableCalculationCount"] =
+    String(parallel);
+  overrides["Konclude.Calculation.Classification.OptimizedSubClassSubsumptionClassifier.MultipliedUnitsParallelSatisfiableCalculationCount"] =
+    "1";
+  overrides["Konclude.Calculation.Precomputation.TotalPrecomputor.MaximumParallelCalculationCount"] = String(
+    Math.max(4, workers * 4)
+  );
+  overrides["Konclude.Calculation.Precomputation.TotalPrecomputor.MultipliedUnitsParallelCalculationCount"] = "1";
+  overrides["Konclude.Calculation.Precomputation.TotalPrecomputor.MaximumBatchJobCreationCount"] = String(
+    Math.max(2, workers * 2)
+  );
+}
+
+function buildOverrides(profile) {
+  if (profile === "d3fend") {
+    const overrides = {
+      "Konclude.Calculation.ProcessorCount": String(DEFAULT_D3FEND_WORKERS),
+      "Konclude.Calculation.WorkerCount": String(DEFAULT_D3FEND_WORKERS),
+      "Konclude.Calculation.AdaptThreadPoolSizeProcessorCount": "false",
+      "Konclude.Calculation.ThreadPoolMaxCount": "1",
+      "Konclude.Calculation.Classification.Classifier":
+        "Konclude.Calculation.Classification.Classifier.OptimizedSubClassClassifier",
+    "Konclude.Calculation.Optimization.BranchTriggering": "false",
+    "Konclude.Calculation.Preprocessing.BranchingStatisticsExtender": "false",
+    "Konclude.Calculation.Preprocessing.DisjunctSorting": "false",
+    "Konclude.Calculation.Preprocessing.CommonDisjunctConceptExtraction": "false",
+    "Konclude.Calculation.Optimization.IndividualsBackendCacheLoading": "false",
+  };
+    applyParallelismCaps(overrides, Math.min(DEFAULT_D3FEND_WORKERS, D3FEND_PARALLELISM_CAP));
+    return overrides;
+  }
+  if (profile === "large") {
+    const overrides = {
+      "Konclude.Calculation.ProcessorCount": String(DEFAULT_LARGE_WORKERS),
+      "Konclude.Calculation.WorkerCount": String(DEFAULT_LARGE_WORKERS),
+      "Konclude.Calculation.AdaptThreadPoolSizeProcessorCount": "false",
+    };
+    applyParallelismCaps(overrides, DEFAULT_LARGE_WORKERS);
+    return overrides;
+  }
+  return {};
+}
+
+function applyWorkerOverride(overrides, workersOverride, profile) {
+  const workers = Number.parseInt(workersOverride || "", 10);
+  if (Number.isFinite(workers) && workers > 0) {
+    const maxCores = Number.isFinite(navigator?.hardwareConcurrency)
+      ? navigator.hardwareConcurrency
+      : null;
+    const cappedWorkers =
+      profile === "d3fend" && maxCores ? Math.min(workers, maxCores) : workers;
+    if (cappedWorkers !== workers) {
+      console.warn("capping d3fend workers to", cappedWorkers);
+    }
+    overrides["Konclude.Calculation.ProcessorCount"] = String(cappedWorkers);
+    overrides["Konclude.Calculation.WorkerCount"] = String(cappedWorkers);
+    overrides["Konclude.Calculation.AdaptThreadPoolSizeProcessorCount"] = "false";
+    if (profile === "d3fend") {
+      overrides["Konclude.Calculation.ThreadPoolMaxCount"] = "1";
+    }
+      if (profile === "d3fend") {
+        applyParallelismCaps(overrides, Math.min(cappedWorkers, D3FEND_PARALLELISM_CAP));
+      } else if (profile === "large") {
+        applyParallelismCaps(overrides, cappedWorkers);
+      }
+  }
+}
+
+function buildOverridesWithWorkers(profile, workersOverride) {
+  const overrides = buildOverrides(profile);
+  applyWorkerOverride(overrides, workersOverride, profile);
+  return overrides;
+}
+
+function applyWasmOverrides(moduleResolved, overrides) {
+  if (!overrides || !moduleResolved || typeof moduleResolved.cwrap !== "function") {
+    return;
+  }
+  let setConfig = null;
+  let resetConfig = null;
+  try {
+    setConfig = moduleResolved.cwrap("konclude_set_config", "number", ["string", "string"]);
+    resetConfig = moduleResolved.cwrap("konclude_reset_config_overrides", "number", []);
+  } catch (err) {
+    console.warn("konclude config overrides not available", err);
+    return;
+  }
+  if (!setConfig || !resetConfig) {
+    return;
+  }
+  resetConfig();
+  for (const [key, value] of Object.entries(overrides)) {
+    setConfig(key, String(value));
+  }
+}
+
+function applyProfileOverrides(moduleResolved, dataset) {
+  const profile = selectProfile(dataset);
+  const overrides = buildOverridesWithWorkers(profile, workersParam);
+  if (debug) {
+    console.log("[konclude] applying profile", { profile, overrides });
+  }
+  applyWasmOverrides(moduleResolved, overrides);
+  return { profile, overrides };
 }
 
 function loadScript(url) {
@@ -415,6 +552,7 @@ async function runOnMainThread(dataset) {
     console.log("[konclude] runOnMainThread loading module");
   }
   const moduleResolved = await initModule();
+  const profileInfo = applyProfileOverrides(moduleResolved, dataset);
   setStatus("running mt on main thread");
   if (debug) {
     console.log("[konclude] runOnMainThread module ready");
@@ -464,6 +602,7 @@ async function runOnMainThread(dataset) {
   finalize({
     ok,
     dataset: { name: dataset.name, label: dataset.label, version: dataset.meta?.version || null },
+    profile: profileInfo?.profile || null,
     classification: classify,
     consistency: consistencyPayload,
     error: ok ? null : "konclude classify/consistency failed",
@@ -516,6 +655,8 @@ async function runInWorker(dataset) {
     debug,
     timeoutMs,
     only: onlyParam,
+    profile: selectProfile(dataset),
+    workers: workersParam,
     dataset: { name: dataset.name, label: dataset.label, version: dataset.meta?.version || null },
   });
 }

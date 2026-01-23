@@ -36,6 +36,9 @@ KONCLUDE_WASM_EXPORT int konclude_job_status(int job_id);
 KONCLUDE_WASM_EXPORT int konclude_job_exit_code(int job_id);
 KONCLUDE_WASM_EXPORT void konclude_job_free(int job_id);
 KONCLUDE_WASM_EXPORT void konclude_tick(int max_ms);
+// Optional configuration overrides (persist across jobs until reset).
+KONCLUDE_WASM_EXPORT int konclude_set_config(const char* key, const char* value);
+KONCLUDE_WASM_EXPORT int konclude_reset_config_overrides();
 #endif
 
 // Free buffers returned by *_owl2xml.

@@ -48,6 +48,8 @@ async function runBrowser(browserType, label, modes) {
     const debugParam = process.env.DEBUG_WORKER === "1" ? "&debug=1" : "";
     const datasetParam = process.env.DATASET ? `&dataset=${encodeURIComponent(process.env.DATASET)}` : "";
     const timeoutParam = process.env.TIMEOUT_MS ? `&timeoutMs=${encodeURIComponent(process.env.TIMEOUT_MS)}` : "";
+    const profileParam = process.env.PROFILE ? `&profile=${encodeURIComponent(process.env.PROFILE)}` : "";
+    const workersParam = process.env.WORKERS ? `&workers=${encodeURIComponent(process.env.WORKERS)}` : "";
     let mainParam = "";
     if (process.env.MAIN_THREAD === "1") {
       mainParam = "&main=1";
@@ -55,7 +57,7 @@ async function runBrowser(browserType, label, modes) {
       mainParam = "&main=0";
     }
     const onlyParam = process.env.ONLY ? `&only=${encodeURIComponent(process.env.ONLY)}` : "";
-    const url = `${baseUrl}/web/index.html?mode=${mode}${debugParam}${datasetParam}${timeoutParam}${mainParam}${onlyParam}`;
+    const url = `${baseUrl}/web/index.html?mode=${mode}${debugParam}${datasetParam}${timeoutParam}${profileParam}${workersParam}${mainParam}${onlyParam}`;
     console.log(`${label} ${mode}: loading`);
 
     await page.goto(url, { waitUntil: "load" });
