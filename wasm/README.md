@@ -149,14 +149,6 @@ Request worker mode (falls back to the main thread in the demo):
 MAIN_THREAD=0 BROWSERS=chromium node e2e.js
 ```
 
-To exercise the D3FEND datasets:
-```bash
-DATASET=d3fend BROWSERS=chromium node e2e.js
-DATASET=d3fend-full TIMEOUT_MS=300000 BROWSERS=chromium node e2e.js
-# Aggressive parallelism (can increase CPU use but may need longer timeouts):
-PARALLEL=2 DATASET=d3fend PROFILE=d3fend WORKERS=16 BROWSERS=chromium node e2e.js
-```
-
 ## WASM Runtime Profiles (Large Ontologies)
 The web demo applies a conservative multi-threaded profile for large datasets (including D3FEND)
 to reduce threading pressure while still using multiple workers. The D3FEND profile switches to a
@@ -172,6 +164,14 @@ Override via URL params:
 Example (explicitly pin 16 workers):
 ```
 http://localhost:8000/web/index.html?mode=mt&dataset=d3fend&profile=d3fend&workers=16
+```
+
+D3FEND E2E examples:
+```bash
+DATASET=d3fend BROWSERS=chromium node e2e.js
+DATASET=d3fend-full TIMEOUT_MS=300000 BROWSERS=chromium node e2e.js
+# Aggressive parallelism (can increase CPU use but may need longer timeouts):
+PARALLEL=2 DATASET=d3fend PROFILE=d3fend WORKERS=16 BROWSERS=chromium node e2e.js
 ```
 
 With the default 2GB heap and D3FEND parallelism capped at 1 by default, D3FEND classification is stable
