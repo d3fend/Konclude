@@ -7,6 +7,7 @@ self.onmessage = async (event) => {
   const preferBlocking = payload.blocking === true || payload.blocking === "1";
   const profile = payload.profile || "default";
   const workersParam = payload.workers || "";
+  const parallelParam = payload.parallel || "";
   const totalMemory = Number.isFinite(payload.totalMemory) ? payload.totalMemory : null;
   const timeoutMs = Number.isFinite(payload.timeoutMs) ? payload.timeoutMs : 120000;
   const dataset = payload.dataset || null;
@@ -63,11 +64,23 @@ self.onmessage = async (event) => {
       ? self.navigator.hardwareConcurrency
       : DEFAULT_D3FEND_WORKERS_MAX
   );
-  const D3FEND_PARALLELISM_CAP = 1;
+  const DEFAULT_D3FEND_PARALLELISM = 1;
+  const D3FEND_PARALLELISM_OPTIONS = { precomputeScale: 2, batchScale: 1 };
   const DEFAULT_LARGE_WORKERS = 2;
+  const parallelOverrideRaw = Number.parseInt(parallelParam || "", 10);
+  const parallelOverride = Number.isFinite(parallelOverrideRaw) && parallelOverrideRaw > 0 ? parallelOverrideRaw : null;
 
-  function applyParallelismCaps(overrides, workers) {
+  function resolveParallelCap(workers, profileName) {
+    const cap =
+      parallelOverride ??
+      (profileName === "d3fend" ? DEFAULT_D3FEND_PARALLELISM : workers);
+    return Math.max(1, Math.min(workers, cap));
+  }
+
+  function applyParallelismCaps(overrides, workers, options = {}) {
     const parallel = Math.max(1, workers);
+    const precomputeScale = options.precomputeScale ?? 4;
+    const batchScale = options.batchScale ?? 2;
     overrides["Konclude.Calculation.Classification.MaximumParallelSubsumptionCalculationCount"] = String(parallel);
     overrides["Konclude.Calculation.Classification.OptimizedKPSetClassSubsumptionClassifier.MaximumParallelSatisfiableCalculationCount"] =
       String(parallel);
@@ -78,11 +91,11 @@ self.onmessage = async (event) => {
     overrides["Konclude.Calculation.Classification.OptimizedSubClassSubsumptionClassifier.MultipliedUnitsParallelSatisfiableCalculationCount"] =
       "1";
     overrides["Konclude.Calculation.Precomputation.TotalPrecomputor.MaximumParallelCalculationCount"] = String(
-      Math.max(4, workers * 4)
+      Math.max(4, parallel * precomputeScale)
     );
     overrides["Konclude.Calculation.Precomputation.TotalPrecomputor.MultipliedUnitsParallelCalculationCount"] = "1";
     overrides["Konclude.Calculation.Precomputation.TotalPrecomputor.MaximumBatchJobCreationCount"] = String(
-      Math.max(2, workers * 2)
+      Math.max(2, parallel * batchScale)
     );
   }
 
@@ -101,7 +114,11 @@ self.onmessage = async (event) => {
         "Konclude.Calculation.Preprocessing.CommonDisjunctConceptExtraction": "false",
         "Konclude.Calculation.Optimization.IndividualsBackendCacheLoading": "false",
       };
-      applyParallelismCaps(overrides, Math.min(DEFAULT_D3FEND_WORKERS, D3FEND_PARALLELISM_CAP));
+      applyParallelismCaps(
+        overrides,
+        resolveParallelCap(DEFAULT_D3FEND_WORKERS, "d3fend"),
+        D3FEND_PARALLELISM_OPTIONS
+      );
       return overrides;
     }
     if (profileName === "large") {
@@ -110,7 +127,7 @@ self.onmessage = async (event) => {
         "Konclude.Calculation.WorkerCount": String(DEFAULT_LARGE_WORKERS),
         "Konclude.Calculation.AdaptThreadPoolSizeProcessorCount": "false",
       };
-      applyParallelismCaps(overrides, DEFAULT_LARGE_WORKERS);
+      applyParallelismCaps(overrides, resolveParallelCap(DEFAULT_LARGE_WORKERS, "large"));
       return overrides;
     }
     return {};
@@ -134,9 +151,13 @@ self.onmessage = async (event) => {
         overrides["Konclude.Calculation.ThreadPoolMaxCount"] = "1";
       }
       if (profileName === "d3fend") {
-        applyParallelismCaps(overrides, Math.min(cappedWorkers, D3FEND_PARALLELISM_CAP));
+        applyParallelismCaps(
+          overrides,
+          resolveParallelCap(cappedWorkers, profileName),
+          D3FEND_PARALLELISM_OPTIONS
+        );
       } else if (profileName === "large") {
-        applyParallelismCaps(overrides, cappedWorkers);
+        applyParallelismCaps(overrides, resolveParallelCap(cappedWorkers, profileName));
       }
     }
   }

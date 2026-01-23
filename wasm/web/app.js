@@ -12,9 +12,14 @@ const onlyParam = params.get("only");
 const debug = params.get("debug") === "1";
 const profileParam = params.get("profile");
 const workersParam = params.get("workers");
+const parallelParam = params.get("parallel");
 const mainParam = params.get("main");
 const useMainThread = mainParam === null ? true : mainParam === "1";
-const canUseThreads = window.crossOriginIsolated && typeof SharedArrayBuffer !== "undefined";
+const sharedArrayBufferAvailable = typeof SharedArrayBuffer !== "undefined";
+const canUseThreads = window.crossOriginIsolated && sharedArrayBufferAvailable;
+const hardwareConcurrency = Number.isFinite(navigator?.hardwareConcurrency)
+  ? navigator.hardwareConcurrency
+  : null;
 const mode = "mt";
 const timeoutParam = params.has("timeoutMs") ? Number(params.get("timeoutMs")) : NaN;
 const defaultTimeoutMs = datasetParam === "d3fend" ? 300000 : 120000;
@@ -22,7 +27,12 @@ const timeoutMs = Number.isFinite(timeoutParam) ? timeoutParam : defaultTimeoutM
 
 modeEl.textContent = mode;
 datasetEl.textContent = datasetParam;
-console.log("konclude wasm smoke test starting", { mode, canUseThreads, dataset: datasetParam });
+console.log("konclude wasm smoke test starting", {
+  mode,
+  canUseThreads,
+  dataset: datasetParam,
+  hardwareConcurrency,
+});
 
 const OWL_XML = `<?xml version="1.0"?>
 <Ontology xmlns="http://www.w3.org/2002/07/owl#"
@@ -67,6 +77,13 @@ window.__koncludeResult = {
   dataset: { name: datasetParam, version: null },
   profile: null,
   crossOriginIsolated: window.crossOriginIsolated,
+  runtime: {
+    canUseThreads,
+    crossOriginIsolated: window.crossOriginIsolated,
+    sharedArrayBuffer: sharedArrayBufferAvailable,
+    hardwareConcurrency,
+  },
+  config: null,
   classification: null,
   realization: null,
   consistency: null,
@@ -88,6 +105,29 @@ function formatResult(result) {
   }
   if (result.profile) {
     lines.push(`profile: ${result.profile}`);
+  }
+  if (result.runtime) {
+    const hwText =
+      Number.isFinite(result.runtime.hardwareConcurrency) && result.runtime.hardwareConcurrency > 0
+        ? result.runtime.hardwareConcurrency
+        : "n/a";
+    lines.push(
+      `runtime: threads=${result.runtime.canUseThreads ? "enabled" : "disabled"} crossOriginIsolated=${Boolean(
+        result.runtime.crossOriginIsolated
+      )} sharedArrayBuffer=${Boolean(result.runtime.sharedArrayBuffer)} hw=${hwText}`
+    );
+  }
+  if (result.config) {
+    const workersText = Number.isFinite(result.config.workers) ? result.config.workers : "default";
+    const parallelText = Number.isFinite(result.config.parallel) ? result.config.parallel : "default";
+    const precomputeText = Number.isFinite(result.config.precomputeParallel)
+      ? result.config.precomputeParallel
+      : "default";
+    const batchText = Number.isFinite(result.config.precomputeBatch) ? result.config.precomputeBatch : "default";
+    const poolText = Number.isFinite(result.config.threadPoolMax) ? result.config.threadPoolMax : "default";
+    lines.push(
+      `config: workers=${workersText} parallel=${parallelText} precompute=${precomputeText} batch=${batchText} threadPoolMax=${poolText}`
+    );
   }
   if (result.classification) {
     const sizeText = Number.isFinite(result.classification.outputSize)
@@ -135,6 +175,9 @@ function formatResult(result) {
 
 function finalize(result) {
   const summary = formatResult(result);
+  const runtime = result.runtime
+    ? { ...window.__koncludeResult.runtime, ...result.runtime }
+    : window.__koncludeResult.runtime;
   window.__koncludeResult = {
     done: true,
     ok: Boolean(result.ok),
@@ -142,6 +185,8 @@ function finalize(result) {
     dataset: result.dataset || { name: datasetParam, version: null },
     profile: result.profile || null,
     crossOriginIsolated: window.crossOriginIsolated,
+    runtime,
+    config: result.config || null,
     classification: result.classification || null,
     realization: result.realization || null,
     consistency: result.consistency || null,
@@ -169,13 +214,25 @@ function selectProfile(dataset) {
 const DEFAULT_D3FEND_WORKERS_MAX = 16;
 const DEFAULT_D3FEND_WORKERS = Math.min(
   DEFAULT_D3FEND_WORKERS_MAX,
-  Number.isFinite(navigator?.hardwareConcurrency) ? navigator.hardwareConcurrency : DEFAULT_D3FEND_WORKERS_MAX
+  Number.isFinite(hardwareConcurrency) ? hardwareConcurrency : DEFAULT_D3FEND_WORKERS_MAX
 );
-const D3FEND_PARALLELISM_CAP = 1;
+const DEFAULT_D3FEND_PARALLELISM = 1;
+const D3FEND_PARALLELISM_OPTIONS = { precomputeScale: 2, batchScale: 1 };
 const DEFAULT_LARGE_WORKERS = 2;
+const parallelOverrideRaw = Number.parseInt(parallelParam || "", 10);
+const parallelOverride = Number.isFinite(parallelOverrideRaw) && parallelOverrideRaw > 0 ? parallelOverrideRaw : null;
 
-function applyParallelismCaps(overrides, workers) {
+function resolveParallelCap(workers, profile) {
+  const cap =
+    parallelOverride ??
+    (profile === "d3fend" ? DEFAULT_D3FEND_PARALLELISM : workers);
+  return Math.max(1, Math.min(workers, cap));
+}
+
+function applyParallelismCaps(overrides, workers, options = {}) {
   const parallel = Math.max(1, workers);
+  const precomputeScale = options.precomputeScale ?? 4;
+  const batchScale = options.batchScale ?? 2;
   overrides["Konclude.Calculation.Classification.MaximumParallelSubsumptionCalculationCount"] = String(parallel);
   overrides["Konclude.Calculation.Classification.OptimizedKPSetClassSubsumptionClassifier.MaximumParallelSatisfiableCalculationCount"] =
     String(parallel);
@@ -186,11 +243,11 @@ function applyParallelismCaps(overrides, workers) {
   overrides["Konclude.Calculation.Classification.OptimizedSubClassSubsumptionClassifier.MultipliedUnitsParallelSatisfiableCalculationCount"] =
     "1";
   overrides["Konclude.Calculation.Precomputation.TotalPrecomputor.MaximumParallelCalculationCount"] = String(
-    Math.max(4, workers * 4)
+    Math.max(4, parallel * precomputeScale)
   );
   overrides["Konclude.Calculation.Precomputation.TotalPrecomputor.MultipliedUnitsParallelCalculationCount"] = "1";
   overrides["Konclude.Calculation.Precomputation.TotalPrecomputor.MaximumBatchJobCreationCount"] = String(
-    Math.max(2, workers * 2)
+    Math.max(2, parallel * batchScale)
   );
 }
 
@@ -209,7 +266,11 @@ function buildOverrides(profile) {
       "Konclude.Calculation.Preprocessing.CommonDisjunctConceptExtraction": "false",
       "Konclude.Calculation.Optimization.IndividualsBackendCacheLoading": "false",
     };
-    applyParallelismCaps(overrides, Math.min(DEFAULT_D3FEND_WORKERS, D3FEND_PARALLELISM_CAP));
+    applyParallelismCaps(
+      overrides,
+      resolveParallelCap(DEFAULT_D3FEND_WORKERS, "d3fend"),
+      D3FEND_PARALLELISM_OPTIONS
+    );
     return overrides;
   }
   if (profile === "large") {
@@ -218,7 +279,7 @@ function buildOverrides(profile) {
       "Konclude.Calculation.WorkerCount": String(DEFAULT_LARGE_WORKERS),
       "Konclude.Calculation.AdaptThreadPoolSizeProcessorCount": "false",
     };
-    applyParallelismCaps(overrides, DEFAULT_LARGE_WORKERS);
+    applyParallelismCaps(overrides, resolveParallelCap(DEFAULT_LARGE_WORKERS, "large"));
     return overrides;
   }
   return {};
@@ -227,9 +288,7 @@ function buildOverrides(profile) {
 function applyWorkerOverride(overrides, workersOverride, profile) {
   const workers = Number.parseInt(workersOverride || "", 10);
   if (Number.isFinite(workers) && workers > 0) {
-    const maxCores = Number.isFinite(navigator?.hardwareConcurrency)
-      ? navigator.hardwareConcurrency
-      : null;
+    const maxCores = Number.isFinite(hardwareConcurrency) ? hardwareConcurrency : null;
     const cappedWorkers =
       profile === "d3fend" && maxCores ? Math.min(workers, maxCores) : workers;
     if (cappedWorkers !== workers) {
@@ -241,11 +300,17 @@ function applyWorkerOverride(overrides, workersOverride, profile) {
     if (profile === "d3fend") {
       overrides["Konclude.Calculation.ThreadPoolMaxCount"] = "1";
     }
+    if (profile === "d3fend" || profile === "large") {
       if (profile === "d3fend") {
-        applyParallelismCaps(overrides, Math.min(cappedWorkers, D3FEND_PARALLELISM_CAP));
-      } else if (profile === "large") {
-        applyParallelismCaps(overrides, cappedWorkers);
+        applyParallelismCaps(
+          overrides,
+          resolveParallelCap(cappedWorkers, profile),
+          D3FEND_PARALLELISM_OPTIONS
+        );
+      } else {
+        applyParallelismCaps(overrides, resolveParallelCap(cappedWorkers, profile));
       }
+    }
   }
 }
 
@@ -253,6 +318,27 @@ function buildOverridesWithWorkers(profile, workersOverride) {
   const overrides = buildOverrides(profile);
   applyWorkerOverride(overrides, workersOverride, profile);
   return overrides;
+}
+
+function summarizeOverrides(profile, overrides) {
+  const getNumber = (key) => {
+    if (!overrides || !(key in overrides)) {
+      return null;
+    }
+    const value = Number.parseInt(String(overrides[key]), 10);
+    return Number.isFinite(value) ? value : null;
+  };
+  const config = {
+    profile,
+    workers:
+      getNumber("Konclude.Calculation.ProcessorCount") ??
+      getNumber("Konclude.Calculation.WorkerCount"),
+    parallel: getNumber("Konclude.Calculation.Classification.MaximumParallelSubsumptionCalculationCount"),
+    precomputeParallel: getNumber("Konclude.Calculation.Precomputation.TotalPrecomputor.MaximumParallelCalculationCount"),
+    precomputeBatch: getNumber("Konclude.Calculation.Precomputation.TotalPrecomputor.MaximumBatchJobCreationCount"),
+    threadPoolMax: getNumber("Konclude.Calculation.ThreadPoolMaxCount"),
+  };
+  return config;
 }
 
 function applyWasmOverrides(moduleResolved, overrides) {
@@ -284,7 +370,7 @@ function applyProfileOverrides(moduleResolved, dataset) {
     console.log("[konclude] applying profile", { profile, overrides });
   }
   applyWasmOverrides(moduleResolved, overrides);
-  return { profile, overrides };
+  return { profile, overrides, config: summarizeOverrides(profile, overrides) };
 }
 
 function loadScript(url) {
@@ -635,6 +721,7 @@ async function runOnMainThread(dataset) {
     ok,
     dataset: { name: dataset.name, label: dataset.label, version: dataset.meta?.version || null },
     profile: profileInfo?.profile || null,
+    config: profileInfo?.config || null,
     classification: classify,
     realization,
     consistency: consistencyPayload,

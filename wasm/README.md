@@ -153,33 +153,33 @@ To exercise the D3FEND datasets:
 ```bash
 DATASET=d3fend BROWSERS=chromium node e2e.js
 DATASET=d3fend-full TIMEOUT_MS=300000 BROWSERS=chromium node e2e.js
+# Aggressive parallelism (can increase CPU use but may need longer timeouts):
+PARALLEL=2 DATASET=d3fend PROFILE=d3fend WORKERS=16 BROWSERS=chromium node e2e.js
 ```
 
 ## WASM Runtime Profiles (Large Ontologies)
 The web demo applies a conservative multi-threaded profile for large datasets (including D3FEND)
-to reduce threading pressure while still using multiple workers. The D3FEND profile caps
-classification/precomputation parallelism, switches to a less aggressive classifier, and defaults
-to `min(16, hardware concurrency)` workers for D3FEND; explicit `workers=` overrides are clamped to available hardware
+to reduce threading pressure while still using multiple workers. The D3FEND profile switches to a
+less aggressive classifier, disables a few preprocessing optimizations, and defaults to
+`min(16, hardware concurrency)` workers for D3FEND; explicit `workers=` overrides are clamped to available hardware
 concurrency.
 
 Override via URL params:
 - `profile=default|large|d3fend` (default: `auto`)
 - `workers=<N>` to force Konclude worker/processor counts
+- `parallel=<N>` to cap classification/precomputation parallelism (defaults to workers; D3FEND defaults to 1)
 
 Example (explicitly pin 16 workers):
 ```
 http://localhost:8000/web/index.html?mode=mt&dataset=d3fend&profile=d3fend&workers=16
 ```
 
-Example (use the full 16-thread pool):
-```
-http://localhost:8000/web/index.html?mode=mt&dataset=d3fend&profile=d3fend&workers=16
-```
-
-With the default 2GB heap and the D3FEND parallelism cap at 1, D3FEND classification is stable
+With the default 2GB heap and D3FEND parallelism capped at 1 by default, D3FEND classification is stable
 through 16 workers (thread pool size). A 3GB heap build crashes in Chromium for D3FEND, so 2GB is
 currently the practical max. To go beyond 16 workers, rebuild with a larger thread pool
-(`KONCLUDE_WASM_PTHREAD_POOL`) and validate memory limits in your target browsers.
+(`KONCLUDE_WASM_PTHREAD_POOL`) and validate memory limits in your target browsers. Use `parallel=<N>`
+to raise or cap parallelism if you see memory pressure. In local tests, `parallel=2` is stable, while
+`parallel=3` can exceed the default timeout (tune `timeoutMs`/`TIMEOUT_MS` accordingly).
 
 The WASM bridge also exposes runtime config overrides:
 - `konclude_set_config(key, value)`

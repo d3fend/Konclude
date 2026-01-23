@@ -57,7 +57,8 @@ async function runBrowser(browserType, label, modes) {
       mainParam = "&main=0";
     }
     const onlyParam = process.env.ONLY ? `&only=${encodeURIComponent(process.env.ONLY)}` : "";
-    const url = `${baseUrl}/web/index.html?mode=${mode}${debugParam}${datasetParam}${timeoutParam}${profileParam}${workersParam}${mainParam}${onlyParam}`;
+    const parallelParam = process.env.PARALLEL ? `&parallel=${encodeURIComponent(process.env.PARALLEL)}` : "";
+    const url = `${baseUrl}/web/index.html?mode=${mode}${debugParam}${datasetParam}${timeoutParam}${profileParam}${workersParam}${parallelParam}${mainParam}${onlyParam}`;
     console.log(`${label} ${mode}: loading`);
 
     await page.goto(url, { waitUntil: "load" });
