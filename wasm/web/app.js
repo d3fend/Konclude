@@ -23,6 +23,7 @@ const hardwareConcurrency = Number.isFinite(navigator?.hardwareConcurrency)
 const mode = "mt";
 const timeoutParam = params.has("timeoutMs") ? Number(params.get("timeoutMs")) : NaN;
 let timeoutMs = Number.isFinite(timeoutParam) ? timeoutParam : null;
+window.__koncludeRuntimeTimeoutMs = Number.isFinite(timeoutMs) ? timeoutMs : null;
 
 modeEl.textContent = mode;
 datasetEl.textContent = datasetParam;
@@ -690,6 +691,7 @@ async function main() {
   datasetVersionEl.textContent = dataset.meta?.version || "n/a";
   datasetSizeEl.textContent = `${dataset.sizeBytes} bytes`;
   timeoutMs = resolveTimeoutMs(dataset);
+  window.__koncludeRuntimeTimeoutMs = timeoutMs;
 
   setStatus("starting");
   if (forcedMode && forcedMode !== "mt") {

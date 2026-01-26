@@ -64,9 +64,20 @@ async function runBrowser(browserType, label, modes) {
     await page.goto(url, { waitUntil: "load" });
     console.log(`${label} ${mode}: waiting for result`);
 
+    let waitTimeout = pageTimeout;
+    try {
+      const runtimeTimeoutMs = await page.evaluate(() => window.__koncludeRuntimeTimeoutMs);
+      if (Number.isFinite(runtimeTimeoutMs) && runtimeTimeoutMs > 0) {
+        waitTimeout = Math.max(waitTimeout, runtimeTimeoutMs + 60000);
+        page.setDefaultTimeout(waitTimeout);
+      }
+    } catch {
+      // ignore runtime timeout lookup
+    }
+
     await page.waitForFunction(
       () => window.__koncludeResult && window.__koncludeResult.done,
-      { timeout: pageTimeout }
+      { timeout: waitTimeout }
     );
 
     const result = await page.evaluate(() => window.__koncludeResult);
