@@ -36,13 +36,12 @@ namespace Konclude {
 				CConcurrentTaskCalculationManager::CConcurrentTaskCalculationManager(CWatchDog *watchDog) {
 					calcContext = nullptr;
 					mTaskCalcEn = nullptr;
-					mGenTaskHandleContext = nullptr;
-					mTemMemMan = nullptr;
 				}
 
 				CCalculationManager *CConcurrentTaskCalculationManager::calculateTask(CSatisfiableCalculationTask* task) {
 					if (mTaskCalcEn) {
-						CTaskEventCommunicator::postSendTaskScheduleEvent(mTaskCalcEn->getSchedulerTaskProcessorUnit()->getEventHandler(),task,mTemMemMan);
+						CGeneratorTaskHandleContextBase* genContext = getThreadGeneratorContext();
+						CTaskEventCommunicator::postSendTaskScheduleEvent(mTaskCalcEn->getSchedulerTaskProcessorUnit()->getEventHandler(),task,genContext->getTaskHandleMemoryAllocationManager());
 					}
 					return this;
 				}
@@ -54,7 +53,8 @@ namespace Konclude {
 						return this;
 					}
 #endif
-					CSatisfiableCalculationTaskFromCalculationJobGenerator gen(mGenTaskHandleContext);
+					CGeneratorTaskHandleContextBase* genContext = getThreadGeneratorContext();
+					CSatisfiableCalculationTaskFromCalculationJobGenerator gen(genContext);
 					CSatisfiableCalculationTask* task = gen.createSatisfiableCalculationTask(job,callbackData);
 					if (task) {
 #ifdef __EMSCRIPTEN__
@@ -89,7 +89,8 @@ namespace Konclude {
 
 				CCalculationManager* CConcurrentTaskCalculationManager::calculateJobs(const QList< QPair<CCalculationJob*,CCallbackData*> >& jobCallbackList) {
 					CSatisfiableCalculationTask* taskLinker = nullptr;
-					CSatisfiableCalculationTaskFromCalculationJobGenerator gen(mGenTaskHandleContext);
+					CGeneratorTaskHandleContextBase* genContext = getThreadGeneratorContext();
+					CSatisfiableCalculationTaskFromCalculationJobGenerator gen(genContext);
 					for (QList< QPair<CCalculationJob*,CCallbackData*> >::const_iterator it = jobCallbackList.constBegin(), itEnd = jobCallbackList.constEnd(); it != itEnd; ++it) {
 						QPair<CCalculationJob*,CCallbackData*> jobCallbackPair(*it);
 						CCalculationJob* job(jobCallbackPair.first);
@@ -109,9 +110,17 @@ namespace Konclude {
 					CConfigurationBase *config = 0;
 					calcContext = contextFactory->createCalculationContext(configurationProvider);
 					mTaskCalcEn = dynamic_cast<CConcurrentTaskCalculationEnvironment*>(calcContext);
-					mGenTaskHandleContext = new CGeneratorTaskHandleContextBase();
-					mTemMemMan = mGenTaskHandleContext->getTaskHandleMemoryAllocationManager();
+					getThreadGeneratorContext();
 					return this;
+				}
+
+				CGeneratorTaskHandleContextBase* CConcurrentTaskCalculationManager::getThreadGeneratorContext() {
+					CGeneratorTaskHandleContextBase* genContext = mGenTaskHandleContextStorage.localData();
+					if (!genContext) {
+						genContext = new CGeneratorTaskHandleContextBase();
+						mGenTaskHandleContextStorage.setLocalData(genContext);
+					}
+					return genContext;
 				}
 
 				CCalculationEnviroment *CConcurrentTaskCalculationManager::getCalculationContext() {

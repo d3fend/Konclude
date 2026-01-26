@@ -23,7 +23,19 @@ isEmpty(KONCLUDE_WASM_EXCEPTIONS) { KONCLUDE_WASM_EXCEPTIONS = 1 }
 !equals(KONCLUDE_WASM_EXCEPTIONS, 0) {
 	QMAKE_CFLAGS += -fexceptions
 	QMAKE_CXXFLAGS += -fexceptions
-	QMAKE_LFLAGS += -s DISABLE_EXCEPTION_CATCHING=0
+}
+
+# Prefer native WebAssembly exceptions when available (requires recent emsdk).
+isEmpty(KONCLUDE_WASM_WASM_EXCEPTIONS) { KONCLUDE_WASM_WASM_EXCEPTIONS = 0 }
+!equals(KONCLUDE_WASM_WASM_EXCEPTIONS, 0) {
+	QMAKE_CFLAGS += -fwasm-exceptions
+	QMAKE_CXXFLAGS += -fwasm-exceptions
+	QMAKE_LFLAGS += -fwasm-exceptions
+}
+equals(KONCLUDE_WASM_WASM_EXCEPTIONS, 0) {
+	!equals(KONCLUDE_WASM_EXCEPTIONS, 0) {
+		QMAKE_LFLAGS += -s DISABLE_EXCEPTION_CATCHING=0
+	}
 }
 
 # Module packaging
@@ -31,9 +43,19 @@ QMAKE_LFLAGS += -s MODULARIZE=1
 QMAKE_LFLAGS += -s EXPORT_NAME=createKoncludeModule
 QMAKE_LFLAGS += -s ENVIRONMENT=web,worker
 
+# Enable setjmp/longjmp support needed by Qt/CLI paths.
+!equals(KONCLUDE_WASM_WASM_EXCEPTIONS, 0) {
+	QMAKE_LFLAGS += -s SUPPORT_LONGJMP=1
+} else {
+	QMAKE_LFLAGS += -s SUPPORT_LONGJMP=emscripten
+}
+
 # Runtime helpers and exports
 QMAKE_LFLAGS += -s EXPORTED_RUNTIME_METHODS=['ccall','cwrap','FS']
 QMAKE_LFLAGS += -s EXPORTED_FUNCTIONS=['_konclude_run_command','_konclude_classify_files','_konclude_consistency_files','_konclude_realise_files','_konclude_realize_files','_konclude_classify_owl2xml','_konclude_consistency_owl2xml','_konclude_realise_owl2xml','_konclude_realize_owl2xml','_konclude_submit_job','_konclude_submit_classify_files','_konclude_submit_realise_files','_konclude_submit_realize_files','_konclude_job_status','_konclude_job_exit_code','_konclude_job_free','_konclude_tick','_konclude_set_config','_konclude_reset_config_overrides','_konclude_free','_konclude_shutdown']
+
+# Allow the wasm function table to grow to avoid indirect call OOBs under heavy multithreading.
+QMAKE_LFLAGS += -s ALLOW_TABLE_GROWTH=1
 
 # Allow function pointer casts for complex C++ callback paths.
 QMAKE_LFLAGS += -s EMULATE_FUNCTION_POINTER_CASTS=1

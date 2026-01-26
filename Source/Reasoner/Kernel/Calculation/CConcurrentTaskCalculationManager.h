@@ -22,6 +22,7 @@
 #define KONCLUDE_REASONER_KERNEL_CALCULATION_CCONCURRENTTASKCALCULATIONMANAGER_H
 
 // Libraries includes
+#include <QThreadStorage>
 
 
 // Namespace includes
@@ -83,13 +84,13 @@ namespace Konclude {
 
 					// protected methods
 					protected:
+						CGeneratorTaskHandleContextBase* getThreadGeneratorContext();
 
 					// protected variables
 					protected:
 						CCalculationEnviroment *calcContext;
 						CConcurrentTaskCalculationEnvironment* mTaskCalcEn;
-						CGeneratorTaskHandleContextBase* mGenTaskHandleContext;
-						CMemoryTemporaryAllocationManager* mTemMemMan;
+						QThreadStorage<CGeneratorTaskHandleContextBase*> mGenTaskHandleContextStorage;
 
 					// private methods
 					private:

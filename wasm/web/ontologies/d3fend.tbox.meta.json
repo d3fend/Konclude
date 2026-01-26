@@ -5,5 +5,7 @@
   "derived_from": "d3fend.owl.xml",
   "retrieved_at": "2026-01-15T22:19:57Z",
   "individuals_removed": true,
-  "owlxml_sha256": "27cee93a61196aa985db2b33f0cc498c722757a8383484f100f812ad04cfdb12"
+  "owlxml_sha256": "27cee93a61196aa985db2b33f0cc498c722757a8383484f100f812ad04cfdb12",
+  "profile": "d3fend",
+  "timeout_ms": 300000
 }

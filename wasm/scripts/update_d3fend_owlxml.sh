@@ -7,6 +7,9 @@ TMP_DIR="$(mktemp -d)"
 ROBOT_BIN="${ROBOT_BIN:-robot}"
 D3FEND_VERSION="${D3FEND_VERSION:-}"
 VERSION_JSON=""
+PROFILE_NAME="d3fend"
+TIMEOUT_MS_FULL="${TIMEOUT_MS_FULL:-3600000}"
+TIMEOUT_MS_TBOX="${TIMEOUT_MS_TBOX:-300000}"
 
 cleanup() {
   rm -rf "$TMP_DIR"
@@ -56,7 +59,9 @@ cat > "$OUT_DIR/d3fend.meta.json" <<META
   "source_url": "${SOURCE_URL}",
   "retrieved_at": "${RETRIEVED_AT}",
   "source_sha256": "${SOURCE_SHA256}",
-  "owlxml_sha256": "${OWLXML_SHA256}"
+  "owlxml_sha256": "${OWLXML_SHA256}",
+  "profile": "${PROFILE_NAME}",
+  "timeout_ms": ${TIMEOUT_MS_FULL}
 }
 META
 cat > "$OUT_DIR/d3fend.tbox.meta.json" <<META
@@ -67,7 +72,9 @@ cat > "$OUT_DIR/d3fend.tbox.meta.json" <<META
   "derived_from": "d3fend.owl.xml",
   "retrieved_at": "${RETRIEVED_AT}",
   "individuals_removed": true,
-  "owlxml_sha256": "${TBOX_SHA256}"
+  "owlxml_sha256": "${TBOX_SHA256}",
+  "profile": "${PROFILE_NAME}",
+  "timeout_ms": ${TIMEOUT_MS_TBOX}
 }
 META
 

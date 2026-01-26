@@ -8,7 +8,16 @@
 #include <assert.h>
 
 #ifndef JAVACC_CHAR_TYPE
+#ifdef __EMSCRIPTEN__
+#define JAVACC_CHAR_TYPE char
+#define JAVACC_CHAR_TYPE_UTF8 1
+#else
 #define JAVACC_CHAR_TYPE wchar_t
+#endif
+#endif
+
+#if defined(__EMSCRIPTEN__) && !defined(JAVACC_CHAR_TYPE_UTF8)
+#define JAVACC_CHAR_TYPE_UTF8 1
 #endif
 
 #ifndef JAVACC_STRING_TYPE

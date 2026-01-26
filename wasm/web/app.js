@@ -22,8 +22,7 @@ const hardwareConcurrency = Number.isFinite(navigator?.hardwareConcurrency)
   : null;
 const mode = "mt";
 const timeoutParam = params.has("timeoutMs") ? Number(params.get("timeoutMs")) : NaN;
-const defaultTimeoutMs = datasetParam === "d3fend" ? 300000 : 120000;
-const timeoutMs = Number.isFinite(timeoutParam) ? timeoutParam : defaultTimeoutMs;
+let timeoutMs = Number.isFinite(timeoutParam) ? timeoutParam : null;
 
 modeEl.textContent = mode;
 datasetEl.textContent = datasetParam;
@@ -202,13 +201,26 @@ function selectProfile(dataset) {
   if (profileParam && profileParam !== "auto") {
     return profileParam;
   }
-  if (datasetParam.startsWith("d3fend")) {
-    return "d3fend";
+  if (dataset?.meta?.profile) {
+    return dataset.meta.profile;
   }
   if (dataset && dataset.sizeBytes > 2 * 1024 * 1024) {
     return "large";
   }
   return "default";
+}
+
+function resolveTimeoutMs(dataset) {
+  if (Number.isFinite(timeoutMs) && timeoutMs > 0) {
+    return timeoutMs;
+  }
+  if (dataset?.meta?.timeout_ms) {
+    return dataset.meta.timeout_ms;
+  }
+  if (dataset?.sizeBytes && dataset.sizeBytes > 2 * 1024 * 1024) {
+    return 300000;
+  }
+  return 120000;
 }
 
 const parallelOverrideRaw = Number.parseInt(parallelParam || "", 10);
@@ -677,6 +689,7 @@ async function main() {
   datasetEl.textContent = dataset.label || dataset.name;
   datasetVersionEl.textContent = dataset.meta?.version || "n/a";
   datasetSizeEl.textContent = `${dataset.sizeBytes} bytes`;
+  timeoutMs = resolveTimeoutMs(dataset);
 
   setStatus("starting");
   if (forcedMode && forcedMode !== "mt") {

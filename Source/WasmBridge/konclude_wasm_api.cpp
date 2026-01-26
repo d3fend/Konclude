@@ -431,7 +431,7 @@ namespace {
 				const QString commandLower = job->command.toLower();
 				const bool isConsistency = (commandLower == "consistency" || commandLower == "cons");
 				const bool allowFullCompletionGraph = isConsistency && inputInfo.size() > 0 && inputInfo.size() <= (5 * 1024 * 1024);
-				const bool cacheEnabled = false;
+				const bool cacheEnabled = true;
 
 				auto setConfigValue = [&](const QString& name, const QString& value) {
 					CConfigData* confData = mConfiguration->createAndSetConfig(name);
@@ -503,10 +503,15 @@ namespace {
 						(enableCompConsCache ? 1 : 0) +
 						(enableBackendCache ? 1 : 0) +
 						(enableOccStatsCache ? 1 : 0);
-				// Reserve threads for manager/precompute/classifier/etc. in addition to caches.
-				const cint64 baseThreadReserve = threadOverhead > 0 ? qMin<cint64>(10, threadOverhead) : 0;
-				const cint64 safetyThreadReserve = threadOverhead > 0 ? qMax<cint64>(2, threadOverhead / 8) : 0;
+				// Reserve a minimal slot for the reasoner manager and Qt thread pool.
+				const cint64 managerThreadReserve = 1;
+				cint64 poolAvailable = poolCount - cacheThreadReserve - managerThreadReserve;
+				if (poolAvailable < 1) {
+					poolAvailable = 1;
+				}
+				cint64 threadPoolReserve = qMin<cint64>(2, qMax<cint64>(1, poolAvailable / 8));
 				cint64 procCount = detectedCores;
+				bool procCountOverride = false;
 #ifdef KONCLUDE_WASM_PROCESSOR_COUNT
 #if KONCLUDE_WASM_PROCESSOR_COUNT > 0
 				useAllThreads = false;
@@ -528,19 +533,12 @@ namespace {
 						if (ok && overrideProc > 0) {
 							useAllThreads = false;
 							procCount = overrideProc;
+							procCountOverride = true;
 						}
 					}
 				}
-				const cint64 reserveCount = cacheThreadReserve + baseThreadReserve + safetyThreadReserve;
-				cint64 poolAvailable = poolCount - reserveCount;
-				if (poolAvailable < 1) {
-					poolAvailable = 1;
-				}
-				cint64 threadPoolReserve = qMin<cint64>(4, qMax<cint64>(2, poolAvailable / 8));
-				if (threadPoolReserve >= poolAvailable) {
-					threadPoolReserve = qMax<cint64>(1, poolAvailable - 1);
-				}
-				cint64 maxProc = poolAvailable - threadPoolReserve;
+				const cint64 reserveCount = cacheThreadReserve + managerThreadReserve + threadPoolReserve;
+				cint64 maxProc = poolCount - reserveCount;
 				if (maxProc < 1) {
 					maxProc = 1;
 				}
@@ -548,18 +546,20 @@ namespace {
 				if (procCountReduced) {
 					procCount = maxProc;
 				}
-				cint64 threadPoolMax = poolAvailable - procCount;
-				if (threadPoolMax < 1) {
-					threadPoolMax = 1;
+				cint64 threadPoolMax = poolCount - cacheThreadReserve - managerThreadReserve - procCount;
+				if (threadPoolMax < threadPoolReserve) {
+					threadPoolMax = threadPoolReserve;
 				}
 #ifdef __EMSCRIPTEN__
 				if (procCountReduced) {
-					LOG(INFO, "::Konclude::Wasm",
-							QString("Thread reserve=%1 reduces procCount to %2 (pool=%3)")
-									.arg(reserveCount + threadPoolReserve)
-									.arg(procCount)
-									.arg(poolCount),
-							0);
+					QString reductionInfo = QString("Thread reserve=%1 reduces procCount to %2 (pool=%3)")
+						.arg(reserveCount)
+						.arg(procCount)
+						.arg(poolCount);
+					if (procCountOverride) {
+						reductionInfo.prepend("Requested worker count exceeds pool; ");
+					}
+					LOG(INFO, "::Konclude::Wasm", reductionInfo, 0);
 				}
 #endif
 				if (!wasmThreadsEnabled) {
@@ -665,31 +665,86 @@ namespace {
 				setConfigValue("Konclude.Calculation.Optimization.CompletionGraphNonDeterministicReuse", cacheFlag);
 				setConfigValue("Konclude.Calculation.Optimization.SignatureSaving", cacheFlag);
 				setConfigValue("Konclude.Calculation.Optimization.SignatureMirroringBlocking", cacheFlag);
-				// Default to single parallel subsumption/precompute; overrides can raise this when safe.
 #if defined(__EMSCRIPTEN_PTHREADS__)
-				const QString parallelCountString = QStringLiteral("1");
-				setConfigValue("Konclude.Calculation.Classification.MaximumParallelSubsumptionCalculationCount", parallelCountString);
-				setConfigValue("Konclude.Calculation.Classification.OptimizedKPSetClassSubsumptionClassifier.MaximumParallelSatisfiableCalculationCount", parallelCountString);
-				setConfigValue("Konclude.Calculation.Classification.OptimizedKPSetClassSubsumptionClassifier.MultipliedUnitsParallelSatisfiableCalculationCount", "1");
-				setConfigValue("Konclude.Calculation.Classification.OptimizedSubClassSubsumptionClassifier.MaximumParallelSatisfiableCalculationCount", parallelCountString);
-				setConfigValue("Konclude.Calculation.Classification.OptimizedSubClassSubsumptionClassifier.MultipliedUnitsParallelSatisfiableCalculationCount", "1");
-				setConfigValue("Konclude.Calculation.Precomputation.TotalPrecomputor.MaximumParallelCalculationCount", parallelCountString);
-				setConfigValue("Konclude.Calculation.Precomputation.TotalPrecomputor.MaximumBatchJobCreationCount", parallelCountString);
-				setConfigValue("Konclude.Calculation.Precomputation.TotalPrecomputor.MultipliedUnitsParallelCalculationCount", "1");
+				if (!wasmThreadsEnabled) {
+					setConfigValue("Konclude.Calculation.Classification.MaximumParallelSubsumptionCalculationCount", "1");
+					setConfigValue("Konclude.Calculation.Classification.OptimizedKPSetClassSubsumptionClassifier.MaximumParallelSatisfiableCalculationCount", "1");
+					setConfigValue("Konclude.Calculation.Classification.OptimizedKPSetClassSubsumptionClassifier.MultipliedUnitsParallelSatisfiableCalculationCount", "1");
+					setConfigValue("Konclude.Calculation.Classification.OptimizedSubClassSubsumptionClassifier.MaximumParallelSatisfiableCalculationCount", "1");
+					setConfigValue("Konclude.Calculation.Classification.OptimizedSubClassSubsumptionClassifier.MultipliedUnitsParallelSatisfiableCalculationCount", "1");
+					setConfigValue("Konclude.Calculation.Classification.OptimizedKPSetRoleSubsumptionClassifier.MaximumParallelSatisfiableCalculationCount", "1");
+					setConfigValue("Konclude.Calculation.Precomputation.TotalPrecomputor.MaximumParallelCalculationCount", "1");
+					setConfigValue("Konclude.Calculation.Precomputation.TotalPrecomputor.MaximumBatchJobCreationCount", "1");
+					setConfigValue("Konclude.Calculation.Precomputation.TotalPrecomputor.MultipliedUnitsParallelCalculationCount", "1");
+					setConfigValue("Konclude.Calculation.Answering.MaximumParallelTestingCalculationCount", "1");
+				} else {
+					const QString parallelCount = QString::number(procCount);
+					setConfigValue("Konclude.Calculation.Classification.MaximumParallelSubsumptionCalculationCount", parallelCount);
+					setConfigValue("Konclude.Calculation.Classification.OptimizedKPSetClassSubsumptionClassifier.MaximumParallelSatisfiableCalculationCount", parallelCount);
+					setConfigValue("Konclude.Calculation.Classification.OptimizedSubClassSubsumptionClassifier.MaximumParallelSatisfiableCalculationCount", parallelCount);
+					setConfigValue("Konclude.Calculation.Classification.OptimizedKPSetRoleSubsumptionClassifier.MaximumParallelSatisfiableCalculationCount", parallelCount);
+					setConfigValue("Konclude.Calculation.Answering.MaximumParallelTestingCalculationCount", parallelCount);
+				}
 #else
 				setConfigValue("Konclude.Calculation.Classification.MaximumParallelSubsumptionCalculationCount", "1");
 				setConfigValue("Konclude.Calculation.Classification.OptimizedKPSetClassSubsumptionClassifier.MaximumParallelSatisfiableCalculationCount", "1");
 				setConfigValue("Konclude.Calculation.Classification.OptimizedKPSetClassSubsumptionClassifier.MultipliedUnitsParallelSatisfiableCalculationCount", "1");
 				setConfigValue("Konclude.Calculation.Classification.OptimizedSubClassSubsumptionClassifier.MaximumParallelSatisfiableCalculationCount", "1");
 				setConfigValue("Konclude.Calculation.Classification.OptimizedSubClassSubsumptionClassifier.MultipliedUnitsParallelSatisfiableCalculationCount", "1");
+				setConfigValue("Konclude.Calculation.Classification.OptimizedKPSetRoleSubsumptionClassifier.MaximumParallelSatisfiableCalculationCount", "1");
+				setConfigValue("Konclude.Calculation.Answering.MaximumParallelTestingCalculationCount", "1");
 				setConfigValue("Konclude.Calculation.Precomputation.TotalPrecomputor.MaximumParallelCalculationCount", "1");
 				setConfigValue("Konclude.Calculation.Precomputation.TotalPrecomputor.MaximumBatchJobCreationCount", "1");
 				setConfigValue("Konclude.Calculation.Precomputation.TotalPrecomputor.MultipliedUnitsParallelCalculationCount", "1");
 #endif
+				auto clampParallelOverride = [&](const QString& key, const QString& value) -> QString {
+					if (procCount <= 0) {
+						return value;
+					}
+					const bool matches =
+						key == "Konclude.Calculation.Classification.MaximumParallelSubsumptionCalculationCount" ||
+						key == "Konclude.Calculation.Classification.OptimizedKPSetClassSubsumptionClassifier.MaximumParallelSatisfiableCalculationCount" ||
+						key == "Konclude.Calculation.Classification.OptimizedSubClassSubsumptionClassifier.MaximumParallelSatisfiableCalculationCount" ||
+						key == "Konclude.Calculation.Classification.OptimizedKPSetRoleSubsumptionClassifier.MaximumParallelSatisfiableCalculationCount" ||
+						key == "Konclude.Calculation.Answering.MaximumParallelTestingCalculationCount" ||
+						key == "Konclude.Calculation.Precomputation.TotalPrecomputor.MaximumParallelCalculationCount" ||
+						key == "Konclude.Calculation.Precomputation.TotalPrecomputor.MaximumBatchJobCreationCount";
+					if (!matches) {
+						return value;
+					}
+					bool ok = false;
+					const cint64 requested = value.toLongLong(&ok);
+					if (!ok || requested <= 0) {
+						return value;
+					}
+					if (requested > procCount) {
+						return QString::number(procCount);
+					}
+					return value;
+				};
 				{
 					QMutexLocker locker(&mConfigMutex);
 					for (auto it = mConfigOverrides.constBegin(); it != mConfigOverrides.constEnd(); ++it) {
-						setConfigValue(it.key(), it.value());
+						const QString& key = it.key();
+						if (key == "Konclude.Calculation.ProcessorCount" ||
+								key == "Konclude.Calculation.WorkerCount" ||
+								key == "Konclude.Calculation.ThreadPoolMaxCount" ||
+								key == "Konclude.Calculation.AdaptThreadPoolSizeProcessorCount") {
+							continue;
+						}
+						const QString clampedValue = clampParallelOverride(key, it.value());
+						if (clampedValue != it.value()) {
+#ifdef __EMSCRIPTEN__
+							LOG(INFO, "::Konclude::Wasm",
+									QString("Clamping %1 from %2 to %3 based on procCount=%4")
+										.arg(key)
+										.arg(it.value())
+										.arg(clampedValue)
+										.arg(procCount),
+									0);
+#endif
+						}
+						setConfigValue(key, clampedValue);
 					}
 				}
 

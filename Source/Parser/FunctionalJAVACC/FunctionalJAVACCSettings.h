@@ -53,25 +53,29 @@ namespace Konclude {
 
 #ifndef JAVACC_TO_QSTRING_DEFINED
 	#define JAVACC_TO_QSTRING_DEFINED
-	#ifndef EXPLICIT_JAVACC_QSTRING_CONVERTION
-		#define JAVACC_TO_QSTRING(s) QString::fromStdWString(s)
+
+	#if defined(JAVACC_CHAR_TYPE_UTF8)
+		#define JAVACC_TO_QSTRING(s) QString::fromUtf8((s).c_str(), (int)(s).size())
 	#else
-
-		class JAVACCToQStringConverter {
-		public:
-			static const QString convertJAVACCToQString(JAVACC_STRING_TYPE string) {
-				QString qstring;
-				qstring.reserve(string.size());
-				for (JAVACC_STRING_TYPE::const_iterator it = string.cbegin(), itEnd = string.cend(); it != itEnd; ++it) {
-					JAVACC_CHAR_TYPE character = *it;
-					uint unicode = (uint)character;
-					qstring.append(QChar(unicode));
+		#ifndef EXPLICIT_JAVACC_QSTRING_CONVERTION
+			#define JAVACC_TO_QSTRING(s) QString::fromStdWString(s)
+		#else
+			class JAVACCToQStringConverter {
+			public:
+				static const QString convertJAVACCToQString(JAVACC_STRING_TYPE string) {
+					QString qstring;
+					qstring.reserve(string.size());
+					for (JAVACC_STRING_TYPE::const_iterator it = string.cbegin(), itEnd = string.cend(); it != itEnd; ++it) {
+						JAVACC_CHAR_TYPE character = *it;
+						uint unicode = (uint)character;
+						qstring.append(QChar(unicode));
+					}
+					return qstring;
 				}
-				return qstring;
-			}
-		};
+			};
 
-		#define JAVACC_TO_QSTRING(s) JAVACCToQStringConverter::convertJAVACCToQString(s)
+			#define JAVACC_TO_QSTRING(s) JAVACCToQStringConverter::convertJAVACCToQString(s)
+		#endif
 	#endif
 #endif
 
