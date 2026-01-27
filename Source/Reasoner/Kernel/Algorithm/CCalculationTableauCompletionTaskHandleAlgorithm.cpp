@@ -20,6 +20,8 @@
 
 #include "CCalculationTableauCompletionTaskHandleAlgorithm.h"
 
+#include <atomic>
+
 
 
 
@@ -1354,6 +1356,15 @@ namespace Konclude {
 							if (calcStopProcException.isTaskCompletedProcessed()) {
 								completed = true;
 							}
+#ifdef __EMSCRIPTEN__
+							static std::atomic<int> sWasmStopCatchLogs{0};
+							if (sWasmStopCatchLogs.fetch_add(1, std::memory_order_relaxed) < 8) {
+								LOG(INFO, "::Konclude::Wasm",
+										QString("Caught stop-processing exception (taskCompleted=%1)")
+											.arg(calcStopProcException.isTaskCompletedProcessed() ? "true" : "false"),
+											0);
+							}
+#endif
 						} catch (const CCalculationErrorProcessingException& calcErrorProcException) {
 							if (calcErrorProcException.hasError()) {
 								error = true;
@@ -16993,6 +17004,15 @@ namespace Konclude {
 
 							processorContext->getTaskProcessorCommunicator()->communicateTaskCreation(newTaskList);
 
+#ifdef __EMSCRIPTEN__
+							static std::atomic<int> sWasmOrBranchThrowLogs{0};
+							if (sWasmOrBranchThrowLogs.fetch_add(1, std::memory_order_relaxed) < 8) {
+								LOG(INFO, "::Konclude::Wasm",
+										QString("OR branching created %1 tasks; throwing stop-processing exception")
+											.arg(notPosAndNegContainedOperandCount),
+											0);
+							}
+#endif
 							throw CCalculationStopProcessingException(true);
 						} else {
 							// throw clash

@@ -80,6 +80,52 @@ self.onmessage = async (event) => {
     overrides["Konclude.Calculation.Precomputation.TotalPrecomputor.MaximumBatchJobCreationCount"] = String(parallelCount);
   }
 
+  function resolveProfileDefaults(profileName, datasetInfo) {
+    if (profileName !== "d3fend" && profileName !== "large") {
+      return {};
+    }
+    const sizeBytes = Number.isFinite(datasetInfo?.sizeBytes) ? datasetInfo.sizeBytes : 0;
+    const isFull =
+      datasetInfo?.name === "d3fend-full" ||
+      datasetInfo?.label === "d3fend-full" ||
+      sizeBytes > 6 * 1024 * 1024;
+    const hw = Number.isFinite(self.navigator?.hardwareConcurrency) && self.navigator.hardwareConcurrency > 0
+      ? self.navigator.hardwareConcurrency
+      : null;
+    const workerCap = isFull ? 8 : 16;
+    const workers = hw ? Math.min(workerCap, hw) : workerCap;
+    return { workers, parallel: 2 };
+  }
+
+  function resolveWorkersOverride(workersOverride, defaults) {
+    const parsed = Number.parseInt(workersOverride || "", 10);
+    if (Number.isFinite(parsed) && parsed > 0) {
+      return parsed;
+    }
+    if (Number.isFinite(defaults.workers) && defaults.workers > 0) {
+      return defaults.workers;
+    }
+    return null;
+  }
+
+  function resolveParallelOverride(parallelOverrideValue, defaults) {
+    if (Number.isFinite(parallelOverrideValue) && parallelOverrideValue > 0) {
+      return parallelOverrideValue;
+    }
+    if (Number.isFinite(defaults.parallel) && defaults.parallel > 0) {
+      return defaults.parallel;
+    }
+    return null;
+  }
+
+  function applyLoggingDefaults(overrides) {
+    if (debug) {
+      return;
+    }
+    overrides["Konclude.Logging.MinLoggingLevel"] = "60";
+    overrides["Konclude.Logging.MaxLogMessageCount"] = "2000";
+  }
+
   function applyWorkerOverride(overrides, workersOverride) {
     const workers = Number.parseInt(workersOverride || "", 10);
     if (Number.isFinite(workers) && workers > 0) {
@@ -95,12 +141,18 @@ self.onmessage = async (event) => {
     }
   }
 
-  function buildOverrides(workersOverride, parallelOverrideValue) {
+  function buildOverrides(workersOverride, parallelOverrideValue, profileName, datasetInfo) {
+    const defaults = resolveProfileDefaults(profileName, datasetInfo);
     const overrides = {};
-    applyWorkerOverride(overrides, workersOverride);
-    if (parallelOverrideValue) {
-      applyParallelOverride(overrides, parallelOverrideValue);
+    const resolvedWorkers = resolveWorkersOverride(workersOverride, defaults);
+    if (resolvedWorkers) {
+      applyWorkerOverride(overrides, resolvedWorkers);
     }
+    const resolvedParallel = resolveParallelOverride(parallelOverrideValue, defaults);
+    if (resolvedParallel) {
+      applyParallelOverride(overrides, resolvedParallel);
+    }
+    applyLoggingDefaults(overrides);
     return overrides;
   }
 
@@ -180,19 +232,21 @@ self.onmessage = async (event) => {
         if (!debug && typeof args[0] === "string" && args[0].includes("[konclude wasm]")) {
           return;
         }
-        const msg = typeof args[0] === "string" ? args[0] : "";
-        const match = msg.match(/Compiled code throwing an exception, (\d+),(\d+),(\d+)/);
-        if (match) {
-          const typePtr = Number(match[2]);
-          exceptionState.typePtr = Number.isFinite(typePtr) ? typePtr : null;
-          if (moduleRef && exceptionState.typePtr) {
-            const namePtr = moduleRef.HEAPU32[(exceptionState.typePtr + 4) >> 2];
-            exceptionState.mangled = readCString(moduleRef.HEAPU8, namePtr);
-            console.log("[konclude] exception type", {
-              ptr: Number(match[1]),
-              typePtr: exceptionState.typePtr,
-              mangled: exceptionState.mangled,
-            });
+        if (debug) {
+          const msg = typeof args[0] === "string" ? args[0] : "";
+          const match = msg.match(/Compiled code throwing an exception, (\d+),(\d+),(\d+)/);
+          if (match) {
+            const typePtr = Number(match[2]);
+            exceptionState.typePtr = Number.isFinite(typePtr) ? typePtr : null;
+            if (moduleRef && exceptionState.typePtr) {
+              const namePtr = moduleRef.HEAPU32[(exceptionState.typePtr + 4) >> 2];
+              exceptionState.mangled = readCString(moduleRef.HEAPU8, namePtr);
+              console.log("[konclude] exception type", {
+                ptr: Number(match[1]),
+                typePtr: exceptionState.typePtr,
+                mangled: exceptionState.mangled,
+              });
+            }
           }
         }
         console.log("[konclude]", ...args);
@@ -283,7 +337,7 @@ self.onmessage = async (event) => {
 
     console.log("worker module ready");
     moduleRef = isUsableModule(moduleResolved) ? moduleResolved : moduleInit;
-    if (exceptionState.typePtr && !exceptionState.mangled) {
+    if (debug && exceptionState.typePtr && !exceptionState.mangled) {
       const namePtr = moduleResolved.HEAPU32[(exceptionState.typePtr + 4) >> 2];
       exceptionState.mangled = readCString(moduleResolved.HEAPU8, namePtr);
       console.log("[konclude] exception type", {
@@ -313,8 +367,7 @@ self.onmessage = async (event) => {
     const realiseFiles = preferBlocking ? safeCwrap("konclude_realise_files", "number", ["string", "string"]) : null;
     const realizeFiles = preferBlocking ? safeCwrap("konclude_realize_files", "number", ["string", "string"]) : null;
 
-    const overrides = buildOverrides(workersParam, parallelOverride);
-    applyWorkerOverride(overrides, workersParam, profile);
+    const overrides = buildOverrides(workersParam, parallelOverride, profile, dataset);
     if (debug) {
       console.log("[konclude] worker applying profile", { profile, overrides });
     }

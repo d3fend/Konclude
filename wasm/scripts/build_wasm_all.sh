@@ -7,10 +7,6 @@ source "${ROOT_DIR}/wasm/scripts/env.sh"
 
 "${ROOT_DIR}/wasm/scripts/build_wasm_mt.sh"
 
-if [[ "${KONCLUDE_WASM_BUILD_ST:-0}" == "1" ]]; then
-	"${ROOT_DIR}/wasm/scripts/build_wasm_st.sh"
-fi
-
 GIT_REV="unknown"
 if command -v git >/dev/null 2>&1; then
 	GIT_REV="$(git -C "${ROOT_DIR}" rev-parse HEAD 2>/dev/null || echo unknown)"

@@ -1,0 +1,13 @@
+diff --git a/qtbase/mkspecs/wasm-emscripten/qmake.conf b/qtbase/mkspecs/wasm-emscripten/qmake.conf
+index b5d02b8ed1..9d4f6a9f10 100644
+--- a/qtbase/mkspecs/wasm-emscripten/qmake.conf
++++ b/qtbase/mkspecs/wasm-emscripten/qmake.conf
+@@ -41,6 +41,11 @@ EMCC_COMMON_LFLAGS += \
+     -s EXTRA_EXPORTED_RUNTIME_METHODS=[\"UTF16ToString\",\"stringToUTF16\"] \
+     --bind \
+     -s FETCH=1
++
++# Enable native WebAssembly exceptions (requires newer emsdk).
++QMAKE_CFLAGS += -fwasm-exceptions -s SUPPORT_LONGJMP=wasm
++QMAKE_CXXFLAGS += -fwasm-exceptions -s SUPPORT_LONGJMP=wasm
++EMCC_COMMON_LFLAGS += -fwasm-exceptions -s SUPPORT_LONGJMP=wasm

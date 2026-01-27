@@ -13,6 +13,7 @@ ARG KONCLUDE_WASM_STACK_SIZE=
 ARG KONCLUDE_WASM_PTHREAD_STACK_SIZE=16777216
 ARG KONCLUDE_WASM_EXCEPTIONS=
 ARG KONCLUDE_WASM_WASM_EXCEPTIONS=
+ARG KONCLUDE_WASM_LONGJMP=
 
 FROM ubuntu:22.04 AS toolchain
 ARG EMSDK_VERSION
@@ -20,6 +21,7 @@ ARG QT_VERSION
 ARG QT_SRC_URL
 ARG QT_SRC_DIR
 ARG QT_CONFIGURE_FLAGS
+ARG KONCLUDE_WASM_WASM_EXCEPTIONS
 
 RUN apt-get update && apt-get install -y \
     build-essential \
@@ -47,12 +49,20 @@ RUN mkdir -p /opt/qt-src
 RUN curl -L "${QT_SRC_URL}" -o /opt/qt-src/qt-src.tar.xz
 RUN tar -xJf /opt/qt-src/qt-src.tar.xz -C /opt/qt-src
 
-# Patch Qt 5.15.2 for Emscripten: ensure <limits> is available
+# Patch Qt 5.15.x for Emscripten: ensure <limits> is available (skip if already present)
 COPY wasm/patches/qt-5.15.2-emscripten-qfloat16.patch /opt/qt-src/qt-patch-qfloat16.patch
 COPY wasm/patches/qt-5.15.2-emscripten-qglobal-limits.patch /opt/qt-src/qt-patch-qglobal.patch
+COPY wasm/patches/qt-5.15.2-emscripten-wasm-exceptions.patch /opt/qt-src/qt-patch-wasm-exceptions.patch
 RUN /bin/bash -lc "cd /opt/qt-src/${QT_SRC_DIR} && \
-    patch -p1 < /opt/qt-src/qt-patch-qfloat16.patch && \
-    patch -p1 < /opt/qt-src/qt-patch-qglobal.patch"
+    if ! grep -q '<limits>' qtbase/src/corelib/global/qfloat16.h; then \
+        patch -p1 < /opt/qt-src/qt-patch-qfloat16.patch; \
+    fi && \
+    if ! grep -q '<limits>' qtbase/src/corelib/global/qglobal.h; then \
+        patch -p1 < /opt/qt-src/qt-patch-qglobal.patch; \
+    fi && \
+    if [[ \"${KONCLUDE_WASM_WASM_EXCEPTIONS}\" != \"0\" && -n \"${KONCLUDE_WASM_WASM_EXCEPTIONS}\" ]]; then \
+        patch -p1 < /opt/qt-src/qt-patch-wasm-exceptions.patch; \
+    fi"
 
 RUN /bin/bash -lc "source /opt/emsdk/emsdk_env.sh && \
     which em++ && em++ --version && python --version && \
@@ -71,6 +81,7 @@ ARG KONCLUDE_WASM_STACK_SIZE
 ARG KONCLUDE_WASM_PTHREAD_STACK_SIZE
 ARG KONCLUDE_WASM_EXCEPTIONS
 ARG KONCLUDE_WASM_WASM_EXCEPTIONS
+ARG KONCLUDE_WASM_LONGJMP
 
 WORKDIR /src
 COPY . /src
@@ -87,6 +98,7 @@ RUN /bin/bash -lc "export EMSDK_DIR=/opt/emsdk; \
     export KONCLUDE_WASM_PTHREAD_STACK_SIZE=${KONCLUDE_WASM_PTHREAD_STACK_SIZE}; \
     export KONCLUDE_WASM_EXCEPTIONS=${KONCLUDE_WASM_EXCEPTIONS}; \
     export KONCLUDE_WASM_WASM_EXCEPTIONS=${KONCLUDE_WASM_WASM_EXCEPTIONS}; \
+    export KONCLUDE_WASM_LONGJMP=${KONCLUDE_WASM_LONGJMP}; \
     /src/wasm/scripts/build_wasm_all.sh"
 
 RUN mkdir -p /out && cp -r /src/wasm/dist/* /out/

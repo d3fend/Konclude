@@ -20,6 +20,8 @@
 
 #include "COptimizedKPSetClassSubsumptionClassifierThread.h"
 
+#include <atomic>
+
 namespace Konclude {
 
 	namespace Reasoner {
@@ -2445,6 +2447,12 @@ namespace Konclude {
 						if (workItem->isTestValid()) {
 
 							if (testResult->hasCalculationError()) {
+#ifdef __EMSCRIPTEN__
+								static std::atomic<int> sCalcErrorLogCount{0};
+								if (sCalcErrorLogCount.fetch_add(1, std::memory_order_relaxed) < 5) {
+									LOG(ERROR,getLogDomain(),logTr("Calculation error code %1.").arg(testResult->getCalculationErrorCode()),getLogObject());
+								}
+#endif
 								LOG(ERROR,getLogDomain(),logTr("Error in computation, classification for ontology '%1' failed.").arg(ontClassItem->getOntology()->getTerminologyName()),getLogObject());
 								ontClassItem->setTaxonomyConstructionFailed();
 

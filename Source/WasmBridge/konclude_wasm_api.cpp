@@ -634,11 +634,11 @@ namespace {
 					setConfigValue("Konclude.Calculation.Preprocessing.CheckingOntologyConsistency", "true");
 					setConfigValue("Konclude.Calculation.Preprocessing.CoreConceptCyclesPrecomputation", "true");
 					setConfigValue("Konclude.Calculation.Preprocessing.CoreConceptCyclesExtraction", "true");
+					// Drop triples data after indexing to save memory.
+					setConfigValue("Konclude.Calculation.Preprocessing.TripleEncodedAssertionsIndexing.DeleteTriplesDataAfterIndexing", "true");
 					// Avoid full completion graph construction in memory-constrained wasm runs unless the input is small.
 					setConfigValue("Konclude.Calculation.Precomputation.ForceFullCompletionGraphConstruction", "false");
 					setConfigValue("Konclude.Calculation.Precomputation.ConditionalFullCompletionGraphConstruction", allowFullCompletionGraph ? "true" : "false");
-					// Drop triples data after indexing to save memory.
-					setConfigValue("Konclude.Calculation.Preprocessing.TripleEncodedAssertionsIndexing.DeleteTriplesDataAfterIndexing", "true");
 				}
 				// Reduce memory spikes in WASM by shrinking allocation growth.
 				setConfigValue("Konclude.Calculation.Memory.IncreaseAllocationSize", "67108864");

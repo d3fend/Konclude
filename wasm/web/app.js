@@ -247,6 +247,50 @@ function applyParallelOverride(overrides, parallelOverrideValue) {
   overrides["Konclude.Calculation.Precomputation.TotalPrecomputor.MaximumBatchJobCreationCount"] = String(parallelCount);
 }
 
+function resolveProfileDefaults(profile, dataset) {
+  if (profile !== "d3fend" && profile !== "large") {
+    return {};
+  }
+  const sizeBytes = Number.isFinite(dataset?.sizeBytes) ? dataset.sizeBytes : 0;
+  const isFull =
+    dataset?.name === "d3fend-full" ||
+    dataset?.label === "d3fend-full" ||
+    sizeBytes > 6 * 1024 * 1024;
+  const hw = Number.isFinite(hardwareConcurrency) && hardwareConcurrency > 0 ? hardwareConcurrency : null;
+  const workerCap = isFull ? 8 : 16;
+  const workers = hw ? Math.min(workerCap, hw) : workerCap;
+  return { workers, parallel: 2 };
+}
+
+function resolveWorkersOverride(workersOverride, defaults) {
+  const parsed = Number.parseInt(workersOverride || "", 10);
+  if (Number.isFinite(parsed) && parsed > 0) {
+    return parsed;
+  }
+  if (Number.isFinite(defaults.workers) && defaults.workers > 0) {
+    return defaults.workers;
+  }
+  return null;
+}
+
+function resolveParallelOverride(parallelOverrideValue, defaults) {
+  if (Number.isFinite(parallelOverrideValue) && parallelOverrideValue > 0) {
+    return parallelOverrideValue;
+  }
+  if (Number.isFinite(defaults.parallel) && defaults.parallel > 0) {
+    return defaults.parallel;
+  }
+  return null;
+}
+
+function applyLoggingDefaults(overrides) {
+  if (debug) {
+    return;
+  }
+  overrides["Konclude.Logging.MinLoggingLevel"] = "60";
+  overrides["Konclude.Logging.MaxLogMessageCount"] = "2000";
+}
+
 function applyWorkerOverride(overrides, workersOverride) {
   const workers = Number.parseInt(workersOverride || "", 10);
   if (Number.isFinite(workers) && workers > 0) {
@@ -260,12 +304,18 @@ function applyWorkerOverride(overrides, workersOverride) {
   }
 }
 
-function buildOverrides(workersOverride, parallelOverrideValue) {
+function buildOverrides(workersOverride, parallelOverrideValue, profile, dataset) {
+  const defaults = resolveProfileDefaults(profile, dataset);
   const overrides = {};
-  applyWorkerOverride(overrides, workersOverride);
-  if (parallelOverrideValue) {
-    applyParallelOverride(overrides, parallelOverrideValue);
+  const resolvedWorkers = resolveWorkersOverride(workersOverride, defaults);
+  if (resolvedWorkers) {
+    applyWorkerOverride(overrides, resolvedWorkers);
   }
+  const resolvedParallel = resolveParallelOverride(parallelOverrideValue, defaults);
+  if (resolvedParallel) {
+    applyParallelOverride(overrides, resolvedParallel);
+  }
+  applyLoggingDefaults(overrides);
   return overrides;
 }
 
@@ -314,7 +364,7 @@ function applyWasmOverrides(moduleResolved, overrides) {
 
 function applyProfileOverrides(moduleResolved, dataset) {
   const profile = selectProfile(dataset);
-  const overrides = buildOverrides(workersParam, parallelOverride);
+  const overrides = buildOverrides(workersParam, parallelOverride, profile, dataset);
   if (debug) {
     console.log("[konclude] applying profile", { profile, overrides });
   }
@@ -381,6 +431,20 @@ async function initModule() {
   }
 
   let runtimeReady = false;
+  let moduleRef = null;
+  const exceptionState = { typePtr: null, mangled: null };
+  const textDecoder = new TextDecoder("utf-8");
+  const readCString = (heapU8, ptr, maxBytes = 512) => {
+    if (!ptr || !heapU8) return "";
+    let end = ptr;
+    const max = Math.min(heapU8.length, ptr + maxBytes);
+    while (end < max && heapU8[end] !== 0) {
+      end += 1;
+    }
+    // TextDecoder does not accept views backed by SharedArrayBuffer in some browsers.
+    const copy = heapU8.slice(ptr, end);
+    return textDecoder.decode(copy);
+  };
   const moduleOptions = {
     noInitialRun: true,
     noExitRuntime: true,
@@ -395,6 +459,23 @@ async function initModule() {
     printErr: (...args) => {
       if (!debug && typeof args[0] === "string" && args[0].includes("[konclude wasm]")) {
         return;
+      }
+      if (debug) {
+        const msg = typeof args[0] === "string" ? args[0] : "";
+        const match = msg.match(/Compiled code throwing an exception, (\d+),(\d+),(\d+)/);
+        if (match) {
+          const typePtr = Number(match[2]);
+          exceptionState.typePtr = Number.isFinite(typePtr) ? typePtr : null;
+          if (moduleRef && exceptionState.typePtr) {
+            const namePtr = moduleRef.HEAPU32[(exceptionState.typePtr + 4) >> 2];
+            exceptionState.mangled = readCString(moduleRef.HEAPU8, namePtr);
+            console.log("[konclude] exception type", {
+              ptr: Number(match[1]),
+              typePtr: exceptionState.typePtr,
+              mangled: exceptionState.mangled,
+            });
+          }
+        }
       }
       console.log("[konclude]", ...args);
     },
@@ -479,6 +560,15 @@ async function initModule() {
 
   if (debug) {
     console.log("[konclude] initModule ready");
+  }
+  moduleRef = moduleResolved;
+  if (debug && exceptionState.typePtr && !exceptionState.mangled && moduleRef?.HEAPU8) {
+    const namePtr = moduleRef.HEAPU32[(exceptionState.typePtr + 4) >> 2];
+    exceptionState.mangled = readCString(moduleRef.HEAPU8, namePtr);
+    console.log("[konclude] exception type", {
+      typePtr: exceptionState.typePtr,
+      mangled: exceptionState.mangled,
+    });
   }
   return moduleResolved;
 }
