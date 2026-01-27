@@ -1,0 +1,5 @@
+{
+  "version": "tests",
+  "source": "Tests/lubm-univ-bench.owl.xml",
+  "timeout_ms": 300000
+}

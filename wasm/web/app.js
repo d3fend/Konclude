@@ -68,6 +68,24 @@ const DATASETS = {
     url: new URL("./ontologies/d3fend.owl.xml", import.meta.url).toString(),
     metaUrl: new URL("./ontologies/d3fend.meta.json", import.meta.url).toString(),
   },
+  "roberts-family-full-D": {
+    label: "roberts-family-full-D",
+    type: "fetch",
+    url: new URL("./ontologies/roberts-family-full-D.owl.xml", import.meta.url).toString(),
+    metaUrl: new URL("./ontologies/roberts-family-full-D.meta.json", import.meta.url).toString(),
+  },
+  galen: {
+    label: "galen",
+    type: "fetch",
+    url: new URL("./ontologies/galen.owl.xml", import.meta.url).toString(),
+    metaUrl: new URL("./ontologies/galen.meta.json", import.meta.url).toString(),
+  },
+  "lubm-univ-bench": {
+    label: "lubm-univ-bench",
+    type: "fetch",
+    url: new URL("./ontologies/lubm-univ-bench.owl.xml", import.meta.url).toString(),
+    metaUrl: new URL("./ontologies/lubm-univ-bench.meta.json", import.meta.url).toString(),
+  },
 };
 
 window.__koncludeResult = {
@@ -259,7 +277,8 @@ function resolveProfileDefaults(profile, dataset) {
   const hw = Number.isFinite(hardwareConcurrency) && hardwareConcurrency > 0 ? hardwareConcurrency : null;
   const workerCap = isFull ? 8 : 16;
   const workers = hw ? Math.min(workerCap, hw) : workerCap;
-  return { workers, parallel: 2 };
+  const threadPoolMax = Math.max(2, Math.floor(workers / 2));
+  return { workers, parallel: 2, threadPoolMax };
 }
 
 function resolveWorkersOverride(workersOverride, defaults) {
@@ -279,6 +298,13 @@ function resolveParallelOverride(parallelOverrideValue, defaults) {
   }
   if (Number.isFinite(defaults.parallel) && defaults.parallel > 0) {
     return defaults.parallel;
+  }
+  return null;
+}
+
+function resolveThreadPoolMax(defaults) {
+  if (Number.isFinite(defaults.threadPoolMax) && defaults.threadPoolMax > 0) {
+    return defaults.threadPoolMax;
   }
   return null;
 }
@@ -314,6 +340,10 @@ function buildOverrides(workersOverride, parallelOverrideValue, profile, dataset
   const resolvedParallel = resolveParallelOverride(parallelOverrideValue, defaults);
   if (resolvedParallel) {
     applyParallelOverride(overrides, resolvedParallel);
+  }
+  const resolvedThreadPoolMax = resolveThreadPoolMax(defaults);
+  if (resolvedThreadPoolMax) {
+    overrides["Konclude.Calculation.ThreadPoolMaxCount"] = String(resolvedThreadPoolMax);
   }
   applyLoggingDefaults(overrides);
   return overrides;

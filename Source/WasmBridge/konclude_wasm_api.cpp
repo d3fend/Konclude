@@ -505,11 +505,29 @@ namespace {
 						(enableOccStatsCache ? 1 : 0);
 				// Reserve a minimal slot for the reasoner manager and Qt thread pool.
 				const cint64 managerThreadReserve = 1;
+				cint64 blockThreadPoolThreads = 1;
+				{
+					QMutexLocker locker(&mConfigMutex);
+					auto it = mConfigOverrides.constFind("Konclude.Calculation.BlockingThreadPoolThreadsCount");
+					if (it != mConfigOverrides.constEnd()) {
+						bool ok = false;
+						const cint64 overrideBlock = it.value().toLongLong(&ok);
+						if (ok && overrideBlock >= 0) {
+							blockThreadPoolThreads = overrideBlock;
+						}
+					}
+				}
 				cint64 poolAvailable = poolCount - cacheThreadReserve - managerThreadReserve;
 				if (poolAvailable < 1) {
 					poolAvailable = 1;
 				}
 				cint64 threadPoolReserve = qMin<cint64>(2, qMax<cint64>(1, poolAvailable / 8));
+				// Keep at least two usable Qt thread pool threads after blocking slots.
+				const cint64 minThreadPool = qMax<cint64>(2, blockThreadPoolThreads + 2);
+				cint64 desiredThreadPool = qMax(threadPoolReserve, minThreadPool);
+				if (desiredThreadPool >= poolAvailable) {
+					desiredThreadPool = qMax<cint64>(0, poolAvailable - 1);
+				}
 				cint64 procCount = detectedCores;
 				bool procCountOverride = false;
 #ifdef KONCLUDE_WASM_PROCESSOR_COUNT
@@ -537,7 +555,7 @@ namespace {
 						}
 					}
 				}
-				const cint64 reserveCount = cacheThreadReserve + managerThreadReserve + threadPoolReserve;
+				const cint64 reserveCount = cacheThreadReserve + managerThreadReserve + desiredThreadPool;
 				cint64 maxProc = poolCount - reserveCount;
 				if (maxProc < 1) {
 					maxProc = 1;
@@ -547,8 +565,8 @@ namespace {
 					procCount = maxProc;
 				}
 				cint64 threadPoolMax = poolCount - cacheThreadReserve - managerThreadReserve - procCount;
-				if (threadPoolMax < threadPoolReserve) {
-					threadPoolMax = threadPoolReserve;
+				if (threadPoolMax < desiredThreadPool) {
+					threadPoolMax = desiredThreadPool;
 				}
 #ifdef __EMSCRIPTEN__
 				if (procCountReduced) {
@@ -574,7 +592,7 @@ namespace {
 				setConfigValue("Konclude.Calculation.ThreadPoolMaxCount", QString::number(threadPoolMax));
 #ifdef __EMSCRIPTEN__
 				LOG(INFO, "::Konclude::Wasm",
-						QString("Thread config cmd=%1 detectedCores=%2 overhead=%3 pool=%4 proc=%5 reserve=%6 poolAvail=%7 poolMax=%8 useAll=%9 threadsEnabled=%10")
+						QString("Thread config cmd=%1 detectedCores=%2 overhead=%3 pool=%4 proc=%5 reserve=%6 poolAvail=%7 poolMax=%8 block=%9 useAll=%10 threadsEnabled=%11")
 								.arg(job->command)
 								.arg(detectedCores)
 								.arg(threadOverhead)
@@ -583,6 +601,7 @@ namespace {
 								.arg(reserveCount)
 								.arg(poolAvailable)
 								.arg(threadPoolMax)
+								.arg(blockThreadPoolThreads)
 								.arg(useAllThreads ? "true" : "false")
 								.arg(wasmThreadsEnabled ? "true" : "false"),
 						0);
@@ -618,6 +637,8 @@ namespace {
 				setConfigBool("Konclude.Calculation.Optimization.SaturationExpansionSatisfiabilityCacheWriting", cacheEnabled);
 				setConfigBool("Konclude.Calculation.Optimization.SaturationUnsatisfiabilityCacheWriting", cacheEnabled);
 				setConfigBool("Konclude.Calculation.Optimization.ComputedTypesCaching", cacheEnabled);
+				// Individual saturation in WASM triggers OOB traps on larger ABox workloads; disable by default.
+				setConfigBool("Konclude.Calculation.Optimization.IndividualSaturation", false);
 				setConfigBool("Konclude.Calculation.Optimization.IndividualsBackendCacheLoading", enableBackendCache);
 				setConfigBool("Konclude.Calculation.Optimization.OccurrenceStatisticsCollecting", false);
 				// Enable preprocessing to avoid slow on-demand computation in large runs.

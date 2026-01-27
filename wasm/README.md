@@ -6,6 +6,8 @@ This directory builds a Konclude WebAssembly module for browser/JS usage. The WA
 - **Main-thread runner (default) works** for `DATASET=sample` and D3FEND (validated in Firefox).
 - **MT parallelism works with wasm exceptions** (emsdk 3.1.45 + Qt patched, `KONCLUDE_WASM_WASM_EXCEPTIONS=1`)
   for `PARALLEL=2` on `d3fend` and `d3fend-full` in Firefox.
+- **ABox-heavy regression (`roberts-family-full-D`) is stable** in Firefox/Chromium with
+  `Konclude.Calculation.Optimization.IndividualSaturation=false` (default in WASM).
 - **MT-only build** (pthreads required); the single-threaded build is removed.
 - **Worker runner (`main=0`) is disabled in the demo** and falls back to the main thread; running the module
   directly inside a dedicated worker still hangs after query dispatch (job status remains `0`).
@@ -123,13 +125,22 @@ Update to the latest MITRE D3FEND release:
 ```
 This refreshes the `d3fend*.owl.xml` files and their `d3fend*.meta.json` metadata (version, release date, hashes, retrieval time).
 
+## Regression Datasets (Parity With Tests/)
+The web demo and Playwright E2E runner include additional OWL XML fixtures mirrored from `Tests/`:
+- `galen`
+- `lubm-univ-bench`
+- `roberts-family-full-D`
+
+Use `INCLUDE_SLOW=1` in the E2E runner to include `roberts-family-full-D` by default (it is slower than
+the others). You can always target a dataset explicitly via `DATASET=...`.
+
 ## Thread Pool Sizing
 The WASM heap is set by `KONCLUDE_WASM_TOTAL_MEMORY` (default: `2GB` in `wasm/versions.env`) to keep
 large ontologies like D3FEND stable with multiple workers.
 The pthread pool size is set by `KONCLUDE_WASM_PTHREAD_POOL` (default: `16` from `wasm/versions.env`).
 Set it to `auto` to size the pool at runtime from `navigator.hardwareConcurrency`; the pool can be expanded
 by `KONCLUDE_WASM_PTHREAD_OVERHEAD` (default: `0` in `wasm/versions.env`).
-Pthread stack size defaults to `KONCLUDE_WASM_PTHREAD_STACK_SIZE=16777216` (16MB) and can be overridden at build time.
+Pthread stack size defaults to `KONCLUDE_WASM_PTHREAD_STACK_SIZE=33554432` (32MB) and can be overridden at build time.
 
 Internal worker count defaults to all detected cores; override with `KONCLUDE_WASM_PROCESSOR_COUNT`
 if you need to cap concurrency. For debugging, set `KONCLUDE_WASM_PTHREAD_STRICT=2` to fail fast
@@ -147,6 +158,11 @@ The E2E runner **defaults to main-thread execution** (stable).
 Request worker mode (falls back to the main thread in the demo):
 ```bash
 MAIN_THREAD=0 BROWSERS=chromium node e2e.js
+```
+
+Default datasets: `sample,galen,lubm-univ-bench`. Include the slow regression dataset:
+```bash
+INCLUDE_SLOW=1 BROWSERS=chromium,firefox node e2e.js
 ```
 
 ## WASM Runtime Profiles (Large Ontologies)
@@ -235,9 +251,30 @@ DATASET=d3fend-full PROFILE=large WORKERS=2 PARALLEL=2 ONLY=classification BROWS
 - Upgrading to emsdk 3.1.45 + Qt patched for wasm exceptions + `SUPPORT_LONGJMP=wasm` stabilizes
   `parallel=2` on `d3fend` and `d3fend-full` in Firefox.
 
+## Root Cause (Jan 2026): Individual Saturation OOB on ABox-Heavy Inputs
+**Summary:** enabling `Konclude.Calculation.Optimization.IndividualSaturation` in WASM triggers
+`RuntimeError: index out of bounds` in Firefox (and long stalls in Chromium) on ABox-heavy
+datasets such as `roberts-family-full-D`. The crash is not explained by thread pool sizing,
+backend cache, or stack size. Disabling IndividualSaturation stabilizes the run.
+
+**Evidence / what we observed**
+- `roberts-family-full-D` fails with OOB traps when IndividualSaturation is enabled.
+- The same dataset completes reliably when IndividualSaturation is set to `false`.
+
+**Impact**
+- This is not a generic WASM performance issue; it is a correctness/stability issue tied to
+  IndividualSaturation in the WASM build.
+
+**Status (2026-01-27)**
+- IndividualSaturation is disabled by default in the WASM bridge. You can override via
+  `konclude_set_config("Konclude.Calculation.Optimization.IndividualSaturation","true")`
+  if you want to reproduce/debug.
+
 ## Fix Plan / Next Steps
 1) **Done:** upgrade to emsdk 3.1.45 + Qt wasm exceptions + `SUPPORT_LONGJMP=wasm`. Parallel
    classification works at `PARALLEL=2` for D3FEND in Firefox.
+2) Investigate IndividualSaturation OOB on ABox-heavy inputs in WASM (heap bounds or data layout)
+   and re-enable the optimization once stable.
 2) **Next:** reduce exception-driven control flow in the hot tableau path for WASM builds
    (convert frequent throw/catch to explicit status returns), so MT parallelism remains safe
    regardless of the exception runtime.

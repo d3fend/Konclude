@@ -1,0 +1,6 @@
+{
+  "version": "tests",
+  "source": "Tests/galen.owl.xml",
+  "profile": "large",
+  "timeout_ms": 600000
+}
