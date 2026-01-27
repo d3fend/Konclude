@@ -64,6 +64,16 @@ RUN /bin/bash -lc "cd /opt/qt-src/${QT_SRC_DIR} && \
         patch -p1 < /opt/qt-src/qt-patch-wasm-exceptions.patch; \
     fi"
 
+# Qt 5.15.2 single-source tarball omits qtbase/header.LGPL. Generate it from an existing QtGui header.
+RUN /bin/bash -lc "cd /opt/qt-src/${QT_SRC_DIR}/qtbase && \
+    if [ ! -f header.LGPL ]; then \
+        perl -0777 -ne 'if (/\\A(\\/\\*.*?\\*\\/)/s) { print $1, \"\\n\" }' src/gui/vulkan/qvulkaninstance.cpp > header.LGPL; \
+    fi && \
+    if [ ! -s header.LGPL ]; then \
+        echo 'Failed to create qtbase/header.LGPL' >&2; \
+        exit 1; \
+    fi"
+
 RUN /bin/bash -lc "source /opt/emsdk/emsdk_env.sh && \
     which em++ && em++ --version && python --version && \
     cd /opt/qt-src/${QT_SRC_DIR} && \

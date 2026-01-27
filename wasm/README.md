@@ -3,9 +3,10 @@
 This directory builds a Konclude WebAssembly module for browser/JS usage. The WASM build omits Redland and focuses on OWL 2 XML/Functional inputs. The demo and default build target the multi-threaded (MT/pthreads) runtime and require COOP/COEP headers.
 
 ## Current Status (2026-01-27)
-- **Main-thread runner (default) works** for `DATASET=sample` and D3FEND in Chromium.
+- **Main-thread runner (default) works** for `DATASET=sample` and D3FEND (validated in Firefox).
 - **MT parallelism works with wasm exceptions** (emsdk 3.1.45 + Qt patched, `KONCLUDE_WASM_WASM_EXCEPTIONS=1`)
   for `PARALLEL=2` on `d3fend` and `d3fend-full` in Firefox.
+- **MT-only build** (pthreads required); the single-threaded build is removed.
 - **Worker runner (`main=0`) is disabled in the demo** and falls back to the main thread; running the module
   directly inside a dedicated worker still hangs after query dispatch (job status remains `0`).
 - E2E tests default to the main-thread runner to keep CI stable.
@@ -45,6 +46,8 @@ The Docker build applies (only if needed):
 - `wasm/patches/qt-5.15.2-emscripten-qfloat16.patch`
 - `wasm/patches/qt-5.15.2-emscripten-qglobal-limits.patch`
 - `wasm/patches/qt-5.15.2-emscripten-wasm-exceptions.patch` (only when `KONCLUDE_WASM_WASM_EXCEPTIONS=1`)
+Qt 5.15.2's single-source tarball omits `qtbase/header.LGPL`, so the Docker build generates it from
+`qtbase/src/gui/vulkan/qvulkaninstance.cpp` before configuring Qt.
 
 The build also generates `wasm/Konclude_wasm.pri` to normalize path separators for Qt's moc on wasm.
 
@@ -154,7 +157,8 @@ drops to 8 to avoid wasm memory faults. Override via URL params if you need a di
 setting. The WASM bridge still sizes the internal worker counts and QtConcurrent pool from the
 available pthread pool, then sets classification and precomputation parallelism to match.
 Use `workers=` and `parallel=` if you need to override those defaults for a specific workload.
-**Note:** until the toolchain fix lands, force `parallel=1` for stability (see root-cause note).
+If you are on the legacy toolchain (emsdk 1.39.8 / no wasm exceptions), keep `parallel=1`
+(see root-cause note below). With the wasm-exceptions toolchain, `parallel=2` is validated.
 
 To reduce browser overhead, the demo raises the logging threshold by default
 (`Konclude.Logging.MinLoggingLevel=60`, `MaxLogMessageCount=2000`). Use `debug=1` to re-enable
@@ -174,17 +178,16 @@ D3FEND E2E examples:
 ```bash
 DATASET=d3fend BROWSERS=chromium node e2e.js
 DATASET=d3fend-full TIMEOUT_MS=300000 BROWSERS=chromium node e2e.js
-# Aggressive parallelism (can increase CPU use but may need longer timeouts):
+# Parallelism (requires wasm exceptions toolchain):
 # PARALLEL=2 DATASET=d3fend PROFILE=d3fend WORKERS=16 BROWSERS=chromium node e2e.js
-# (currently unstable on wasm; use only for reproducing the MT exception issue)
 ```
 
 With the default 2GB heap and worker-aligned parallelism, D3FEND classification is stable
-through 16 workers (thread pool size) **when `parallel=1`**. A 3GB heap build crashes in Chromium
-for D3FEND, so 2GB is currently the practical max. To go beyond 16 workers, rebuild with a larger
-thread pool (`KONCLUDE_WASM_PTHREAD_POOL`) and validate memory limits in your target browsers.
-If you are on the legacy toolchain (emsdk 1.39.8 / no wasm exceptions), keep `parallel=1`
-(see root-cause note below). With the wasm-exceptions toolchain, `parallel=2` is validated.
+through 16 workers (thread pool size) when using the wasm-exceptions toolchain. A 3GB heap build
+crashes in Chromium for D3FEND, so 2GB is currently the practical max. To go beyond 16 workers,
+rebuild with a larger thread pool (`KONCLUDE_WASM_PTHREAD_POOL`) and validate memory limits in your
+target browsers. If you are on the legacy toolchain (emsdk 1.39.8 / no wasm exceptions), keep
+`parallel=1` (see root-cause note below).
 
 The WASM bridge also exposes runtime config overrides:
 - `konclude_set_config(key, value)`
@@ -217,40 +220,36 @@ causes worker threads to abort or trap (`RuntimeError: unreachable executed`).
   - followed by “Compiled code throwing an exception …” and a pthread exiting or a trap.
 - `parallel=1` completes reliably for both `d3fend` and `d3fend-full`.
 
-**Minimal repro (Firefox, MT, classification-only):**
+**Minimal repro (legacy toolchain, Firefox, MT, classification-only):**
 ```bash
 DATASET=d3fend PROFILE=d3fend WORKERS=2 PARALLEL=2 ONLY=classification BROWSERS=firefox node e2e.js
 DATASET=d3fend-full PROFILE=large WORKERS=2 PARALLEL=2 ONLY=classification BROWSERS=firefox node e2e.js
-# Both fail; switch PARALLEL=1 to succeed.
+# Both fail on emsdk 1.39.8; switch PARALLEL=1 to succeed.
 ```
 
 **Impact**
 - This is not “WASM is slow.” It is a runtime stability issue caused by exception-heavy control flow
-  under pthreads in the current Emscripten toolchain.
+  under pthreads in the legacy Emscripten toolchain.
 
 **Status (2026-01-27)**
 - Upgrading to emsdk 3.1.45 + Qt patched for wasm exceptions + `SUPPORT_LONGJMP=wasm` stabilizes
   `parallel=2` on `d3fend` and `d3fend-full` in Firefox.
 
-## Fix Plan (Proposed)
-1) **Short-term mitigation (stable builds):** force `parallel=1` for wasm in
-   `Source/WasmBridge/konclude_wasm_api.cpp` when pthreads are enabled, with an explicit override
-   gate for debugging. This keeps MT usable for other work but avoids the exception storm.
-2) **Medium-term fix (toolchain upgrade):** upgrade to a newer emsdk + Qt that supports
-   **WASM exceptions**, enable `KONCLUDE_WASM_WASM_EXCEPTIONS=1` and build Qt with wasm longjmp,
-   then re-validate parallel classification in Chromium/Firefox.
-3) **Long-term robustness:** reduce exception-driven control flow in the hot tableau path for
-   WASM builds (convert frequent throw/catch to explicit status returns), so MT parallelism is safe
-   regardless of the JS exception runtime.
-4) **Add regression coverage:** a wasm e2e run with `PARALLEL=2` should be part of the MT test
-   matrix (expected-fail until the toolchain fix lands; then flip to expected-pass).
+## Fix Plan / Next Steps
+1) **Done:** upgrade to emsdk 3.1.45 + Qt wasm exceptions + `SUPPORT_LONGJMP=wasm`. Parallel
+   classification works at `PARALLEL=2` for D3FEND in Firefox.
+2) **Next:** reduce exception-driven control flow in the hot tableau path for WASM builds
+   (convert frequent throw/catch to explicit status returns), so MT parallelism remains safe
+   regardless of the exception runtime.
+3) **Add regression coverage:** keep a wasm e2e run with `PARALLEL=2` in the MT test matrix.
 
 ## Handoff Notes for Another Agent
 - Main-thread runner is stable and used by default.
-- Worker runner (`main=0`) hangs after query dispatch (job status remains `0`); the demo now falls back to main thread.
+- Worker runner (`main=0`) hangs after query dispatch (job status remains `0`); the demo falls back to main thread.
 - Key wasm runtime flow lives in `Source/WasmBridge/konclude_wasm_api.cpp` and `wasm/web/*` (notably `wasm/web/konclude_worker.js`).
-- Debug logging was added around requirement expansion and processing in
-  `Source/Reasoner/Kernel/Manager/CReasonerManagerThread.cpp` to pinpoint stalls.
+- Debug logging for exception-heavy paths lives in:
+  - `Source/Reasoner/Kernel/Algorithm/CCalculationTableauCompletionTaskHandleAlgorithm.cpp`
+  - `Source/Reasoner/Classifier/COptimizedKPSetClassSubsumptionClassifierThread.cpp`
 - If investigating worker hangs, reproduce with:
   ```bash
   MAIN_THREAD=0 DATASET=sample BROWSERS=chromium node wasm/tests/e2e.js
