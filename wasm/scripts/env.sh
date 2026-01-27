@@ -54,9 +54,13 @@ fi
 # Load emsdk environment (emcc, node, etc.).
 # shellcheck disable=SC1090
 EMSDK_DIR_SAVED="${EMSDK_DIR}"
+EMSDK_VERSION_SAVED="${EMSDK_VERSION:-}"
 source "${EMSDK_DIR_SAVED}/emsdk_env.sh"
 if [[ -z "${EMSDK_DIR:-}" && -n "${EMSDK_DIR_SAVED}" ]]; then
 	EMSDK_DIR="${EMSDK_DIR_SAVED}"
+fi
+if [[ -z "${EMSDK_VERSION:-}" && -n "${EMSDK_VERSION_SAVED}" ]]; then
+	EMSDK_VERSION="${EMSDK_VERSION_SAVED}"
 fi
 
 export PATH="${QT_WASM_DIR}/bin:${PATH}"
