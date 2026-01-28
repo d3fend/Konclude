@@ -266,7 +266,7 @@ function applyParallelOverride(overrides, parallelOverrideValue) {
 }
 
 function resolveProfileDefaults(profile, dataset) {
-  if (profile !== "d3fend" && profile !== "large") {
+  if (profile !== "d3fend" && profile !== "large" && profile !== "default") {
     return {};
   }
   const sizeBytes = Number.isFinite(dataset?.sizeBytes) ? dataset.sizeBytes : 0;
@@ -275,8 +275,8 @@ function resolveProfileDefaults(profile, dataset) {
     dataset?.label === "d3fend-full" ||
     sizeBytes > 6 * 1024 * 1024;
   const hw = Number.isFinite(hardwareConcurrency) && hardwareConcurrency > 0 ? hardwareConcurrency : null;
-  const workerCap = isFull ? 8 : 16;
-  const workers = hw ? Math.min(workerCap, hw) : workerCap;
+  const fallbackWorkers = isFull ? 8 : 16;
+  const workers = hw ? Math.min(fallbackWorkers, hw) : fallbackWorkers;
   const threadPoolMax = Math.max(2, Math.floor(workers / 2));
   return { workers, parallel: 2, threadPoolMax };
 }
@@ -321,12 +321,11 @@ function applyWorkerOverride(overrides, workersOverride) {
   const workers = Number.parseInt(workersOverride || "", 10);
   if (Number.isFinite(workers) && workers > 0) {
     const maxCores = Number.isFinite(hardwareConcurrency) ? hardwareConcurrency : null;
-    const cappedWorkers = maxCores ? Math.min(workers, maxCores) : workers;
-    if (cappedWorkers !== workers) {
-      console.warn("capping workers to", cappedWorkers);
+    if (maxCores && workers > maxCores) {
+      console.warn("workers exceeds hardwareConcurrency", { workers, maxCores });
     }
-    overrides["Konclude.Calculation.ProcessorCount"] = String(cappedWorkers);
-    overrides["Konclude.Calculation.WorkerCount"] = String(cappedWorkers);
+    overrides["Konclude.Calculation.ProcessorCount"] = String(workers);
+    overrides["Konclude.Calculation.WorkerCount"] = String(workers);
   }
 }
 

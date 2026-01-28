@@ -81,7 +81,7 @@ self.onmessage = async (event) => {
   }
 
   function resolveProfileDefaults(profileName, datasetInfo) {
-    if (profileName !== "d3fend" && profileName !== "large") {
+    if (profileName !== "d3fend" && profileName !== "large" && profileName !== "default") {
       return {};
     }
     const sizeBytes = Number.isFinite(datasetInfo?.sizeBytes) ? datasetInfo.sizeBytes : 0;
@@ -126,20 +126,19 @@ self.onmessage = async (event) => {
     overrides["Konclude.Logging.MaxLogMessageCount"] = "2000";
   }
 
-  function applyWorkerOverride(overrides, workersOverride) {
-    const workers = Number.parseInt(workersOverride || "", 10);
-    if (Number.isFinite(workers) && workers > 0) {
-      const maxCores = Number.isFinite(self.navigator?.hardwareConcurrency)
-        ? self.navigator.hardwareConcurrency
-        : null;
-      const cappedWorkers = maxCores ? Math.min(workers, maxCores) : workers;
-      if (cappedWorkers !== workers) {
-        console.warn("capping workers to", cappedWorkers);
-      }
-      overrides["Konclude.Calculation.ProcessorCount"] = String(cappedWorkers);
-      overrides["Konclude.Calculation.WorkerCount"] = String(cappedWorkers);
+function applyWorkerOverride(overrides, workersOverride) {
+  const workers = Number.parseInt(workersOverride || "", 10);
+  if (Number.isFinite(workers) && workers > 0) {
+    const maxCores = Number.isFinite(self.navigator?.hardwareConcurrency)
+      ? self.navigator.hardwareConcurrency
+      : null;
+    if (maxCores && workers > maxCores) {
+      console.warn("workers exceeds hardwareConcurrency", { workers, maxCores });
     }
+    overrides["Konclude.Calculation.ProcessorCount"] = String(workers);
+    overrides["Konclude.Calculation.WorkerCount"] = String(workers);
   }
+}
 
   function buildOverrides(workersOverride, parallelOverrideValue, profileName, datasetInfo) {
     const defaults = resolveProfileDefaults(profileName, datasetInfo);

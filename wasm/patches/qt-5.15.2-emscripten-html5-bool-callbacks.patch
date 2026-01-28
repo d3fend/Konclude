@@ -1,0 +1,114 @@
+--- a/qtbase/src/plugins/platforms/wasm/qwasmintegration.cpp	2020-10-27 02:02:11.000000000 -0600
++++ b/qtbase/src/plugins/platforms/wasm/qwasmintegration.cpp	2026-01-27 15:24:03.429400225 -0700
+@@ -129,7 +129,7 @@
+     emscripten::val::global("window").set("onbeforeunload", val::module_property("qtBrowserBeforeUnload"));
+ 
+     // install browser window resize handler
+-    auto onWindowResize = [](int eventType, const EmscriptenUiEvent *e, void *userData) -> int {
++    auto onWindowResize = [](int eventType, const EmscriptenUiEvent *e, void *userData) -> bool {
+         Q_UNUSED(eventType);
+         Q_UNUSED(e);
+         Q_UNUSED(userData);
+@@ -139,7 +139,7 @@
+         // update the Qt screen sizes (and canvas render sizes).
+         if (QWasmIntegration *integration = QWasmIntegration::get())
+             integration->resizeAllScreens();
+-        return 0;
++        return false;
+     };
+     emscripten_set_resize_callback(EMSCRIPTEN_EVENT_TARGET_WINDOW, nullptr, 1, onWindowResize);
+ 
+--- a/qtbase/src/plugins/platforms/wasm/qwasmeventtranslator.h	2020-10-27 02:02:11.000000000 -0600
++++ b/qtbase/src/plugins/platforms/wasm/qwasmeventtranslator.h	2026-01-27 15:24:13.360661245 -0700
+@@ -51,12 +51,12 @@
+     explicit QWasmEventTranslator(QWasmScreen *screen);
+     ~QWasmEventTranslator();
+ 
+-    static int keyboard_cb(int eventType, const EmscriptenKeyboardEvent *keyEvent, void *userData);
+-    static int mouse_cb(int eventType, const EmscriptenMouseEvent *mouseEvent, void *userData);
+-    static int focus_cb(int eventType, const EmscriptenFocusEvent *focusEvent, void *userData);
+-    static int wheel_cb(int eventType, const EmscriptenWheelEvent *wheelEvent, void *userData);
++    static bool keyboard_cb(int eventType, const EmscriptenKeyboardEvent *keyEvent, void *userData);
++    static bool mouse_cb(int eventType, const EmscriptenMouseEvent *mouseEvent, void *userData);
++    static bool focus_cb(int eventType, const EmscriptenFocusEvent *focusEvent, void *userData);
++    static bool wheel_cb(int eventType, const EmscriptenWheelEvent *wheelEvent, void *userData);
+ 
+-    static int touchCallback(int eventType, const EmscriptenTouchEvent *ev, void *userData);
++    static bool touchCallback(int eventType, const EmscriptenTouchEvent *ev, void *userData);
+ 
+     void processEvents();
+     void initEventHandlers();
+--- a/qtbase/src/plugins/platforms/wasm/qwasmeventtranslator.cpp	2020-10-27 02:02:11.000000000 -0600
++++ b/qtbase/src/plugins/platforms/wasm/qwasmeventtranslator.cpp	2026-01-27 15:24:24.627958030 -0700
+@@ -437,12 +437,12 @@
+     return translatKeyModifier(mouseEvent);
+ }
+ 
+-int QWasmEventTranslator::keyboard_cb(int eventType, const EmscriptenKeyboardEvent *keyEvent, void *userData)
++bool QWasmEventTranslator::keyboard_cb(int eventType, const EmscriptenKeyboardEvent *keyEvent, void *userData)
+ {
+     QWasmEventTranslator *wasmTranslator = reinterpret_cast<QWasmEventTranslator *>(userData);
+     bool accepted = wasmTranslator->processKeyboard(eventType, keyEvent);
+ 
+-    return accepted ? 1 : 0;
++    return accepted;
+ }
+ 
+ QWasmScreen *QWasmEventTranslator::screen()
+@@ -500,12 +500,12 @@
+     return Qt::NoButton;
+ }
+ 
+-int QWasmEventTranslator::mouse_cb(int eventType, const EmscriptenMouseEvent *mouseEvent, void *userData)
++bool QWasmEventTranslator::mouse_cb(int eventType, const EmscriptenMouseEvent *mouseEvent, void *userData)
+ {
+     QWasmEventTranslator *translator = (QWasmEventTranslator*)userData;
+     translator->processMouse(eventType,mouseEvent);
+     QWasmEventDispatcher::maintainTimers();
+-    return 0;
++    return false;
+ }
+ 
+ void resizeWindow(QWindow *window, QWasmWindow::ResizeMode mode,
+@@ -662,12 +662,12 @@
+     }
+ }
+ 
+-int QWasmEventTranslator::focus_cb(int /*eventType*/, const EmscriptenFocusEvent */*focusEvent*/, void */*userData*/)
++bool QWasmEventTranslator::focus_cb(int /*eventType*/, const EmscriptenFocusEvent */*focusEvent*/, void */*userData*/)
+ {
+-    return 0;
++    return false;
+ }
+ 
+-int QWasmEventTranslator::wheel_cb(int eventType, const EmscriptenWheelEvent *wheelEvent, void *userData)
++bool QWasmEventTranslator::wheel_cb(int eventType, const EmscriptenWheelEvent *wheelEvent, void *userData)
+ {
+     Q_UNUSED(eventType)
+ 
+@@ -698,7 +698,7 @@
+ 
+     QWindow *window2 = eventTranslator->screen()->compositor()->windowAt(globalPoint, 5);
+     if (!window2)
+-        return 0;
++        return false;
+     QPoint localPoint = window2->mapFromGlobal(globalPoint);
+ 
+     QPoint pixelDelta;
+@@ -710,13 +710,13 @@
+                                              globalPoint, QPoint(), pixelDelta, modifiers);
+     QWasmEventDispatcher::maintainTimers();
+ 
+-    return 1;
++    return true;
+ }
+ 
+-int QWasmEventTranslator::touchCallback(int eventType, const EmscriptenTouchEvent *touchEvent, void *userData)
++bool QWasmEventTranslator::touchCallback(int eventType, const EmscriptenTouchEvent *touchEvent, void *userData)
+ {
+     auto translator = reinterpret_cast<QWasmEventTranslator*>(userData);
+-    return translator->handleTouch(eventType, touchEvent);
++    return translator->handleTouch(eventType, touchEvent) != 0;
+ }
+ 
+ int QWasmEventTranslator::handleTouch(int eventType, const EmscriptenTouchEvent *touchEvent)

@@ -3,6 +3,25 @@ message("Configuring Konclude WebAssembly flags.")
 # Optimization
 QMAKE_CFLAGS_RELEASE += -O3 -DNDEBUG
 QMAKE_CXXFLAGS_RELEASE += -O3 -DNDEBUG
+isEmpty(KONCLUDE_WASM_LINK_O3) { KONCLUDE_WASM_LINK_O3 = 0 }
+!equals(KONCLUDE_WASM_LINK_O3, 0) {
+	QMAKE_LFLAGS_RELEASE += -O3
+}
+
+# Optional link-time optimization (enable via KONCLUDE_WASM_LTO=1).
+isEmpty(KONCLUDE_WASM_LTO) { KONCLUDE_WASM_LTO = 0 }
+!equals(KONCLUDE_WASM_LTO, 0) {
+	QMAKE_CFLAGS_RELEASE += -flto
+	QMAKE_CXXFLAGS_RELEASE += -flto
+	QMAKE_LFLAGS_RELEASE += -flto
+}
+
+# Optional SIMD (enable via KONCLUDE_WASM_SIMD=1).
+isEmpty(KONCLUDE_WASM_SIMD) { KONCLUDE_WASM_SIMD = 1 }
+!equals(KONCLUDE_WASM_SIMD, 0) {
+	QMAKE_CFLAGS += -msimd128
+	QMAKE_CXXFLAGS += -msimd128
+}
 
 # Optional debug helpers (enable via KONCLUDE_WASM_DEBUG=1).
 isEmpty(KONCLUDE_WASM_DEBUG) { KONCLUDE_WASM_DEBUG = 0 }
@@ -34,6 +53,7 @@ isEmpty(KONCLUDE_WASM_WASM_EXCEPTIONS) { KONCLUDE_WASM_WASM_EXCEPTIONS = 0 }
 }
 equals(KONCLUDE_WASM_WASM_EXCEPTIONS, 0) {
 	!equals(KONCLUDE_WASM_EXCEPTIONS, 0) {
+		QMAKE_LFLAGS += -fexceptions
 		QMAKE_LFLAGS += -s DISABLE_EXCEPTION_CATCHING=0
 	}
 }
@@ -69,10 +89,16 @@ QMAKE_LFLAGS += -s EXPORTED_RUNTIME_METHODS=['ccall','cwrap','FS']
 QMAKE_LFLAGS += -s EXPORTED_FUNCTIONS=['_konclude_run_command','_konclude_classify_files','_konclude_consistency_files','_konclude_realise_files','_konclude_realize_files','_konclude_classify_owl2xml','_konclude_consistency_owl2xml','_konclude_realise_owl2xml','_konclude_realize_owl2xml','_konclude_submit_job','_konclude_submit_classify_files','_konclude_submit_realise_files','_konclude_submit_realize_files','_konclude_job_status','_konclude_job_exit_code','_konclude_job_free','_konclude_tick','_konclude_set_config','_konclude_reset_config_overrides','_konclude_free','_konclude_shutdown']
 
 # Allow the wasm function table to grow to avoid indirect call OOBs under heavy multithreading.
-QMAKE_LFLAGS += -s ALLOW_TABLE_GROWTH=1
+isEmpty(KONCLUDE_WASM_TABLE_GROWTH) { KONCLUDE_WASM_TABLE_GROWTH = 0 }
+!equals(KONCLUDE_WASM_TABLE_GROWTH, 0) {
+	QMAKE_LFLAGS += -s ALLOW_TABLE_GROWTH=1
+}
 
 # Allow function pointer casts for complex C++ callback paths.
-QMAKE_LFLAGS += -s EMULATE_FUNCTION_POINTER_CASTS=1
+isEmpty(KONCLUDE_WASM_FP_CASTS) { KONCLUDE_WASM_FP_CASTS = 0 }
+!equals(KONCLUDE_WASM_FP_CASTS, 0) {
+	QMAKE_LFLAGS += -s EMULATE_FUNCTION_POINTER_CASTS=1
+}
 
 # File system support (needed for temp files and any explicit FS usage).
 QMAKE_LFLAGS += -s FORCE_FILESYSTEM=1
@@ -92,6 +118,15 @@ QMAKE_WASM_TOTAL_MEMORY = $$KONCLUDE_WASM_TOTAL_MEMORY
 QMAKE_CFLAGS += -pthread
 QMAKE_CXXFLAGS += -pthread
 QMAKE_LFLAGS += -pthread -s USE_PTHREADS=1
+
+# Optional allocator override (emscripten MALLOC).
+!isEmpty(KONCLUDE_WASM_MALLOC) {
+	QMAKE_LFLAGS += -s MALLOC=$$KONCLUDE_WASM_MALLOC
+}
+
+contains(KONCLUDE_WASM_RESERVE_POLICY, ^[0-9]+$) {
+	DEFINES += KONCLUDE_WASM_RESERVE_POLICY=$$KONCLUDE_WASM_RESERVE_POLICY
+}
 
 # Pthread stack size (override via qmake vars if needed).
 isEmpty(KONCLUDE_WASM_PTHREAD_STACK_SIZE) { KONCLUDE_WASM_PTHREAD_STACK_SIZE = 8388608 }  # 8MB

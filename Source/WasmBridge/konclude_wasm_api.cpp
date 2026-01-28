@@ -495,7 +495,7 @@ namespace {
 					}
 				}
 				const bool enableOccStatsCache = false;
-				const cint64 cacheThreadReserve =
+				const cint64 baseCacheThreadReserve =
 						(enableUnsatCache ? 1 : 0) +
 						(enableSatExpCache ? 1 : 0) +
 						(enableReuseCompGraphCache ? 1 : 0) +
@@ -503,9 +503,38 @@ namespace {
 						(enableCompConsCache ? 1 : 0) +
 						(enableBackendCache ? 1 : 0) +
 						(enableOccStatsCache ? 1 : 0);
-				// Reserve a minimal slot for the reasoner manager and Qt thread pool.
-				const cint64 managerThreadReserve = 1;
-				cint64 blockThreadPoolThreads = 1;
+				enum ReservePolicy { ReserveDefault = 0, ReserveRelaxed = 1, ReserveNone = 2 };
+				ReservePolicy reservePolicy = ReserveDefault;
+#ifdef KONCLUDE_WASM_RESERVE_POLICY
+				if (KONCLUDE_WASM_RESERVE_POLICY == 1) {
+					reservePolicy = ReserveRelaxed;
+				} else if (KONCLUDE_WASM_RESERVE_POLICY >= 2) {
+					reservePolicy = ReserveNone;
+				}
+#endif
+				{
+					QMutexLocker locker(&mConfigMutex);
+					auto it = mConfigOverrides.constFind("Konclude.Wasm.ThreadReservePolicy");
+					if (it != mConfigOverrides.constEnd()) {
+						const QString value = it.value().trimmed().toLower();
+						if (value == "none" || value == "2") {
+							reservePolicy = ReserveNone;
+						} else if (value == "relaxed" || value == "1") {
+							reservePolicy = ReserveRelaxed;
+						} else if (value == "default" || value == "0") {
+							reservePolicy = ReserveDefault;
+						}
+					}
+				}
+				cint64 cacheThreadReserve = baseCacheThreadReserve;
+				cint64 managerThreadReserve = 1;
+				if (reservePolicy == ReserveRelaxed) {
+					cacheThreadReserve = qMin<cint64>(1, baseCacheThreadReserve);
+				} else if (reservePolicy == ReserveNone) {
+					cacheThreadReserve = 0;
+					managerThreadReserve = 0;
+				}
+				cint64 blockThreadPoolThreads = 0;
 				{
 					QMutexLocker locker(&mConfigMutex);
 					auto it = mConfigOverrides.constFind("Konclude.Calculation.BlockingThreadPoolThreadsCount");
@@ -521,9 +550,19 @@ namespace {
 				if (poolAvailable < 1) {
 					poolAvailable = 1;
 				}
-				cint64 threadPoolReserve = qMin<cint64>(2, qMax<cint64>(1, poolAvailable / 8));
-				// Keep at least two usable Qt thread pool threads after blocking slots.
-				const cint64 minThreadPool = qMax<cint64>(2, blockThreadPoolThreads + 2);
+				cint64 threadPoolReserve = 0;
+				cint64 minThreadPool = 0;
+				if (reservePolicy == ReserveDefault) {
+					threadPoolReserve = qMin<cint64>(2, qMax<cint64>(1, poolAvailable / 8));
+					// Keep at least two usable Qt thread pool threads after blocking slots.
+					minThreadPool = qMax<cint64>(2, blockThreadPoolThreads + 2);
+				} else if (reservePolicy == ReserveRelaxed) {
+					threadPoolReserve = qMin<cint64>(1, qMax<cint64>(0, poolAvailable / 16));
+					minThreadPool = qMax<cint64>(1, blockThreadPoolThreads);
+				} else {
+					threadPoolReserve = 0;
+					minThreadPool = qMax<cint64>(0, blockThreadPoolThreads);
+				}
 				cint64 desiredThreadPool = qMax(threadPoolReserve, minThreadPool);
 				if (desiredThreadPool >= poolAvailable) {
 					desiredThreadPool = qMax<cint64>(0, poolAvailable - 1);
@@ -591,8 +630,14 @@ namespace {
 				setConfigValue("Konclude.Calculation.AdaptThreadPoolSizeProcessorCount", "false");
 				setConfigValue("Konclude.Calculation.ThreadPoolMaxCount", QString::number(threadPoolMax));
 #ifdef __EMSCRIPTEN__
+				QString reservePolicyLabel = "default";
+				if (reservePolicy == ReserveRelaxed) {
+					reservePolicyLabel = "relaxed";
+				} else if (reservePolicy == ReserveNone) {
+					reservePolicyLabel = "none";
+				}
 				LOG(INFO, "::Konclude::Wasm",
-						QString("Thread config cmd=%1 detectedCores=%2 overhead=%3 pool=%4 proc=%5 reserve=%6 poolAvail=%7 poolMax=%8 block=%9 useAll=%10 threadsEnabled=%11")
+						QString("Thread config cmd=%1 detectedCores=%2 overhead=%3 pool=%4 proc=%5 reserve=%6 poolAvail=%7 poolMax=%8 block=%9 cacheRes=%10 mgrRes=%11 poolRes=%12 policy=%13 useAll=%14 threadsEnabled=%15")
 								.arg(job->command)
 								.arg(detectedCores)
 								.arg(threadOverhead)
@@ -602,6 +647,10 @@ namespace {
 								.arg(poolAvailable)
 								.arg(threadPoolMax)
 								.arg(blockThreadPoolThreads)
+								.arg(cacheThreadReserve)
+								.arg(managerThreadReserve)
+								.arg(desiredThreadPool)
+								.arg(reservePolicyLabel)
 								.arg(useAllThreads ? "true" : "false")
 								.arg(wasmThreadsEnabled ? "true" : "false"),
 						0);
@@ -750,7 +799,8 @@ namespace {
 						if (key == "Konclude.Calculation.ProcessorCount" ||
 								key == "Konclude.Calculation.WorkerCount" ||
 								key == "Konclude.Calculation.ThreadPoolMaxCount" ||
-								key == "Konclude.Calculation.AdaptThreadPoolSizeProcessorCount") {
+								key == "Konclude.Calculation.AdaptThreadPoolSizeProcessorCount" ||
+								key == "Konclude.Wasm.ThreadReservePolicy") {
 							continue;
 						}
 						const QString clampedValue = clampParallelOverride(key, it.value());

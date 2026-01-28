@@ -9,9 +9,14 @@ ARG KONCLUDE_WASM_PTHREAD_OVERHEAD=
 ARG KONCLUDE_WASM_PROCESSOR_COUNT=
 ARG KONCLUDE_WASM_PTHREAD_STRICT=
 ARG KONCLUDE_WASM_DEBUG=0
+ARG KONCLUDE_WASM_LTO=
+ARG KONCLUDE_WASM_LINK_O3=
+ARG KONCLUDE_WASM_SIMD=
 ARG KONCLUDE_WASM_STACK_SIZE=
 ARG KONCLUDE_WASM_PTHREAD_STACK_SIZE=16777216
 ARG KONCLUDE_WASM_EXCEPTIONS=
+ARG KONCLUDE_WASM_TABLE_GROWTH=
+ARG KONCLUDE_WASM_FP_CASTS=
 ARG KONCLUDE_WASM_WASM_EXCEPTIONS=
 ARG KONCLUDE_WASM_LONGJMP=
 ARG JOBS=
@@ -54,6 +59,7 @@ RUN tar -xJf /opt/qt-src/qt-src.tar.xz -C /opt/qt-src
 COPY wasm/patches/qt-5.15.2-emscripten-qfloat16.patch /opt/qt-src/qt-patch-qfloat16.patch
 COPY wasm/patches/qt-5.15.2-emscripten-qglobal-limits.patch /opt/qt-src/qt-patch-qglobal.patch
 COPY wasm/patches/qt-5.15.2-emscripten-wasm-exceptions.patch /opt/qt-src/qt-patch-wasm-exceptions.patch
+COPY wasm/patches/qt-5.15.2-emscripten-html5-bool-callbacks.patch /opt/qt-src/qt-patch-html5-bool-callbacks.patch
 RUN /bin/bash -lc "cd /opt/qt-src/${QT_SRC_DIR} && \
     if ! grep -q '<limits>' qtbase/src/corelib/global/qfloat16.h; then \
         patch -p1 < /opt/qt-src/qt-patch-qfloat16.patch; \
@@ -61,6 +67,7 @@ RUN /bin/bash -lc "cd /opt/qt-src/${QT_SRC_DIR} && \
     if ! grep -q '<limits>' qtbase/src/corelib/global/qglobal.h; then \
         patch -p1 < /opt/qt-src/qt-patch-qglobal.patch; \
     fi && \
+    patch -p1 < /opt/qt-src/qt-patch-html5-bool-callbacks.patch && \
     if [[ \"${KONCLUDE_WASM_WASM_EXCEPTIONS}\" != \"0\" && -n \"${KONCLUDE_WASM_WASM_EXCEPTIONS}\" ]]; then \
         patch -p1 < /opt/qt-src/qt-patch-wasm-exceptions.patch; \
     fi"
@@ -88,8 +95,15 @@ ARG KONCLUDE_WASM_PTHREAD_POOL
 ARG KONCLUDE_WASM_PTHREAD_OVERHEAD
 ARG KONCLUDE_WASM_PROCESSOR_COUNT
 ARG KONCLUDE_WASM_DEBUG
+ARG KONCLUDE_WASM_LTO
+ARG KONCLUDE_WASM_LINK_O3
+ARG KONCLUDE_WASM_SIMD
 ARG KONCLUDE_WASM_STACK_SIZE
 ARG KONCLUDE_WASM_PTHREAD_STACK_SIZE
+ARG KONCLUDE_WASM_MALLOC
+ARG KONCLUDE_WASM_TABLE_GROWTH
+ARG KONCLUDE_WASM_FP_CASTS
+ARG KONCLUDE_WASM_RESERVE_POLICY
 ARG KONCLUDE_WASM_EXCEPTIONS
 ARG KONCLUDE_WASM_WASM_EXCEPTIONS
 ARG KONCLUDE_WASM_LONGJMP
@@ -107,8 +121,15 @@ RUN /bin/bash -lc "export EMSDK_DIR=/opt/emsdk; \
     export KONCLUDE_WASM_PROCESSOR_COUNT=${KONCLUDE_WASM_PROCESSOR_COUNT}; \
     export KONCLUDE_WASM_PTHREAD_STRICT=${KONCLUDE_WASM_PTHREAD_STRICT}; \
     export KONCLUDE_WASM_DEBUG=${KONCLUDE_WASM_DEBUG}; \
+    export KONCLUDE_WASM_LTO=${KONCLUDE_WASM_LTO}; \
+    export KONCLUDE_WASM_LINK_O3=${KONCLUDE_WASM_LINK_O3}; \
+    export KONCLUDE_WASM_SIMD=${KONCLUDE_WASM_SIMD}; \
     export KONCLUDE_WASM_STACK_SIZE=${KONCLUDE_WASM_STACK_SIZE}; \
     export KONCLUDE_WASM_PTHREAD_STACK_SIZE=${KONCLUDE_WASM_PTHREAD_STACK_SIZE}; \
+    export KONCLUDE_WASM_MALLOC=${KONCLUDE_WASM_MALLOC}; \
+    export KONCLUDE_WASM_TABLE_GROWTH=${KONCLUDE_WASM_TABLE_GROWTH}; \
+    export KONCLUDE_WASM_FP_CASTS=${KONCLUDE_WASM_FP_CASTS}; \
+    export KONCLUDE_WASM_RESERVE_POLICY=${KONCLUDE_WASM_RESERVE_POLICY}; \
     export KONCLUDE_WASM_EXCEPTIONS=${KONCLUDE_WASM_EXCEPTIONS}; \
     export KONCLUDE_WASM_WASM_EXCEPTIONS=${KONCLUDE_WASM_WASM_EXCEPTIONS}; \
     export KONCLUDE_WASM_LONGJMP=${KONCLUDE_WASM_LONGJMP}; \

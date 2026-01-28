@@ -4,7 +4,7 @@ This directory builds a Konclude WebAssembly module for browser/JS usage. The WA
 
 ## Current Status (2026-01-27)
 - **Main-thread runner (default) works** for `DATASET=sample` and D3FEND (validated in Firefox).
-- **MT parallelism works with wasm exceptions** (emsdk 3.1.45 + Qt patched, `KONCLUDE_WASM_WASM_EXCEPTIONS=1`)
+- **MT parallelism works with wasm exceptions** (emsdk 3.1.74 + Qt patched, `KONCLUDE_WASM_WASM_EXCEPTIONS=1`)
   for `PARALLEL=2` on `d3fend` and `d3fend-full` in Firefox.
 - **ABox-heavy regression (`roberts-family-full-D`) is stable** in Firefox/Chromium with
   `Konclude.Calculation.Optimization.IndividualSaturation=false` (default in WASM).
@@ -39,7 +39,7 @@ Pinned versions live in `wasm/versions.env`:
 - `QT_SRC_URL`
 - `QT_SRC_DIR`
 
-Qt 5.15.2 is still the target Qt version, but we now pin emsdk **3.1.45** to enable native WASM
+Qt 5.15.2 is still the target Qt version, but we now pin emsdk **3.1.74** to enable native WASM
 exceptions (see root-cause note below). Qt’s wasm docs list emsdk 1.39.8 as a known-good baseline,
 so if the newer toolchain fails on your host, fall back to 1.39.8 and set
 `KONCLUDE_WASM_WASM_EXCEPTIONS=0`. When wasm exceptions are enabled, Emscripten requires
@@ -47,6 +47,7 @@ so if the newer toolchain fails on your host, fall back to 1.39.8 and set
 The Docker build applies (only if needed):
 - `wasm/patches/qt-5.15.2-emscripten-qfloat16.patch`
 - `wasm/patches/qt-5.15.2-emscripten-qglobal-limits.patch`
+- `wasm/patches/qt-5.15.2-emscripten-html5-bool-callbacks.patch` (Emscripten 3.1.74 html5 callback signature change)
 - `wasm/patches/qt-5.15.2-emscripten-wasm-exceptions.patch` (only when `KONCLUDE_WASM_WASM_EXCEPTIONS=1`)
 Qt 5.15.2's single-source tarball omits `qtbase/header.LGPL`, so the Docker build generates it from
 `qtbase/src/gui/vulkan/qvulkaninstance.cpp` before configuring Qt.
@@ -61,7 +62,7 @@ The build also generates `wasm/Konclude_wasm.pri` to normalize path separators f
 Optional overrides:
 ```bash
 IMAGE_TAG=konclude-wasm-build:qt5.15 \
-  EMSDK_VERSION=3.1.45 \
+  EMSDK_VERSION=3.1.74 \
   QT_VERSION=5.15.2 \
   KONCLUDE_WASM_WASM_EXCEPTIONS=1 \
   KONCLUDE_WASM_LONGJMP=wasm \
@@ -137,14 +138,33 @@ the others). You can always target a dataset explicitly via `DATASET=...`.
 ## Thread Pool Sizing
 The WASM heap is set by `KONCLUDE_WASM_TOTAL_MEMORY` (default: `2GB` in `wasm/versions.env`) to keep
 large ontologies like D3FEND stable with multiple workers.
-The pthread pool size is set by `KONCLUDE_WASM_PTHREAD_POOL` (default: `16` from `wasm/versions.env`).
-Set it to `auto` to size the pool at runtime from `navigator.hardwareConcurrency`; the pool can be expanded
+The pthread pool size is set by `KONCLUDE_WASM_PTHREAD_POOL` (default: `auto` in `wasm/versions.env`).
+`auto` sizes the pool at runtime from `navigator.hardwareConcurrency`; the pool can be expanded
 by `KONCLUDE_WASM_PTHREAD_OVERHEAD` (default: `0` in `wasm/versions.env`).
 Pthread stack size defaults to `KONCLUDE_WASM_PTHREAD_STACK_SIZE=33554432` (32MB) and can be overridden at build time.
+Allocator defaults to `mimalloc` on emsdk 3.1.74. Supported allocators include `mimalloc`, `emmalloc`,
+`dlmalloc`, or `none` (disable malloc). If you hit instability, set `KONCLUDE_WASM_MALLOC=emmalloc`
+or leave it empty to use the toolchain default.
+Thread reserve policy defaults to `KONCLUDE_WASM_RESERVE_POLICY=1` (relaxed, minimal reserves). Use:
+- `0` = default (conservative cache + manager + thread-pool reserves)
+- `1` = relaxed (minimal reserves)
+- `2` = none (no reserves; highest procCount)
+
+You can also override per run with `konclude_set_config("Konclude.Wasm.ThreadReservePolicy","relaxed")` (or `none`).
+Note: `none` removes the Qt thread-pool reserve, which can starve QtConcurrent tasks on some datasets.
 
 Internal worker count defaults to all detected cores; override with `KONCLUDE_WASM_PROCESSOR_COUNT`
 if you need to cap concurrency. For debugging, set `KONCLUDE_WASM_PTHREAD_STRICT=2` to fail fast
 if the pool is too small.
+
+## Build-Time Performance Flags
+The wasm build defaults to performance-focused settings in `wasm/versions.env`:
+- `KONCLUDE_WASM_LTO=0` (LTO regressed multi-thread performance in Firefox for D3FEND).
+- `KONCLUDE_WASM_LINK_O3=0` (link-time `-O3` triggers a pthread runtime crash on emsdk 3.1.74:
+  `__emscripten_thread_crashed` undefined).
+- `KONCLUDE_WASM_SIMD=1` enables wasm SIMD (`-msimd128`); disable for older browsers.
+- `KONCLUDE_WASM_TABLE_GROWTH=0` keeps the function table fixed (set to `1` if you hit indirect-call OOBs).
+- `KONCLUDE_WASM_FP_CASTS=0` disables emulated function-pointer casts (set to `1` if required by callbacks).
 
 ## E2E Browser Tests (Playwright)
 ```bash
@@ -166,11 +186,13 @@ INCLUDE_SLOW=1 BROWSERS=chromium,firefox node e2e.js
 ```
 
 ## WASM Runtime Profiles (Large Ontologies)
-The web demo applies dataset-specific defaults for `profile=large` and `profile=d3fend`:
-`parallel` defaults to 2 and `workers` is capped to 16 (or `hardwareConcurrency` if lower).
-For larger datasets (e.g., `d3fend-full`, or inputs larger than ~6MB), the default worker cap
-drops to 8 to avoid wasm memory faults. Override via URL params if you need a different
-setting. The WASM bridge still sizes the internal worker counts and QtConcurrent pool from the
+The web demo applies dataset-specific defaults for `profile=default`, `profile=large`, and `profile=d3fend`:
+`parallel` defaults to 2 and `workers` defaults to the smaller of `navigator.hardwareConcurrency` and
+16 (or 8 for larger datasets such as `d3fend-full` or inputs larger than ~6MB). This avoids 32-thread
+crashes observed in Firefox while still allowing overrides. Override via URL params if you need a different
+setting. The pthread pool can still be larger (e.g., `auto` sizing), and you can override
+`workers=` to use fewer or more threads if you need to experiment. The WASM bridge still sizes the internal
+worker counts and QtConcurrent pool from the
 available pthread pool, then sets classification and precomputation parallelism to match.
 Use `workers=` and `parallel=` if you need to override those defaults for a specific workload.
 If you are on the legacy toolchain (emsdk 1.39.8 / no wasm exceptions), keep `parallel=1`
@@ -199,11 +221,11 @@ DATASET=d3fend-full TIMEOUT_MS=300000 BROWSERS=chromium node e2e.js
 ```
 
 With the default 2GB heap and worker-aligned parallelism, D3FEND classification is stable
-through 16 workers (thread pool size) when using the wasm-exceptions toolchain. A 3GB heap build
+through 16 workers in the demo defaults when using the wasm-exceptions toolchain. A 3GB heap build
 crashes in Chromium for D3FEND, so 2GB is currently the practical max. To go beyond 16 workers,
-rebuild with a larger thread pool (`KONCLUDE_WASM_PTHREAD_POOL`) and validate memory limits in your
-target browsers. If you are on the legacy toolchain (emsdk 1.39.8 / no wasm exceptions), keep
-`parallel=1` (see root-cause note below).
+ensure the pthread pool size is large enough (`KONCLUDE_WASM_PTHREAD_POOL=auto` or a larger fixed
+value), then validate memory limits in your target browsers. If you are on the legacy toolchain
+(emsdk 1.39.8 / no wasm exceptions), keep `parallel=1` (see root-cause note below).
 
 The WASM bridge also exposes runtime config overrides:
 - `konclude_set_config(key, value)`
@@ -248,7 +270,7 @@ DATASET=d3fend-full PROFILE=large WORKERS=2 PARALLEL=2 ONLY=classification BROWS
   under pthreads in the legacy Emscripten toolchain.
 
 **Status (2026-01-27)**
-- Upgrading to emsdk 3.1.45 + Qt patched for wasm exceptions + `SUPPORT_LONGJMP=wasm` stabilizes
+- Upgrading to emsdk 3.1.74 + Qt patched for wasm exceptions + `SUPPORT_LONGJMP=wasm` stabilizes
   `parallel=2` on `d3fend` and `d3fend-full` in Firefox.
 
 ## Root Cause (Jan 2026): Individual Saturation OOB on ABox-Heavy Inputs
@@ -271,7 +293,7 @@ backend cache, or stack size. Disabling IndividualSaturation stabilizes the run.
   if you want to reproduce/debug.
 
 ## Fix Plan / Next Steps
-1) **Done:** upgrade to emsdk 3.1.45 + Qt wasm exceptions + `SUPPORT_LONGJMP=wasm`. Parallel
+1) **Done:** upgrade to emsdk 3.1.74 + Qt wasm exceptions + `SUPPORT_LONGJMP=wasm`. Parallel
    classification works at `PARALLEL=2` for D3FEND in Firefox.
 2) Investigate IndividualSaturation OOB on ABox-heavy inputs in WASM (heap bounds or data layout)
    and re-enable the optimization once stable.
