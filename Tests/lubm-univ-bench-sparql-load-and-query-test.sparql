@@ -1,4 +1,4 @@
-# requires Konclude compliled with Redland RDF Libraries since the files are serialized with RDF Turtle
+# Turtle parsing uses Redland when available; without Redland Konclude falls back to the simple Turtle assertions parser (ABox-only).
 LOAD <file:Tests/lubm-univ-bench.owl.xml>
 LOAD <file:Tests/lubm-univ-bench-data-1.ttl>
 

@@ -20,6 +20,8 @@
 
 #include "COntologyMultiAutoParsingLoader.h"
 
+#include "COWL2RDFTurtleAssertionsSimpleParser.h"
+
 
 namespace Konclude {
 
@@ -274,6 +276,26 @@ namespace Konclude {
 					if (parsingSucceeded) {
 						triplesParsed = true;
 					}
+#else
+					COWL2RDFTurtleAssertionsSimpleParser* turtleParser = new COWL2RDFTurtleAssertionsSimpleParser(builder, ont);
+					parsingTryLogString = QString("Trying simple RDF Turtle assertions parsing for '%1'.").arg(iriFileString);
+					LOG(INFO, getLogDomain(), parsingTryLogString, this);
+					if (device->open(QIODevice::ReadOnly)) {
+						device->reset();
+						if (turtleParser->parseOntology(device)) {
+							parsingSucceeded = true;
+							LOG(INFO, getLogDomain(), logTr("Finished simple RDF Turtle assertions parsing for '%1'.").arg(iriFileString), this);
+						} else {
+							if (turtleParser->hasError()) {
+								parserErrorList.append(QString("Simple RDF Turtle assertions parsing error: %1").arg(turtleParser->getErrorString()));
+							}
+							parserErrorList.append(QString("Simple RDF Turtle assertions parsing for '%1' failed.").arg(iriFileString));
+						}
+						device->close();
+					} else {
+						CUnspecifiedMessageErrorRecord::makeRecord(QString("Data for '%1' cannot be read.").arg(resolvedIRI), &commandRecordRouter);
+					}
+					delete turtleParser;
 #endif // !KONCLUDE_REDLAND_INTEGRATION
 
 				} else if (parserString == "RDFNTRIPLES") {
@@ -283,6 +305,26 @@ namespace Konclude {
 					if (parsingSucceeded) {
 						triplesParsed = true;
 					}
+#else
+					COWL2RDFTurtleAssertionsSimpleParser* turtleParser = new COWL2RDFTurtleAssertionsSimpleParser(builder, ont);
+					parsingTryLogString = QString("Trying simple RDF NTriples assertions parsing for '%1'.").arg(iriFileString);
+					LOG(INFO, getLogDomain(), parsingTryLogString, this);
+					if (device->open(QIODevice::ReadOnly)) {
+						device->reset();
+						if (turtleParser->parseOntology(device)) {
+							parsingSucceeded = true;
+							LOG(INFO, getLogDomain(), logTr("Finished simple RDF NTriples assertions parsing for '%1'.").arg(iriFileString), this);
+						} else {
+							if (turtleParser->hasError()) {
+								parserErrorList.append(QString("Simple RDF NTriples assertions parsing error: %1").arg(turtleParser->getErrorString()));
+							}
+							parserErrorList.append(QString("Simple RDF NTriples assertions parsing for '%1' failed.").arg(iriFileString));
+						}
+						device->close();
+					} else {
+						CUnspecifiedMessageErrorRecord::makeRecord(QString("Data for '%1' cannot be read.").arg(resolvedIRI), &commandRecordRouter);
+					}
+					delete turtleParser;
 #endif // !KONCLUDE_REDLAND_INTEGRATION
 
 				}
