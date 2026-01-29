@@ -13,18 +13,17 @@ EXPECTED_FILE="${4:-Tests/owl2-test-cases/expected-failures.txt}"
 
 mkdir -p "$WORK_DIR"
 
-declare -A expected
+EXPECTED_LIST=""
 if [[ -f "$EXPECTED_FILE" ]]; then
-  while IFS= read -r line; do
-    line="${line%%#*}"
-    line="${line//$'\r'/}"
-    line="${line//$'\n'/}"
-    line="${line## }"
-    line="${line%% }"
-    [[ -z "$line" ]] && continue
-    expected["$line"]=1
-  done < "$EXPECTED_FILE"
+  EXPECTED_LIST="$(mktemp "$WORK_DIR/expected.XXXXXX")"
+  sed -e 's/\r$//' -e 's/#.*$//' -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//' -e '/^$/d' \
+    "$EXPECTED_FILE" > "$EXPECTED_LIST"
 fi
+
+is_expected() {
+  [[ -z "$EXPECTED_LIST" ]] && return 1
+  grep -Fxq "$1" "$EXPECTED_LIST"
+}
 
 fail=0
 count=0
@@ -37,7 +36,7 @@ while IFS=$'\t' read -r expect path case_id; do
   out="$WORK_DIR/$(basename "$path").out"
   "$KONCLUDE" consistency -i "$path" -o "$out" >/dev/null
   if [[ ! -f "$out" ]]; then
-    if [[ -n "${expected[$case_id]:-}" ]]; then
+    if is_expected "$case_id"; then
       echo "XFAIL $case_id: missing output"
       ((xfail+=1))
       continue
@@ -48,7 +47,7 @@ while IFS=$'\t' read -r expect path case_id; do
   fi
   got=$(tr -d '\r\n' < "$out" | tr '[:upper:]' '[:lower:]')
   if [[ "$got" != "$expect" ]]; then
-    if [[ -n "${expected[$case_id]:-}" ]]; then
+    if is_expected "$case_id"; then
       echo "XFAIL $case_id: expected $expect got $got"
       ((xfail+=1))
       continue
@@ -56,7 +55,7 @@ while IFS=$'\t' read -r expect path case_id; do
     echo "FAIL $case_id: expected $expect got $got"
     fail=1
   else
-    if [[ -n "${expected[$case_id]:-}" ]]; then
+    if is_expected "$case_id"; then
       echo "XPASS $case_id"
       ((xpass+=1))
       fail=1
