@@ -5,6 +5,7 @@
 /bin/
 /lib/
 /out/
+/Release/
 CMakeCache.txt
 CMakeFiles/
 cmake_install.cmake
@@ -63,6 +64,16 @@ compile_commands.json
 /wasm/tests/playwright-report/
 /wasm/tests/.cache/
 /wasm/tests/.playwright/
+/wasm/tests/perf-out/
+/wasm/tests/perf-*.csv
+/wasm/tests/perf-*.json
+
+# Generated test datasets
+/Tests/lubm-generated/
+/Tests/lubm-tools/
+/Tests/lubm-univ-bench-[0-9]*.owl.xml
+/wasm/web/ontologies/lubm-univ-bench-[0-9]*.owl.xml
+/wasm/web/ontologies/lubm-univ-bench-[0-9]*.meta.json
 
 # Node dependencies
 node_modules/

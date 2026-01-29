@@ -43,6 +43,9 @@ namespace Konclude {
 
 
 				bool CSatisfiableTaskSaturationOccurrenceStatisticsCollector::analyseSatisfiableTask(CSatisfiableCalculationTask* statCalcTask, CCalculationAlgorithmContext* calcAlgContext) {
+					if (!mOccStatsCacheWriter) {
+						return false;
+					}
 					mOntology = statCalcTask->getProcessingDataBox()->getOntology();
 					mOntologyTag = mOntology->getOntologyID();
 					return collectOccurrenceStatistics(statCalcTask->getProcessingDataBox(), calcAlgContext);
@@ -179,7 +182,7 @@ namespace Konclude {
 												baseRole = true;
 											}
 										}
-										if (baseRole) {				
+										if (baseRole) {
 											for (CSortedNegLinker<CRole*>* superRoleLinkerIt = role->getIndirectSuperRoleList(); superRoleLinkerIt; superRoleLinkerIt = superRoleLinkerIt->getNext()) {
 												CRole* superRole = superRoleLinkerIt->getData();
 												bool superRoleNegation = superRoleLinkerIt->isNegated();
@@ -188,7 +191,7 @@ namespace Konclude {
 										}
 									}
 								}
-							}							
+							}
 						}
 
 					} else if (analyseConcepts && conSet) {
@@ -301,7 +304,7 @@ namespace Konclude {
 
 									CIndividualSaturationProcessNodeLinker* indiProcessNodeLinker = CObjectAllocator< CIndividualSaturationProcessNodeLinker >::allocateAndConstruct(calcAlgContext->getTemporaryMemoryAllocationManager());
 									indiProcessNodeLinker->initProcessNodeLinker(succNode, true);
-									succIdentNodeLinker = indiProcessNodeLinker->append(succIdentNodeLinker);		
+									succIdentNodeLinker = indiProcessNodeLinker->append(succIdentNodeLinker);
 									++mCollectedOccStatsSuccNodeCount;
 								}
 								return true;

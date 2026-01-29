@@ -56,7 +56,7 @@ namespace Konclude {
 
 			namespace Cache {
 
-				/*! 
+				/*!
 				 *
 				 *		\class		CBackendRepresentativeMemoryCacheOntologyData
 				 *		\author		Andreas Steigmiller
@@ -116,6 +116,9 @@ namespace Konclude {
 						cint64 getIndividualAssociationsCount();
 						CBackendRepresentativeMemoryCacheOntologyData* setIndividualAssociationsCount(cint64 count);
 						CBackendRepresentativeMemoryCacheOntologyData* incIndividualAssociationsCount(cint64 count = 1);
+
+						cint64 getExpectedIndividualCount();
+						CBackendRepresentativeMemoryCacheOntologyData* setExpectedIndividualCount(cint64 count);
 
 
 						bool isAssociationCompleted();
@@ -238,6 +241,7 @@ namespace Konclude {
 						cint64 mLastMinIncompletelyHandledIndiId;
 						cint64 mIncompletelyHandledIndiIdCount;
 						cint64 mIndividualAssociationsCount;
+						cint64 mExpectedIndividualCount;
 						bool mAssociationCompleted;
 						bool mFirstIncompletelyHandledIndividualsRetrieved;
 

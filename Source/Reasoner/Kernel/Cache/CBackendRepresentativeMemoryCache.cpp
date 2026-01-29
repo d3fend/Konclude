@@ -373,6 +373,16 @@ namespace Konclude {
 
 						ontologyData = new CBackendRepresentativeMemoryCacheOntologyData(&mContext);
 						ontologyData->initOntologyData(ontologyIdentifier, !mConfLateIndividualLabelAssociationIndexing);
+						{
+							cint64 expectedCount = 0;
+							if (prevOntologyData) {
+								expectedCount = prevOntologyData->getExpectedIndividualCount();
+							}
+							if (minIndiCount > expectedCount) {
+								expectedCount = minIndiCount;
+							}
+							ontologyData->setExpectedIndividualCount(expectedCount);
+						}
 
 
 						mOntologyDataUpdateCount++;
@@ -463,6 +473,13 @@ namespace Konclude {
 						}
 					}
 
+					if (ontologyData && minIndiCount > 0) {
+						cint64 expectedCount = ontologyData->getExpectedIndividualCount();
+						if (minIndiCount > expectedCount) {
+							ontologyData->setExpectedIndividualCount(minIndiCount);
+						}
+					}
+
 					return ontologyData;
 				}
 
@@ -521,20 +538,30 @@ namespace Konclude {
 					CBackendRepresentativeMemoryCacheReader* reader = new CBackendRepresentativeMemoryCacheReader();
 					mReaderSyncMutex.lock();
 					mReaderLinker = reader->append(mReaderLinker);
+					if (mLastUpdatedSlotLinker) {
+						mLastUpdatedSlotLinker->incReader();
+						reader->updateSlot(mLastUpdatedSlotLinker);
+					}
 					mReaderSyncMutex.unlock();
 					return reader;
 				}
 
 
 				CBackendRepresentativeMemoryCacheReader* CBackendRepresentativeMemoryCache::createOntologyFixedCacheReader(cint64 ontologyIdentifier) {
-					CBackendRepresentativeMemoryCacheReader* reader = new CBackendRepresentativeMemoryCacheReader();
 					mFixedOntologyIdentifierDataHashLock.lockForRead();
 					CBackendRepresentativeMemoryCacheOntologyData* ontologyData = mFixedOntologyIdentifierDataHash.value(ontologyIdentifier);
 					if (ontologyData) {
 						ontologyData->incUsageCount();
 					}
-					reader->fixOntologyData(ontologyData);
 					mFixedOntologyIdentifierDataHashLock.unlock();
+					if (!ontologyData) {
+						LOG(WARN, "::Konclude::RepresentativeBackendCache", logTr("Fixed ontology cache data missing for %1; falling back to live cache reader.").arg(ontologyIdentifier), this);
+						CBackendRepresentativeMemoryCacheReader* liveReader = createCacheReader();
+						liveReader->setWorkingOntology(ontologyIdentifier);
+						return liveReader;
+					}
+					CBackendRepresentativeMemoryCacheReader* reader = new CBackendRepresentativeMemoryCacheReader();
+					reader->fixOntologyData(ontologyData);
 					ontologyData->waitIndividualLabelAssociationIndexed();
 					return reader;
 				}
@@ -1022,7 +1049,7 @@ namespace Konclude {
 							refLabelItem->setExtensionData(CBackendRepresentativeMemoryLabelCacheItemCardinalityExtensionData::CARDINALITY_HASH, newExtensionData);
 
 
-						}	
+						}
 
 					}
 
@@ -1541,7 +1568,7 @@ namespace Konclude {
 
 				CBackendRepresentativeMemoryCacheContext* CBackendRepresentativeMemoryCache::getIndividualAssociationDataMemoryContext(CBackendRepresentativeMemoryCacheIndividualAssociationData* associationData, CBackendRepresentativeMemoryCacheOntologyData* ontologyData, bool* requiresDataCopying) {
 					CBackendRepresentativeMemoryCacheIndividualAssociationContext* context = associationData->getIndividualAssociationMemoryContext();
-					if (context) {		
+					if (context) {
 						if (requiresDataCopying && context->getIndividualAssociationDataUsageCount() <= 1 && context->getPreviousMemoryManagementCount() > 0) {
 							*requiresDataCopying = true;
 						}
@@ -1759,7 +1786,7 @@ namespace Konclude {
 
 
 
-					
+
 
 					bool repLabelUpdateRequired = false;
 					for (cint64 i = 0; associationData && !repLabelUpdateRequired && i < CBackendRepresentativeMemoryLabelCacheItem::LABEL_CACHE_ITEM_ASSOCIATABLE_TYPE_COUNT; ++i) {
@@ -1869,7 +1896,7 @@ namespace Konclude {
 
 
 					bool integrationUpdated = false;
-					if (!associationData || (associationData && (tempAssWriteDataLinkerIt->hasIndirectlyConnectedIndividualIntegration() && !associationData->hasIndirectlyConnectedIndividualIntegration() || 
+					if (!associationData || (associationData && (tempAssWriteDataLinkerIt->hasIndirectlyConnectedIndividualIntegration() && !associationData->hasIndirectlyConnectedIndividualIntegration() ||
 																tempAssWriteDataLinkerIt->isIndirectlyConnectedNominalIndividual() && !associationData->isIndirectlyConnectedNominalIndividual() ||
 																integratedIndirectlyConnectedIndividualsChangeId > 0 && integratedIndirectlyConnectedIndividualsChangeId != associationData->getLastIntegratedIndirectlyConnectedIndividualsChangeId()))) {
 						integrationUpdated = true;
@@ -3011,7 +3038,7 @@ namespace Konclude {
 								if (mergedDetSameLabItem) {
 									DEBUG_HANDLING_STRING(QString("Found new deterministic same mergings for %1 to %2 stored in label item %3").arg(refIndiId).arg(destIndiId).arg(mergedDetSameLabItem->getCacheEntryID()))
 								}
-								
+
 								for (CBackendRepresentativeMemoryLabelValueLinker* detSameValueLinkerIt = mergedDetSameLabItem->getCacheValueLinker(); detSameValueLinkerIt; detSameValueLinkerIt = detSameValueLinkerIt->getNext()) {
 									cint64 detSameId = detSameValueLinkerIt->getCacheValue().getTag();
 									CBackendRepresentativeMemoryCacheIndividualAssociationData* sameIndiAssociationData = ontologyData->getIndividualIdAssoiationDataVector()[detSameId];
@@ -3036,7 +3063,7 @@ namespace Konclude {
 #endif
 										DEBUG_HANDLING_STRING(QString("Updating new deterministic same mergings for %1").arg(detSameId))
 
-										
+
 										locSameIndiAssociationData->setRepresentativeSameIndividualId(minRepIndiId);
 										if (locSameIndiAssociationData->hasRepresentativeSameIndividualMerging()) {
 											if (!sameIndiAssociationData || !sameIndiAssociationData->hasRepresentativeSameIndividualMerging()) {
@@ -3202,7 +3229,7 @@ namespace Konclude {
 								}
 							}
 						}
-					} else {				
+					} else {
 						ontologyData->setLastMinIncompletelyHandledIndvidualiId(qMin(ontologyData->getLastMinIncompletelyHandledIndvidualiId(), individualID));
 						if (!locAssociationData->isIncompletelyMarked()) {
 							ontologyData->incIncompletelyHandledIndividualIdCount();
@@ -3364,6 +3391,18 @@ namespace Konclude {
 					return true;
 				}
 
+				bool CBackendRepresentativeMemoryCache::completeIndividualsAssociationCaching(cint64 ontologyIdentifier) {
+					if (mConfDirectUpdateSynchronization) {
+						mDirectUpdateSyncMutex.lock();
+						CCompleteIndividualAssociationsCacheEvent* procEvent = new CCompleteIndividualAssociationsCacheEvent(ontologyIdentifier);
+						processCustomsEvents(CCompleteIndividualAssociationsCacheEvent::EVENTTYPE, procEvent);
+						mDirectUpdateSyncMutex.unlock();
+					} else {
+						postEvent(new CCompleteIndividualAssociationsCacheEvent(ontologyIdentifier));
+					}
+					return true;
+				}
+
 				bool CBackendRepresentativeMemoryCache::reportMaximumHandledRecomputationId(cint64 ontologyIdentifier, cint64 maximumRecomputationId) {
 					if (mConfDirectUpdateSynchronization) {
 						mDirectUpdateSyncMutex.lock();
@@ -3435,7 +3474,7 @@ namespace Konclude {
 								extensionData->appendTagLabelResolvingDataLinker(cacheValue.getTag(), linker);
 							}
 						}
-						
+
 					}
 					return extensionData;
 				}
@@ -3519,6 +3558,31 @@ namespace Konclude {
 
 						return true;
 
+					}  else if (type == CCompleteIndividualAssociationsCacheEvent::EVENTTYPE) {
+						CCompleteIndividualAssociationsCacheEvent* ciace = (CCompleteIndividualAssociationsCacheEvent*)event;
+						cint64 ontologyIdentifier = ciace->getOntologyIdentifier();
+
+						CBackendRepresentativeMemoryCacheOntologyData* ontologyData = mOntologyIdentifierDataHash->value(ontologyIdentifier);
+						if (ontologyData && !ontologyData->isAssociationCompleted()) {
+							bool updateSlot = false;
+							if (!ontologyData->isFirstIncompletelyHandledIndividualsRetrieved()) {
+								if (!ontologyData->isSlotUpdateIntegrated()) {
+									updateSlot = true;
+								}
+								ontologyData->setFirstIncompletelyHandledIndividualsRetrieved(true);
+							}
+
+							checkAssociationComplete(ontologyData, false);
+
+							if (updateSlot || ontologyData->isAssociationCompleted()) {
+								ontologyData->setNextSlotUpdateWaitingCount(mSlotUpdateWaitingIncreaseCount);
+								createReaderSlotUpdate(ontologyData, &mContext);
+								cleanUnusedSlots(&mContext);
+							}
+						}
+
+						return true;
+
 					} else if (type == CRetrieveIncompletelyAssociationCachedEvent::EVENTTYPE) {
 						CRetrieveIncompletelyAssociationCachedEvent* iace = (CRetrieveIncompletelyAssociationCachedEvent*)event;
 						cint64 limit = iace->getRetrievalLimit();
@@ -3583,14 +3647,14 @@ namespace Konclude {
 									if (keepIndi) {
 										refData->incUsageCount();
 										newRetrievalHash->insert(indiId, refData);
-										
+
 									} else {
 										//newRetrievalHash->incHashRemovedCount();
 									}
 								}
 							}
 
-							
+
 
 							if (ontologyData->isBasicPrecomputationMode()) {
 
@@ -3624,14 +3688,14 @@ namespace Konclude {
 									newRetrievalHash->setBasicPrecomputationMode(true);
 								}
 
-							} 
+							}
 							if (!ontologyData->isBasicPrecomputationMode()) {
 
 								CCACHINGSET<cint64>* propIndiSet = ontologyData->getProblematicIncompletelyHandledIndividualSet();
 								if (propIndiSet) {
 									for (CCACHINGSET<cint64>::const_iterator it = propIndiSet->constBegin(), itEnd = propIndiSet->constEnd(); it != itEnd && count < ontologyData->getIncompletelyHandledIndividualIdCount() && (count < limit || limit < 0); ++it) {
 										cint64 indiId = *it;
-										CBackendRepresentativeMemoryCacheIndividualAssociationData* indiAssData = ontologyData->getIndividualIdAssoiationDataVector()[indiId];									
+										CBackendRepresentativeMemoryCacheIndividualAssociationData* indiAssData = ontologyData->getIndividualIdAssoiationDataVector()[indiId];
 
 										CBackendIndividualRetrievalComputationUpdateCoordinationHashData*& refData = (*newRetrievalHash)[indiId];
 										if (!refData) {
@@ -3752,7 +3816,7 @@ namespace Konclude {
 							//}
 
 
-							
+
 						}
 
 
@@ -3818,7 +3882,7 @@ namespace Konclude {
 
 									mTmpIndiAssocPrevUpdateId = mNextIndiUpdateId;
 									mTmpIndiIndirectlyConnNomLabelItemHash.clear();
-								
+
 
 									bool cached = false;
 
@@ -4186,7 +4250,7 @@ namespace Konclude {
 														propCutNeighbourRelationPropagatedConceptMissingInfluencingCount++;
 													}
 												}
-											} else if (missingNondeterministicExpansionPropagation) {											
+											} else if (missingNondeterministicExpansionPropagation) {
 												CBackendRepresentativeMemoryLabelCacheItem* neighbourConSetLabel = neighbourIndiAssocData->getLabelCacheEntry(CBackendRepresentativeMemoryLabelCacheItem::FULL_CONCEPT_SET_LABEL);
 												CBackendRepresentativeMemoryLabelCacheItemCardinalityExtensionData* cardExtData = (CBackendRepresentativeMemoryLabelCacheItemCardinalityExtensionData*)neighbourConSetLabel->getExtensionData(CBackendRepresentativeMemoryLabelCacheItemCardinalityExtensionData::CARDINALITY_HASH);
 												if (cardExtData || neighbourConSetLabel->hasNondeterministicElements()) {
@@ -4213,7 +4277,7 @@ namespace Konclude {
 										propagationCutIndiReferredNeighbourArrayIdHash.insertMulti(propCutIndiId, arrayIndexId);
 									}
 								}
-							
+
 							}
 						}
 
@@ -4674,7 +4738,7 @@ namespace Konclude {
 					}
 					else if (labelType == CBackendRepresentativeMemoryLabelCacheItem::FULL_CONCEPT_SET_LABEL) {
 						labelTypeString = "FULL_CONCEPT_SET_LABEL";
-					} 
+					}
 					else if (labelType == CBackendRepresentativeMemoryLabelCacheItem::DETERMINISTIC_COMBINED_EXISTENTIAL_INSTANTIATED_ROLE_SET_LABEL) {
 						labelTypeString = "DETERMINISTIC_COMBINED_EXISTENTIAL_INSTANTIATED_ROLE_SET_LABEL";
 					}
@@ -4707,10 +4771,10 @@ namespace Konclude {
 					}
 					else if (labelType == CBackendRepresentativeMemoryLabelCacheItem::NEIGHBOUR_INSTANTIATED_ROLE_SET_LABEL) {
 						labelTypeString = "NEIGHBOUR_INSTANTIATED_ROLE_SET_LABEL";
-					} 
+					}
 					else if (labelType == CBackendRepresentativeMemoryLabelCacheItem::DETERMINISTIC_COMBINED_DATA_INSTANTIATED_ROLE_SET_LABEL) {
 						labelTypeString = "DETERMINISTIC_COMBINED_DATA_INSTANTIATED_ROLE_SET_LABEL";
-					} 
+					}
 					else if (labelType == CBackendRepresentativeMemoryLabelCacheItem::NONDETERMINISTIC_COMBINED_DATA_INSTANTIATED_ROLE_SET_LABEL) {
 						labelTypeString = "NONDETERMINISTIC_COMBINED_DATA_INSTANTIATED_ROLE_SET_LABEL";
 					}
@@ -5089,7 +5153,7 @@ namespace Konclude {
 										prevNeighbourIndiArrayPosHash.insert(neighbourIndiId, i);
 									}
 								}
-							}							
+							}
 						}
 
 						QHash<cint64,cint64> newNeighbourIndiArrayPosHash;
@@ -5178,7 +5242,7 @@ namespace Konclude {
 									}
 								}
 							}
-							
+
 						}
 					}
 #endif
@@ -5287,7 +5351,21 @@ namespace Konclude {
 				}
 
 				void CBackendRepresentativeMemoryCache::checkAssociationComplete(CBackendRepresentativeMemoryCacheOntologyData* ontologyData, bool forceCompletion) {
-					if ((ontologyData->getIncompletelyHandledIndividualIdCount() <= 0 || forceCompletion) && !ontologyData->isAssociationCompleted() && ontologyData->isFirstIncompletelyHandledIndividualsRetrieved()) {
+					bool allowCompletion = ontologyData->isFirstIncompletelyHandledIndividualsRetrieved();
+#ifdef __EMSCRIPTEN__
+					if (!allowCompletion && ontologyData->getIncompletelyHandledIndividualIdCount() <= 0) {
+						const cint64 expectedCount = ontologyData->getExpectedIndividualCount();
+						const cint64 assocCount = ontologyData->getIndividualAssociationsCount();
+						const cint64 maxStoredId = ontologyData->getMaxStoredIndvidualiId();
+						if ((expectedCount > 0 && assocCount >= expectedCount) || (expectedCount <= 0 && assocCount > 0 && maxStoredId > 0)) {
+							// WASM builds can reach realization before the first incomplete-individual retrieval.
+							// Allow early completion only after all individuals have been cached.
+							ontologyData->setFirstIncompletelyHandledIndividualsRetrieved(true);
+							allowCompletion = true;
+						}
+					}
+#endif
+					if ((ontologyData->getIncompletelyHandledIndividualIdCount() <= 0 || forceCompletion) && !ontologyData->isAssociationCompleted() && allowCompletion) {
 						cint64 ontologyIdentifier = ontologyData->getOntologyIdentifer();
 						ontologyData->setAssociationCompleted(true);
 						mFixedOntologyIdentifierDataHashLock.lockForWrite();

@@ -59,6 +59,7 @@
 #include "Reasoner/Kernel/Cache/Events/CRetrieveIncompletelyAssociationCachedEvent.h"
 #include "Reasoner/Kernel/Cache/Events/CInitializeIndividualAssociationsCacheEvent.h"
 #include "Reasoner/Kernel/Cache/Events/CReportMaximumHandledRecomputationIdsEvent.h"
+#include "Reasoner/Kernel/Cache/Events/CCompleteIndividualAssociationsCacheEvent.h"
 
 #include "Utilities/Memory/CObjectMemoryPoolAllocator.h"
 #include "Utilities/Memory/CObjectParameterizingAllocator.h"
@@ -94,7 +95,7 @@ namespace Konclude {
 
 				using namespace Events;
 
-				/*! 
+				/*!
 				 *
 				 *		\class		CBackendRepresentativeMemoryCache
 				 *		\author		Andreas Steigmiller
@@ -122,6 +123,7 @@ namespace Konclude {
 
 						bool getIncompletlyAssociationCachedIndividuals(cint64 ontologyIdentifier, CBackendIndividualRetrievalComputationUpdateCoordinationHash* prevCoordHash, CBackendIndividualRetrievalComputationUpdateCoordinationHash* newCoordHash, bool allIndividualsAdded, bool refillRetrievalCoordHash, cint64 limit = -1, CCallbackData* callbackData = nullptr);
 						bool initializeIndividualsAssociationCaching(cint64 ontologyIdentifier, cint64 individualCount);
+						bool completeIndividualsAssociationCaching(cint64 ontologyIdentifier);
 						bool reportMaximumHandledRecomputationId(cint64 ontologyIdentifier, cint64 maximumRecomputationId);
 
 						void writeStringifiedRepresentativeCacheToFile();
@@ -133,7 +135,7 @@ namespace Konclude {
 
 						void createReaderSlotUpdate(CBackendRepresentativeMemoryCacheOntologyData* ontologyData, CBackendRepresentativeMemoryCacheBaseContext* context);
 						void cleanUnusedSlots(CBackendRepresentativeMemoryCacheBaseContext* context);
-						
+
 						void deleteExpiredIndividualAssociationMemoryContexts(CBackendRepresentativeMemoryCacheOntologyData* ontologyData, CBackendRepresentativeMemoryCacheBaseContext* context);
 						void queueIndividualAssociationMemoryContextDeletion(CBackendRepresentativeMemoryCacheIndividualAssociationContext* indiAssMemContext, CBackendRepresentativeMemoryCacheOntologyData* ontologyData);
 						cint64 getMinimumSlotReferreringInstalledValidRecomputationId(CBackendRepresentativeMemoryCacheOntologyData* ontologyData);
@@ -224,7 +226,7 @@ namespace Konclude {
 
 						bool checkUpdateRejection(CBackendRepresentativeMemoryCacheTemporaryAssociationWriteDataLinker* tempAssWriteDataLinker, CBackendRepresentativeMemoryCacheOntologyData* ontologyData);
 						bool handleUpdateRejection(CBackendRepresentativeMemoryCacheTemporaryAssociationWriteDataLinker* tempAssWriteDataLinker, CBackendRepresentativeMemoryCacheOntologyData* ontologyData);
-						
+
 						bool analyseDeterministicSameAsAssociationInstallation(CBackendRepresentativeMemoryCacheTemporaryAssociationWriteDataLinker* tempAssWriteDataLinker, CBackendRepresentativeMemoryCacheOntologyData* ontologyData);
 
 
@@ -354,7 +356,7 @@ namespace Konclude {
 							QSet<cint64> mIdPossibleInstallationSet;
 							QSet<cint64> mIdFirstPossibleInstallationSet;
 						};
-						QHash<cint64, CDeterministicSameHandlingInstallationData> mDeterministicSameHandlingInstallationDataHash;						
+						QHash<cint64, CDeterministicSameHandlingInstallationData> mDeterministicSameHandlingInstallationDataHash;
 
 
 

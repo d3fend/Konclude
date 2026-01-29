@@ -46,8 +46,18 @@ namespace Konclude {
 					if (mConfgAdaptThreadPoolToWorkerCount) {
 						QThreadPool::globalInstance()->setMaxThreadCount(mWorkControllerCount);
 					}
-					if (mBlockThreadPoolThreadCount > 0) {
-						for (cint64 i = 0; i < mBlockThreadPoolThreadCount; ++i) {
+					cint64 blockThreadPoolCount = mBlockThreadPoolThreadCount;
+					const cint64 poolMaxCount = QThreadPool::globalInstance()->maxThreadCount();
+					if (poolMaxCount > 0) {
+						const cint64 maxBlocking = qMax<cint64>(0, poolMaxCount - 1);
+						if (blockThreadPoolCount > maxBlocking) {
+							LOG(WARNING,"::Konclude::Reasoner::Kernel::ExperimentalReasonerManager",logTr("Reducing blocking thread pool reserve from %1 to %2 (thread pool max %3).").arg(blockThreadPoolCount).arg(maxBlocking).arg(poolMaxCount),this);
+							blockThreadPoolCount = maxBlocking;
+						}
+					}
+					mBlockThreadPoolThreadCount = blockThreadPoolCount;
+					if (blockThreadPoolCount > 0) {
+						for (cint64 i = 0; i < blockThreadPoolCount; ++i) {
 							QtConcurrent::run(QThreadPool::globalInstance(), [&]() {
 								mBlockThreadPoolThreadsBlockingSemaphore.acquire(1);
 								mBlockThreadPoolThreadsReleasingSemaphore.release(1);

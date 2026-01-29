@@ -291,7 +291,7 @@ namespace Konclude {
 				}
 
 				void CReasonerManagerThread::readConfig(CConfigurationBase *config) {
-					
+
 				}
 
 
@@ -350,8 +350,18 @@ namespace Konclude {
 					} else if (mConfgAdaptThreadPoolToWorkerCount) {
 						QThreadPool::globalInstance()->setMaxThreadCount(mWorkControllerCount);
 					}
-					if (mBlockThreadPoolThreadCount > 0) {
-						for (cint64 i = 0; i < mBlockThreadPoolThreadCount; ++i) {
+					cint64 blockThreadPoolCount = mBlockThreadPoolThreadCount;
+					const cint64 poolMaxCount = QThreadPool::globalInstance()->maxThreadCount();
+					if (poolMaxCount > 0) {
+						const cint64 maxBlocking = qMax<cint64>(0, poolMaxCount - 1);
+						if (blockThreadPoolCount > maxBlocking) {
+							LOG(WARNING,"::Konclude::Reasoner::Kernel::ReasonerManager",logTr("Reducing blocking thread pool reserve from %1 to %2 (thread pool max %3).").arg(blockThreadPoolCount).arg(maxBlocking).arg(poolMaxCount),this);
+							blockThreadPoolCount = maxBlocking;
+						}
+					}
+					mBlockThreadPoolThreadCount = blockThreadPoolCount;
+					if (blockThreadPoolCount > 0) {
+						for (cint64 i = 0; i < blockThreadPoolCount; ++i) {
 							QtConcurrent::run(QThreadPool::globalInstance(), [&]() {
 								mBlockThreadPoolThreadsBlockingSemaphore.acquire(1);
 								mBlockThreadPoolThreadsReleasingSemaphore.release(1);
@@ -686,7 +696,7 @@ namespace Konclude {
 					}
 					if (!ontReqPrepData->mFailedReqList.isEmpty()) {
 						for (QList<COntologyProcessingRequirement*>::const_iterator it = ontReqPrepData->mFailedReqList.constBegin(), itEnd = ontReqPrepData->mFailedReqList.constEnd(); it != itEnd; ++it) {
-							COntologyProcessingRequirement* failedReqData(*it);			
+							COntologyProcessingRequirement* failedReqData(*it);
 							const QString& failureString = failedReqData->getRequirementFailureString(ontology);
 							if (!failureString.isEmpty()) {
 								LOG(ERROR,"::Konclude::Reasoner::Kernel::ReasonerManager",logTr("%1").arg(failureString),this);
@@ -1004,7 +1014,7 @@ namespace Konclude {
 
 
 
-						} 
+						}
 
 
 
@@ -1151,7 +1161,7 @@ namespace Konclude {
 						if (compAnsQuery) {
 							reasoningData->mCallback = callbackData;
 
-							CConcreteOntology* ontology = compAnsQuery->getBaseOntology();							
+							CConcreteOntology* ontology = compAnsQuery->getBaseOntology();
 
 							CCallbackData* callback = reasoningData->mCallback;
 
@@ -1209,7 +1219,7 @@ namespace Konclude {
 
 
 				bool CReasonerManagerThread::updateFinishingCalculationStatistics(CReasoningTaskData* reaTaskData, CQueryStatistics* queryStat, CConfiguration* config) {
-					if (queryStat) {		
+					if (queryStat) {
 						if (!config) {
 							config = configProvider->getCurrentConfiguration();
 						}
@@ -1238,7 +1248,7 @@ namespace Konclude {
 								CConcreteOntology* ontology = ontReqPair.mOntology;
 								COntologyProcessingRequirement* requirement = ontReqPair.mRequirement;
 								COntologyProcessingStepRequirement* ontProcStepRequirement = dynamic_cast<COntologyProcessingStepRequirement*>(requirement);
-								if (ontProcStepRequirement) {								
+								if (ontProcStepRequirement) {
 									COntologyProcessingStepData* procStepData = ontology->getProcessingSteps()->getOntologyProcessingStepDataVector()->getProcessingStepData(ontProcStepRequirement->getRequiredProcessingStep()->getOntologyProcessingType());
 									if (procStepData) {
 										COntologyProcessingStatistics* procStepStatistics = procStepData->getProcessingStatistics(false);
@@ -1406,7 +1416,7 @@ namespace Konclude {
 #endif
 						LOG(INFO, "::Konclude::Reasoner::Kernel::ReasonerManager", logTr("Query '%1' processed in '%2' ms.").arg(cqe->getQueryName()).arg(mSecs), this);
 					}
-					
+
 					// print calculation statistics
 					loggingCalculationStatistics();
 
@@ -1426,7 +1436,7 @@ namespace Konclude {
 					if (CIntervalThread::processCustomsEvents(type,event)) {
 						return true;
 					} else if (type == CReasoningSatisfiableCalculationJobEvent::EVENTTYPE) {
-						CReasoningSatisfiableCalculationJobEvent *cbse = static_cast<CReasoningSatisfiableCalculationJobEvent *>(event);					
+						CReasoningSatisfiableCalculationJobEvent *cbse = static_cast<CReasoningSatisfiableCalculationJobEvent *>(event);
 						prepareSatisfiableBoxReasoning(cbse);
 						return true;
 
@@ -1443,14 +1453,14 @@ namespace Konclude {
 					} else if (type == CCalcQueryEvent::EVENTTYPE) {
  						CCalcQueryEvent *cqe = static_cast<CCalcQueryEvent *>(event);
 
-						prepareQueryReasoning(cqe);	
+						prepareQueryReasoning(cqe);
 
 						return true;
 
 					} else if (type == CPrepareOntologyEvent::EVENTTYPE) {
 						CPrepareOntologyEvent* poe = static_cast<CPrepareOntologyEvent *>(event);
 
-						prepareOntologyReasoning(poe);	
+						prepareOntologyReasoning(poe);
 
 						return true;
 

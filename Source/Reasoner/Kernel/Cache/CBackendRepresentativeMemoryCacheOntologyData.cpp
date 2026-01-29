@@ -50,6 +50,7 @@ namespace Konclude {
 					mMaxIndiAssocDataUpdateCount = 0;
 					mIncompletelyHandledIndiIdCount = 0;
 					mIndividualAssociationsCount = 0;
+					mExpectedIndividualCount = 0;
 					mUsageCount = 0;
 					mOntologyContext = nullptr;
 					mNextEntryID = 1;
@@ -96,6 +97,7 @@ namespace Konclude {
 					mMaxStoredIndvidualiId = data->mMaxStoredIndvidualiId;
 					mIndividualLabelAssociationIndexed = data->mIndividualLabelAssociationIndexed;
 					mIndividualAssociationsCount = data->mIndividualAssociationsCount;
+					mExpectedIndividualCount = data->mExpectedIndividualCount;
 					mFirstIncompletelyHandledIndividualsRetrieved = data->mFirstIncompletelyHandledIndividualsRetrieved;
 					mNextSlotUpdateWaitingCount = data->mNextSlotUpdateWaitingCount;
 
@@ -104,7 +106,7 @@ namespace Konclude {
 					mBasicPrecompuationIndiIdAssoDataVectorSize = data->mBasicPrecompuationIndiIdAssoDataVectorSize;
 					mBasicPrecompuationRetrievalIndiIdPos = data->mBasicPrecompuationRetrievalIndiIdPos;
 					mBasicPrecomputationModeActivation = data->mBasicPrecomputationModeActivation;
-					
+
 					mIndividualAssociationDataDirectUpdateCount = data->mIndividualAssociationDataDirectUpdateCount;
 					mIndividualAssociationDataUpdateCount = data->mIndividualAssociationDataUpdateCount;
 					mIndividualAssociationMergingCount = data->mIndividualAssociationMergingCount;
@@ -314,6 +316,15 @@ namespace Konclude {
 
 				CBackendRepresentativeMemoryCacheOntologyData* CBackendRepresentativeMemoryCacheOntologyData::incIndividualAssociationsCount(cint64 count) {
 					mIndividualAssociationsCount += count;
+					return this;
+				}
+
+				cint64 CBackendRepresentativeMemoryCacheOntologyData::getExpectedIndividualCount() {
+					return mExpectedIndividualCount;
+				}
+
+				CBackendRepresentativeMemoryCacheOntologyData* CBackendRepresentativeMemoryCacheOntologyData::setExpectedIndividualCount(cint64 count) {
+					mExpectedIndividualCount = count;
 					return this;
 				}
 
@@ -558,7 +569,7 @@ namespace Konclude {
 					mRecomputationReferenceLinker = linker->append(mRecomputationReferenceLinker);
 					return this;
 				}
-				
+
 
 
 				cint64 CBackendRepresentativeMemoryCacheOntologyData::getMinimumValidRecomputationId() {

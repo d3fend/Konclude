@@ -13,6 +13,7 @@ const debug = params.get("debug") === "1";
 const profileParam = params.get("profile");
 const workersParam = params.get("workers");
 const parallelParam = params.get("parallel");
+const readBytesParam = params.get("readBytes");
 const mainParam = params.get("main");
 const useMainThread = mainParam === null ? true : mainParam === "1";
 const sharedArrayBufferAvailable = typeof SharedArrayBuffer !== "undefined";
@@ -24,6 +25,15 @@ const mode = "mt";
 const timeoutParam = params.has("timeoutMs") ? Number(params.get("timeoutMs")) : NaN;
 let timeoutMs = Number.isFinite(timeoutParam) ? timeoutParam : null;
 window.__koncludeRuntimeTimeoutMs = Number.isFinite(timeoutMs) ? timeoutMs : null;
+let readBytes = 2048;
+if (readBytesParam === "all") {
+  readBytes = "all";
+} else if (readBytesParam !== null) {
+  const parsed = Number.parseInt(readBytesParam, 10);
+  if (Number.isFinite(parsed) && parsed > 0) {
+    readBytes = parsed;
+  }
+}
 
 modeEl.textContent = mode;
 datasetEl.textContent = datasetParam;
@@ -49,6 +59,8 @@ const OWL_XML = `<?xml version="1.0"?>
   <SubClassOf><Class IRI="#A"/><Class IRI="#B"/></SubClassOf>
   <SubClassOf><Class IRI="#B"/><Class IRI="#C"/></SubClassOf>
 </Ontology>`;
+
+const textEncoder = new TextEncoder();
 
 const DATASETS = {
   sample: {
@@ -85,6 +97,12 @@ const DATASETS = {
     type: "fetch",
     url: new URL("./ontologies/lubm-univ-bench.owl.xml", import.meta.url).toString(),
     metaUrl: new URL("./ontologies/lubm-univ-bench.meta.json", import.meta.url).toString(),
+  },
+  "lubm-univ-bench-5": {
+    label: "lubm-univ-bench-5",
+    type: "fetch",
+    url: new URL("./ontologies/lubm-univ-bench-5.owl.xml", import.meta.url).toString(),
+    metaUrl: new URL("./ontologies/lubm-univ-bench-5.meta.json", import.meta.url).toString(),
   },
 };
 
@@ -411,6 +429,16 @@ function loadScript(url) {
   });
 }
 
+function payloadSizeBytes(payload) {
+  if (payload instanceof Uint8Array) {
+    return payload.length;
+  }
+  if (typeof payload === "string") {
+    return textEncoder.encode(payload).length;
+  }
+  return 0;
+}
+
 async function loadDataset(name) {
   const dataset = DATASETS[name];
   if (!dataset) {
@@ -423,7 +451,8 @@ async function loadDataset(name) {
     if (!res.ok) {
       throw new Error(`failed to fetch dataset ${name}: ${res.status}`);
     }
-    owlXml = await res.text();
+    const buffer = await res.arrayBuffer();
+    owlXml = new Uint8Array(buffer);
   }
 
   let meta = null;
@@ -443,7 +472,7 @@ async function loadDataset(name) {
     label: dataset.label || name,
     owlXml,
     meta,
-    sizeBytes: owlXml.length,
+    sizeBytes: payloadSizeBytes(owlXml),
   };
 }
 
@@ -669,8 +698,9 @@ function createJobRunner(moduleResolved) {
     let outputSize = null;
     try {
       outputSize = moduleResolved.FS.stat(outputPath).size;
-      if (readBytes && outputSize > 0) {
-        output = readFileSnippet(moduleResolved, outputPath, readBytes);
+      const readSize = readBytes === "all" ? outputSize : readBytes;
+      if (readSize && outputSize > 0) {
+        output = readFileSnippet(moduleResolved, outputPath, readSize);
       }
     } catch (readErr) {
       console.warn("failed to read output", readErr);
@@ -748,7 +778,7 @@ async function runOnMainThread(dataset) {
     }
     classify = await runJob("classification", inPath, classifyOutputPath, {
       timeoutMs,
-      readBytes: 2048,
+      readBytes,
     });
   }
 
@@ -774,7 +804,7 @@ async function runOnMainThread(dataset) {
     }
     realization = await runJob("realization", inPath, "realize.owl.xml", {
       timeoutMs,
-      readBytes: 2048,
+      readBytes,
     });
   }
 

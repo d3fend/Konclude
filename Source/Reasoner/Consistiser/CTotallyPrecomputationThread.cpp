@@ -105,7 +105,7 @@ namespace Konclude {
 
 				mConfFullCGCExclusionConditionMaximumIndividualLimit = CConfigDataReader::readConfigInteger(config, "Konclude.Calculation.Precomputation.FullCompletionGraphConstruction.ExclusionCondition.MaximumIndividualLimit", 300000);
 				mConfFullCGCSuggestionConditionMaximumIndividualLimit = CConfigDataReader::readConfigInteger(config, "Konclude.Calculation.Precomputation.FullCompletionGraphConstruction.SuggestionCondition.MaximumIndividualLimit", 10000);
-				
+
 				mConfFullCGCExclusionConditionMaximumIndividualConceptRatio = CConfigDataReader::readConfigInteger(config, "Konclude.Calculation.Precomputation.FullCompletionGraphConstruction.ExclusionCondition.MaximumIndividualConceptRatio", 5000) / 100;
 				mConfFullCGCSuggestionConditionMaximumIndividualConceptRatio = CConfigDataReader::readConfigInteger(config, "Konclude.Calculation.Precomputation.FullCompletionGraphConstruction.SuggestionCondition.MaximumIndividualConceptRatio", 500) / 100;
 
@@ -129,7 +129,7 @@ namespace Konclude {
 					}
 
 					CTotallyOntologyPrecomputationItem* totallyPreCompItem = (CTotallyOntologyPrecomputationItem*)ontPreCompItem;
-					
+
 
 					bool failDebug = false;
 					if (!workTestCreated && totallyPreCompItem->isConsistenceStepRequired()) {
@@ -298,7 +298,7 @@ namespace Konclude {
 										}
 									}
 								}
-								
+
 
 								if ((totallyPreCompItem->hasIndividualPrecomputationChecked() || (totallyPreCompItem->hasClashedSaturationIndividuals() || totallyPreCompItem->hasIndividualPrecomputationClashed())) && !totallyPreCompItem->isIndividualComputationRunning()) {
 									totallyPreCompItem->setIndividualStepRunning(false);
@@ -783,7 +783,7 @@ namespace Konclude {
 						}
 					}
 				}
-				
+
 
 
 				if (forceCompuation || (compuation && precomputationProcessingCoordinationHash && precomputationProcessingCoordinationHash->getHashRemainingCount() >= reducedComputationLimit || compuation && approxRemainingIncHandIndiCount > reducedComputationLimit && !totallyPreCompItem->isIndividualComputationRunning())) {
@@ -917,7 +917,7 @@ namespace Konclude {
 								QMap<cint64, CIndividualPrecomputationTestingItem*>* recomIdTestingItemMap = totallyPreCompItem->getRecomputationIdTestingItemMap();
 								recomIdTestingItemMap->insert(repCacheUpdAdapter->getRepresentativeCacheRecomputationId(), indiTestItem);
 
-								
+
 								LOG(INFO, getLogDomain(), logTr("Scheduled precomputation of next %1 of approximately %2/%3 remaining insufficiently handled individuals (%4 batchs queued, %5 computing, %6 processed).").arg(filteredIndiList.size()).arg(filteredIndiList.size() + precomputationProcessingCoordinationHash->getHashRemainingCount()).arg(filteredIndiList.size() + precomputationProcessingCoordinationHash->getApproximateRemainingIncompletelyHandledCount()).arg(mCurrRunningTestParallelCount + 1).arg(precomputationProcessingCoordinationHash->getHashComputationCount()).arg(precomputationProcessingCoordinationHash->getHashProcessedCount()), getLogObject());
 
 								processCalculationJob(satCalcJob, totallyPreCompItem, indiTestItem);
@@ -937,7 +937,7 @@ namespace Konclude {
 
 
 
-			
+
 			bool CTotallyPrecomputationThread::createConsistencePrecomputationCheck(CTotallyOntologyPrecomputationItem* totallyPreCompItem) {
 				CConcreteOntology* onto = totallyPreCompItem->getOntology();
 				CSatisfiableCalculationJob* satCalcJob = nullptr;
@@ -1543,7 +1543,7 @@ namespace Konclude {
 									assRoleSet.insert(role);
 								}
 								for (CDataAssertionLinker* dataAssLinkIt = indi->getAssertionDataLinker(); dataAssLinkIt; dataAssLinkIt = dataAssLinkIt->getNext()) {
-									CRole* role = dataAssLinkIt->getRole();		
+									CRole* role = dataAssLinkIt->getRole();
 									dataRoleSet.insert(role);
 								}
 
@@ -1606,7 +1606,7 @@ namespace Konclude {
 						totallyPreCompItem->setAllAssertionIndividual(tmpAllAssertionIndi);
 					}
 				}
-				
+
 				return constConReqSatAdded;
 			}
 
@@ -1717,7 +1717,7 @@ namespace Konclude {
 							++markedConcepts;
 							opMarkingItem->setItemProcessingMarked(true);
 							itemList.append(opMarkingItem);
-						}		
+						}
 					} else {
 						conNegPairList.append(TConceptNegPair(startMarkingConcept,startMarkingConceptNegation));
 					}
@@ -1774,12 +1774,12 @@ namespace Konclude {
 											++markedConcepts;
 											opMarkingItem->setItemProcessingMarked(true);
 											itemList.append(opMarkingItem);
-										}		
+										}
 										if (roleOpMarkingItem && !roleOpMarkingItem->isItemProcessingMarked()) {
 											++markedConcepts;
 											roleOpMarkingItem->setItemProcessingMarked(true);
 											itemList.append(roleOpMarkingItem);
-										}		
+										}
 									} else {
 										conNegPairList.append(TConceptNegPair(opConcept,opNegation));
 									}
@@ -1795,7 +1795,7 @@ namespace Konclude {
 											++markedConcepts;
 											opMarkingItem->setItemProcessingMarked(true);
 											itemList.append(opMarkingItem);
-										}		
+										}
 									} else {
 										conNegPairList.append(TConceptNegPair(opConcept,false));
 									}
@@ -1862,7 +1862,7 @@ namespace Konclude {
 						} else {
 							saturationItemStack.pop();
 						}
-					}	
+					}
 				}
 
 				//if (!ontConSatDataItem->isOrderingQueued()) {
@@ -1972,7 +1972,7 @@ namespace Konclude {
 				CApproximatedSaturationCalculationJobGenerator satCalculationJobGenerator(onto);
 				satCalculationJob = satCalculationJobGenerator.getApproximatedSaturationCalculationJob(0,totallyPreCompItem->getSaturationData());
 
-				
+
 				CSaturationPrecomputationTestingItem* satTestingItem = new CSaturationPrecomputationTestingItem(totallyPreCompItem,CPrecomputationTestingItem::OCCURRENCESTATISTICSSATURATIONPRECOMPUTATIONTYPE);
 				CCalculationConfigurationExtension* calcConfig = totallyPreCompItem->getCalculationConfiguration();
 				satCalculationJob->setCalculationConfiguration(calcConfig);
@@ -2264,7 +2264,7 @@ namespace Konclude {
 				}
 
 
-				// set reference mode for saturation: substitute or copy 
+				// set reference mode for saturation: substitute or copy
 				QListIterator<CSaturationConceptDataItem*> reverseOrderedIt(*orderedItemList);
 				reverseOrderedIt.toBack();
 				CBOXHASH<CConcept*,CConcept*>* triggerImpHash = totallyPreCompItem->getOntology()->getTBox()->getTriggerImplicationHash(false);
@@ -2431,6 +2431,12 @@ namespace Konclude {
 									if (!procCoordHash || procCoordHash->isEmpty()) {
 #ifdef __EMSCRIPTEN__
 										if (!totallyPreCompItem->hasInsufficientSaturationIndividuals()) {
+											CBackendRepresentativeMemoryCache* backendCache = getBackendAssociationCache();
+											if (backendCache) {
+												backendCache->completeIndividualsAssociationCaching(totallyPreCompItem->getOntology()->getOntologyID());
+											} else {
+												LOG(WARN, getLogDomain(), logTr("Backend association cache unavailable; skipping completion signal."), getLogObject());
+											}
 											totallyPreCompItem->setIndividualsSaturationCacheSynchronisation(true);
 											totallyPreCompItem->setIndividualsSaturationAllOrderedCacheRetrieved(true);
 											totallyPreCompItem->setFirstIncompletelyHandledIndividualsRetrieved(true);
@@ -2470,8 +2476,8 @@ namespace Konclude {
 								}
 							}
 						}
-					} 
-					
+					}
+
 					if (mConfPrecomputationIndividualsRetrievalWhileSaturation && !totallyPreCompItem->hasIndividualsSaturationCacheSynchronisation() && totallyPreCompItem->hasALLIndividualsSaturationOrderd() && !totallyPreCompItem->hasIndividualsSaturationAllOrderedCacheRetrieved() && totallyPreCompItem->hasInsufficientSaturationIndividuals()) {
 						bool fullCompletionGraphConstruction = totallyPreCompItem->isFullCompletionGraphConstruction();
 						if (!fullCompletionGraphConstruction) {
@@ -2526,7 +2532,7 @@ namespace Konclude {
 					totallyPreCompItem->setPrecomputationProcessingCoordinationHash(newRetrievalCoordHash);
 					totallyPreCompItem->setPrecomputationProcessingCoordinationHashIteratorCurrent(newRetrievalCoordHash->constBegin());
 					totallyPreCompItem->setPrecomputationProcessingCoordinationHashIteratorEnd(newRetrievalCoordHash->constEnd());
-					
+
 				} else {
 
 					QTime* indiSatTimer = totallyPreCompItem->getIndividualSaturationTime();

@@ -1235,6 +1235,7 @@ HEADERS += \
    ./Source\Reasoner\Kernel\Cache\Events\CWriteCachedDataEvent.h \
    ./Source\Reasoner\Kernel\Cache\Events\CWriteBackendAssociationCachedEvent.h \
    ./Source\Reasoner\Kernel\Cache\Events\CInitializeIndividualAssociationsCacheEvent.h \
+   ./Source\Reasoner\Kernel\Cache\Events\CCompleteIndividualAssociationsCacheEvent.h \
    ./Source\Reasoner\Kernel\Cache\Events\CRetrieveIncompletelyAssociationCachedEvent.h \
    ./Source\Reasoner\Kernel\Cache\Events\CReportMaximumHandledRecomputationIdsEvent.h \
    ./Source\Reasoner\Kernel\Calculation\CTaskHandleAlgorithmBuilder.h \
@@ -3858,6 +3859,7 @@ SOURCES += \
    ./Source/Reasoner/Kernel/Cache/Events/CWriteCachedDataEvent.cpp \
    ./Source/Reasoner/Kernel/Cache/Events/CWriteBackendAssociationCachedEvent.cpp \
    ./Source/Reasoner/Kernel/Cache/Events/CInitializeIndividualAssociationsCacheEvent.cpp \
+   ./Source/Reasoner/Kernel/Cache/Events/CCompleteIndividualAssociationsCacheEvent.cpp \
    ./Source/Reasoner/Kernel/Cache/Events/CRetrieveIncompletelyAssociationCachedEvent.cpp \
    ./Source/Reasoner/Kernel/Cache/Events/CReportMaximumHandledRecomputationIdsEvent.cpp \
    ./Source/Reasoner/Kernel/Calculation/CTaskHandleAlgorithmBuilder.cpp \

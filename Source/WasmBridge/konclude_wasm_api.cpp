@@ -686,8 +686,25 @@ namespace {
 				setConfigBool("Konclude.Calculation.Optimization.SaturationExpansionSatisfiabilityCacheWriting", cacheEnabled);
 				setConfigBool("Konclude.Calculation.Optimization.SaturationUnsatisfiabilityCacheWriting", cacheEnabled);
 				setConfigBool("Konclude.Calculation.Optimization.ComputedTypesCaching", cacheEnabled);
-				// Individual saturation in WASM triggers OOB traps on larger ABox workloads; disable by default.
-				setConfigBool("Konclude.Calculation.Optimization.IndividualSaturation", false);
+				// Use stable stream parsing for large OWL/XML inputs in WASM.
+				if (inputInfo.size() > (20 * 1024 * 1024)) {
+					setConfigValue("Konclude.Parser.UTF8CompatibilityEnforcedXMLStreamParsing", "true");
+				}
+				// Keep individual saturation aligned with native defaults; allow explicit override when needed.
+				bool enableIndividualSaturation = true;
+				{
+					QMutexLocker locker(&mConfigMutex);
+					auto it = mConfigOverrides.constFind("Konclude.Calculation.Optimization.IndividualSaturation");
+					if (it != mConfigOverrides.constEnd()) {
+						const QString value = it.value().trimmed().toLower();
+						if (value == "false" || value == "0") {
+							enableIndividualSaturation = false;
+						} else if (value == "true" || value == "1") {
+							enableIndividualSaturation = true;
+						}
+					}
+				}
+				setConfigBool("Konclude.Calculation.Optimization.IndividualSaturation", enableIndividualSaturation);
 				setConfigBool("Konclude.Calculation.Optimization.IndividualsBackendCacheLoading", enableBackendCache);
 				setConfigBool("Konclude.Calculation.Optimization.OccurrenceStatisticsCollecting", false);
 				// Enable preprocessing to avoid slow on-demand computation in large runs.

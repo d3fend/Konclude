@@ -41,7 +41,8 @@ async function runBrowser(browserType, label, modes, datasets) {
     });
   }
   page.on("pageerror", (err) => {
-    console.error(`[${label}] pageerror: ${err.message}`);
+    const stack = err && err.stack ? `\n${err.stack}` : "";
+    console.error(`[${label}] pageerror: ${err.message}${stack}`);
   });
 
   for (const dataset of datasets) {
