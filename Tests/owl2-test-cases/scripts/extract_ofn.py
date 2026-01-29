@@ -83,6 +83,31 @@ def parse_manifest(path: str):
         }
 
 
+def parse_imported_ontologies(path: str):
+    tree = ET.parse(path)
+    root = tree.getroot()
+    for node in root.findall(".//test:importedOntologyIRI/..", NS):
+        iri_el = node.find("test:importedOntologyIRI", NS)
+        iri = ""
+        if iri_el is not None:
+            iri = iri_el.get(f"{{{NS['rdf']}}}resource", "") or ""
+        fs_el = node.find("test:fsInputOntology", NS)
+        rdf_el = node.find("test:rdfXmlInputOntology", NS)
+        fs_text = fs_el.text if fs_el is not None else None
+        rdf_text = rdf_el.text if rdf_el is not None else None
+        if fs_text is not None:
+            fs_text = html.unescape(fs_text).strip()
+        if rdf_text is not None:
+            rdf_text = html.unescape(rdf_text).strip()
+        if iri:
+            yield {
+                "iri": iri,
+                "fs_input": fs_text,
+                "rdfxml_input": rdf_text,
+                "source": os.path.basename(path),
+            }
+
+
 def convert_rdfxml_to_ofn(rdfxml_text: str, out_path: str, tmp_dir: str, robot_bin: str) -> bool:
     os.makedirs(tmp_dir, exist_ok=True)
     tmp_in = os.path.join(tmp_dir, os.path.basename(out_path) + ".rdfxml")
@@ -132,6 +157,8 @@ def main() -> int:
     ap.add_argument("--manifests", required=True, help="Directory with approved RDF manifests")
     ap.add_argument("--out", required=True, help="Output directory for OFN files")
     ap.add_argument("--manifest-json", required=True, help="Path to write JSON index")
+    ap.add_argument("--imports-dir", default=None, help="Directory to write imported ontology OFN files")
+    ap.add_argument("--imports-map", default=None, help="Path to write IRI mapping file for imports")
     ap.add_argument("--robot", default=os.environ.get("ROBOT_BIN", "robot"), help="Robot CLI binary")
     ap.add_argument("--tmp-dir", default=None, help="Temporary directory for RDF/XML conversion")
     args = ap.parse_args()
@@ -139,6 +166,7 @@ def main() -> int:
     os.makedirs(args.out, exist_ok=True)
 
     tests = {}
+    imports = {}
     for fname in sorted(os.listdir(args.manifests)):
         if not fname.endswith(".rdf"):
             continue
@@ -178,6 +206,18 @@ def main() -> int:
                     entry["rdfxml_conclusion"] = tc["rdfxml_conclusion"]
                 if tc["source"] not in entry["sources"]:
                     entry["sources"].append(tc["source"])
+        for imp in parse_imported_ontologies(path):
+            iri = imp.get("iri")
+            if not iri:
+                continue
+            entry = imports.get(iri)
+            if entry is None:
+                entry = imp
+                entry["sources"] = [imp["source"]]
+                imports[iri] = entry
+            else:
+                if imp["source"] not in entry["sources"]:
+                    entry["sources"].append(imp["source"])
 
     out_index = []
     used_bases = {}
@@ -242,6 +282,41 @@ def main() -> int:
             "conclusion_ofn": conclusion_path,
             "sources": tc["sources"],
         })
+
+    if args.imports_dir or args.imports_map:
+        imports_dir = args.imports_dir or os.path.join(args.out, "imports")
+        os.makedirs(imports_dir, exist_ok=True)
+        mapping_lines = []
+        used_import_names = {}
+        tmp_dir = args.tmp_dir or os.path.join(args.out, "tmp")
+        robot_bin = args.robot
+        for iri, imp in sorted(imports.items()):
+            base = safe_name(local_name(iri))
+            if base in used_import_names:
+                used_import_names[base] += 1
+                base = f"{base}-{used_import_names[base]}"
+            else:
+                used_import_names[base] = 1
+            out_path = os.path.join(imports_dir, f"{base}.ofn")
+            if imp.get("fs_input"):
+                with open(out_path, "w", encoding="utf-8") as f:
+                    f.write(imp["fs_input"])
+                    f.write("\n")
+            elif imp.get("rdfxml_input"):
+                if not shutil.which(robot_bin):
+                    print(f"robot not found: {robot_bin}", file=sys.stderr)
+                    return 2
+                if not convert_rdfxml_to_ofn(imp["rdfxml_input"], out_path, tmp_dir, robot_bin):
+                    continue
+            else:
+                continue
+            rel_path = os.path.relpath(out_path)
+            mapping_lines.append(f"{iri}={rel_path}")
+        if args.imports_map:
+            with open(args.imports_map, "w", encoding="utf-8") as f:
+                for line in mapping_lines:
+                    f.write(line)
+                    f.write("\n")
 
     with open(args.manifest_json, "w", encoding="utf-8") as f:
         json.dump(out_index, f, indent=2, sort_keys=True)

@@ -240,6 +240,17 @@ namespace Konclude {
 								argumentTranslated = true;
 								mIRITranslated = true;
 
+							} else if (modArgText.indexOf("m") == 0 || modArgText.indexOf("M") == 0) {
+								// ontology IRI mapping file
+								QString mapVal = "";
+								if (remainingArgList.count() > 0) {
+									mapVal = remainingArgList.takeFirst();
+								}
+								if (!mapVal.trimmed().isEmpty()) {
+									mRequestConfList.append(QString("+Konclude.%1.OntologyIRIMappingFile=%2").arg(mInterfaceTypeString).arg(mapVal.trimmed()));
+								}
+								argumentTranslated = true;
+
 							}
 
 						} else if (modArgText.indexOf("+") == 0) {

@@ -51,6 +51,9 @@ namespace Konclude {
 				QStringList ontoIRIList;
 				ontoIRIList.append(mRequestFileString);
 				CLoadKnowledgeBaseOWLAutoOntologyCommand* loadKBCommand = new CLoadKnowledgeBaseOWLAutoOntologyCommand(testKB,ontoIRIList);
+				if (!getOntologyIRIMapping().isEmpty()) {
+					loadKBCommand->setOntologieIRIMappings(getOntologyIRIMapping());
+				}
 				addProcessingCommand(createKBCommand);
 				addProcessingCommand(loadKBCommand);
 				processNextCommand();

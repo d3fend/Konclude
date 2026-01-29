@@ -20,6 +20,9 @@
 
 #include "CCLIBatchProcessingLoader.h"
 
+#include <QFile>
+#include <QTextStream>
+
 #ifdef __EMSCRIPTEN__
 #include <cstdio>
 #include "WasmBridge/konclude_wasm_runtime.h"
@@ -64,6 +67,7 @@ namespace Konclude {
 				mCloseAfterOutput = CConfigDataReader::readConfigBoolean(mLoaderConfig, "Konclude.CLI.CloseAfterProcessedRequest", true);
 				mBlockUntilProcessed = CConfigDataReader::readConfigBoolean(mLoaderConfig, "Konclude.CLI.BlockUntilProcessedRequest", true);
 
+				loadOntologyIRIMapping();
 
 				mRequestFileString = CConfigDataReader::readConfigString(config,"Konclude.CLI.RequestFile");
 				mResponseFileString = CConfigDataReader::readConfigString(config,"Konclude.CLI.ResponseFile");
@@ -164,6 +168,55 @@ namespace Konclude {
 			}
 
 			void CCLIBatchProcessingLoader::writeCommandOutput(const QString& outputFileName, CCommand* processedCommand) {
+			}
+
+			void CCLIBatchProcessingLoader::loadOntologyIRIMapping() {
+				mOntologyIRIMapping.clear();
+				if (!mLoaderConfig) {
+					return;
+				}
+				QString mappingFile = CConfigDataReader::readConfigString(mLoaderConfig, "Konclude.CLI.OntologyIRIMappingFile");
+				if (mappingFile.isEmpty()) {
+					return;
+				}
+				QFile file(mappingFile);
+				if (!file.open(QIODevice::ReadOnly)) {
+					logOutputError(QString("Failed opening ontology IRI mapping file '%1'.").arg(mappingFile));
+					return;
+				}
+				QTextStream in(&file);
+				while (!in.atEnd()) {
+					QString line = in.readLine();
+					int commentPos = line.indexOf('#');
+					if (commentPos >= 0) {
+						line = line.left(commentPos);
+					}
+					line = line.trimmed();
+					if (line.isEmpty()) {
+						continue;
+					}
+					QString key;
+					QString val;
+					int eqPos = line.indexOf('=');
+					if (eqPos >= 0) {
+						key = line.left(eqPos).trimmed();
+						val = line.mid(eqPos + 1).trimmed();
+					} else {
+						QStringList parts = line.split(QRegExp("\\s+"), Qt::SkipEmptyParts);
+						if (parts.size() >= 2) {
+							key = parts.takeFirst();
+							val = parts.join(" ");
+						}
+					}
+					if (!key.isEmpty() && !val.isEmpty()) {
+						mOntologyIRIMapping.insert(key, val);
+					}
+				}
+				file.close();
+			}
+
+			const QMap<QString,QString>& CCLIBatchProcessingLoader::getOntologyIRIMapping() const {
+				return mOntologyIRIMapping;
 			}
 
 			void CCLIBatchProcessingLoader::finishCommandProcessing() {

@@ -52,6 +52,9 @@ namespace Konclude {
 				ontoIRIList.append(mRequestFileString);
 				//CLoadKnowledgeBaseOWLXMLOntologyCommand* loadKBCommand = new CLoadKnowledgeBaseOWLXMLOntologyCommand(testKB,ontoIRIList);
 				CLoadKnowledgeBaseOWLAutoOntologyCommand* loadKBCommand = new CLoadKnowledgeBaseOWLAutoOntologyCommand(testKB,ontoIRIList);
+				if (!getOntologyIRIMapping().isEmpty()) {
+					loadKBCommand->setOntologieIRIMappings(getOntologyIRIMapping());
+				}
 				CProcessClassNameSatisfiableQueryCommand* consistencyKBCommand = new CProcessClassNameSatisfiableQueryCommand(testKB,mIRINameString);
 				addProcessingCommand(createKBCommand);
 				addProcessingCommand(loadKBCommand);

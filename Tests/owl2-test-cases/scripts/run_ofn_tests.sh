@@ -2,7 +2,7 @@
 set -euo pipefail
 
 if [[ $# -lt 1 ]]; then
-  echo "Usage: $0 <konclude-binary> [cases.txt] [workdir] [expected-failures.txt]" >&2
+  echo "Usage: $0 <konclude-binary> [cases.txt] [workdir] [expected-failures.txt] [iri-mapping.txt]" >&2
   exit 2
 fi
 
@@ -10,6 +10,7 @@ KONCLUDE="$1"
 CASES_FILE="${2:-Tests/owl2-test-cases/approved/ofn/cases.txt}"
 WORK_DIR="${3:-Tests/owl2-test-cases/approved/ofn/tmp}"
 EXPECTED_FILE="${4:-Tests/owl2-test-cases/expected-failures.txt}"
+IRI_MAPPING_FILE="${5:-Tests/owl2-test-cases/approved/ofn/iri-mapping.txt}"
 
 mkdir -p "$WORK_DIR"
 
@@ -25,6 +26,11 @@ is_expected() {
   grep -Fxq "$1" "$EXPECTED_LIST"
 }
 
+MAPPING_ARG=()
+if [[ -f "$IRI_MAPPING_FILE" ]]; then
+  MAPPING_ARG=(-m "$IRI_MAPPING_FILE")
+fi
+
 fail=0
 count=0
 xfail=0
@@ -34,7 +40,7 @@ while IFS=$'\t' read -r expect path case_id; do
   [[ "$expect" == \#* ]] && continue
   ((count+=1))
   out="$WORK_DIR/$(basename "$path").out"
-  "$KONCLUDE" consistency -i "$path" -o "$out" >/dev/null
+  "$KONCLUDE" consistency -i "$path" -o "$out" "${MAPPING_ARG[@]}" >/dev/null
   if [[ ! -f "$out" ]]; then
     if is_expected "$case_id"; then
       echo "XFAIL $case_id: missing output"

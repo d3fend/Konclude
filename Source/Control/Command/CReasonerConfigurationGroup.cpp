@@ -3069,6 +3069,10 @@ namespace Konclude {
 						"IRI name for command line interface.",
 						new CStringConfigType("")),
 						new CStringConfigType(""));
+				addConfigProperty(new CConfigDescription("Konclude.CLI.OntologyIRIMappingFile",
+						"Filepath of ontology IRI mapping file for command line interface.",
+						new CStringConfigType("")),
+						new CStringConfigType(""));
 
 				addConfigProperty(new CConfigDescription("Konclude.CLI.CloseAfterProcessedRequest",
 						"Close program after the CLI command has processed.",

@@ -1,0 +1,3 @@
+http://www.w3.org/2002/03owlt/imports/support011-A=Tests/owl2-test-cases/approved/ofn/imports/support011-A.ofn
+http://www.w3.org/2002/03owlt/miscellaneous/consistent001=Tests/owl2-test-cases/approved/ofn/imports/consistent001.ofn
+http://www.w3.org/2002/03owlt/miscellaneous/consistent002=Tests/owl2-test-cases/approved/ofn/imports/consistent002.ofn

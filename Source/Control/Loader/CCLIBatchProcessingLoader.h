@@ -144,6 +144,8 @@ namespace Konclude {
 					void forcedPathCreated(const QString& filePath);
 
 					virtual void writeCommandOutput(const QString& outputFileName, CCommand* processedCommand);
+					void loadOntologyIRIMapping();
+					const QMap<QString,QString>& getOntologyIRIMapping() const;
 
 				// protected variables
 				protected:
@@ -167,6 +169,7 @@ namespace Konclude {
 					COWLLinkRecordInterpreter* mOWLLinkInterpreter;
 
 					CConfiguration* mLoaderConfig;
+					QMap<QString,QString> mOntologyIRIMapping;
 
 
 				// private methods

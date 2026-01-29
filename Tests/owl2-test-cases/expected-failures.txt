@@ -30,7 +30,6 @@ WebOnt-description-logic-612-inconsistency
 WebOnt-description-logic-613-inconsistency
 WebOnt-description-logic-615-inconsistency
 WebOnt-description-logic-617-inconsistency
-WebOnt-imports-011-entailment-1
 WebOnt-miscellaneous-203-inconsistency
 WebOnt-miscellaneous-204-inconsistency
 WebOnt-someValuesFrom-003-entailment-4

@@ -65,6 +65,11 @@ namespace Konclude {
 					return mOntoIRIMapping;
 				}
 
+				CLoadKnowledgeBaseOWLAutoOntologyCommand* CLoadKnowledgeBaseOWLAutoOntologyCommand::setOntologieIRIMappings(const QMap<QString,QString>& mapping) {
+					mOntoIRIMapping = mapping;
+					return this;
+				}
+
 			}; // end namespace Instructions
 
 		}; // end namespace Command

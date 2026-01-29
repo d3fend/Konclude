@@ -74,6 +74,7 @@ namespace Konclude {
 
 						virtual bool getLoadImports();
 						virtual QMap<QString,QString> getOntologieIRIMappings();
+						CLoadKnowledgeBaseOWLAutoOntologyCommand* setOntologieIRIMappings(const QMap<QString,QString>& mapping);
 
 					// protected methods
 					protected:
