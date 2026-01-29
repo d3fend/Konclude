@@ -1,0 +1,1743 @@
+[
+  {
+    "conclusion_ofn": null,
+    "id": "Consistent-Datatype-restrictions-with-Different-Types",
+    "identifier": "Consistent Datatype restrictions with Different Types",
+    "premise_ofn": "Tests/owl2-test-cases/approved/ofn/Consistent-Datatype-restrictions-with-Different-Types-premise.ofn",
+    "profiles": [],
+    "semantics": [
+      "DIRECT",
+      "RDF-BASED"
+    ],
+    "sources": [
+      "all.rdf",
+      "semantics-direct.rdf",
+      "syntax-dl.rdf"
+    ],
+    "species": [
+      "DL",
+      "FULL"
+    ],
+    "types": [
+      "ConsistencyTest",
+      "ProfileIdentificationTest"
+    ],
+    "uri": "http://owl.semanticweb.org/id/Datatype-2Drestrictions-2Ddifferent-2Dtypes"
+  },
+  {
+    "conclusion_ofn": null,
+    "id": "Consistent-owl-real-range-with-DataOneOf",
+    "identifier": "Consistent owl:real range with DataOneOf",
+    "premise_ofn": "Tests/owl2-test-cases/approved/ofn/Consistent-owl-real-range-with-DataOneOf-premise.ofn",
+    "profiles": [],
+    "semantics": [
+      "DIRECT",
+      "RDF-BASED"
+    ],
+    "sources": [
+      "all.rdf",
+      "semantics-direct.rdf",
+      "syntax-dl.rdf"
+    ],
+    "species": [
+      "DL",
+      "FULL"
+    ],
+    "types": [
+      "ConsistencyTest",
+      "ProfileIdentificationTest"
+    ],
+    "uri": "http://owl.semanticweb.org/id/Owlreal-2Dplus-2DoneOf"
+  },
+  {
+    "conclusion_ofn": null,
+    "id": "Consistent-dateTime",
+    "identifier": "Consistent-dateTime",
+    "premise_ofn": "Tests/owl2-test-cases/approved/ofn/Consistent-dateTime-premise.ofn",
+    "profiles": [],
+    "semantics": [
+      "DIRECT",
+      "RDF-BASED"
+    ],
+    "sources": [
+      "all.rdf",
+      "semantics-direct.rdf",
+      "syntax-dl.rdf"
+    ],
+    "species": [
+      "DL",
+      "FULL"
+    ],
+    "types": [
+      "ConsistencyTest",
+      "ProfileIdentificationTest"
+    ],
+    "uri": "http://owl.semanticweb.org/id/Consistent-2DdateTime"
+  },
+  {
+    "conclusion_ofn": null,
+    "id": "Contradicting-datatype-Restrictions",
+    "identifier": "Contradicting datatype Restrictions",
+    "premise_ofn": "Tests/owl2-test-cases/approved/ofn/Contradicting-datatype-Restrictions-premise.ofn",
+    "profiles": [],
+    "semantics": [
+      "DIRECT",
+      "RDF-BASED"
+    ],
+    "sources": [
+      "all.rdf",
+      "semantics-direct.rdf",
+      "syntax-dl.rdf",
+      "type-consistency.rdf",
+      "type-inconsistency.rdf"
+    ],
+    "species": [
+      "DL",
+      "FULL"
+    ],
+    "types": [
+      "InconsistencyTest",
+      "ProfileIdentificationTest"
+    ],
+    "uri": "http://owl.semanticweb.org/id/Contradicting-2Ddatatype-2Drestrictions"
+  },
+  {
+    "conclusion_ofn": null,
+    "id": "Contradicting-dateTime-restrictions",
+    "identifier": "Contradicting-dateTime-restrictions",
+    "premise_ofn": "Tests/owl2-test-cases/approved/ofn/Contradicting-dateTime-restrictions-premise.ofn",
+    "profiles": [],
+    "semantics": [
+      "DIRECT",
+      "RDF-BASED"
+    ],
+    "sources": [
+      "all.rdf",
+      "semantics-direct.rdf",
+      "syntax-dl.rdf",
+      "type-consistency.rdf",
+      "type-inconsistency.rdf"
+    ],
+    "species": [
+      "DL",
+      "FULL"
+    ],
+    "types": [
+      "InconsistencyTest",
+      "ProfileIdentificationTest"
+    ],
+    "uri": "http://owl.semanticweb.org/id/Contradicting-2DdateTime-2Drestrictions"
+  },
+  {
+    "conclusion_ofn": null,
+    "id": "Datatype-DataComplementOf-001",
+    "identifier": "Datatype-DataComplementOf-001",
+    "premise_ofn": "Tests/owl2-test-cases/approved/ofn/Datatype-DataComplementOf-001-premise.ofn",
+    "profiles": [],
+    "semantics": [
+      "DIRECT",
+      "RDF-BASED"
+    ],
+    "sources": [
+      "all.rdf",
+      "semantics-direct.rdf",
+      "syntax-dl.rdf"
+    ],
+    "species": [
+      "DL",
+      "FULL"
+    ],
+    "types": [
+      "ConsistencyTest",
+      "ProfileIdentificationTest"
+    ],
+    "uri": "http://owl.semanticweb.org/id/Datatype-2DDataComplementOf-2D001"
+  },
+  {
+    "conclusion_ofn": null,
+    "id": "Datatype-Float-Discrete-001",
+    "identifier": "Datatype-Float-Discrete-001",
+    "premise_ofn": "Tests/owl2-test-cases/approved/ofn/Datatype-Float-Discrete-001-premise.ofn",
+    "profiles": [],
+    "semantics": [
+      "DIRECT",
+      "RDF-BASED"
+    ],
+    "sources": [
+      "all.rdf",
+      "semantics-direct.rdf",
+      "syntax-dl.rdf",
+      "type-consistency.rdf",
+      "type-inconsistency.rdf"
+    ],
+    "species": [
+      "DL",
+      "FULL"
+    ],
+    "types": [
+      "InconsistencyTest",
+      "ProfileIdentificationTest"
+    ],
+    "uri": "http://owl.semanticweb.org/id/Datatype-2DFloat-2DDiscrete-2D001"
+  },
+  {
+    "conclusion_ofn": null,
+    "id": "Different-types-in-Datatype-Restrictions-and-Complement",
+    "identifier": "Different types in Datatype Restrictions and Complement",
+    "premise_ofn": "Tests/owl2-test-cases/approved/ofn/Different-types-in-Datatype-Restrictions-and-Complement-premise.ofn",
+    "profiles": [],
+    "semantics": [
+      "DIRECT",
+      "RDF-BASED"
+    ],
+    "sources": [
+      "all.rdf",
+      "semantics-direct.rdf",
+      "syntax-dl.rdf",
+      "type-consistency.rdf",
+      "type-inconsistency.rdf"
+    ],
+    "species": [
+      "DL",
+      "FULL"
+    ],
+    "types": [
+      "InconsistencyTest",
+      "ProfileIdentificationTest"
+    ],
+    "uri": "http://owl.semanticweb.org/id/Different-2Dtypes-2Dplus-2Dcomplement"
+  },
+  {
+    "conclusion_ofn": "Tests/owl2-test-cases/approved/ofn/DisjointClasses-001-conclusion.ofn",
+    "id": "DisjointClasses-001",
+    "identifier": "DisjointClasses-001",
+    "premise_ofn": "Tests/owl2-test-cases/approved/ofn/DisjointClasses-001-premise.ofn",
+    "profiles": [
+      "RL"
+    ],
+    "semantics": [
+      "DIRECT",
+      "RDF-BASED"
+    ],
+    "sources": [
+      "all.rdf",
+      "profile-RL.rdf",
+      "semantics-direct.rdf",
+      "syntax-dl.rdf",
+      "type-positive-entailment.rdf"
+    ],
+    "species": [
+      "DL",
+      "FULL"
+    ],
+    "types": [
+      "ConsistencyTest",
+      "PositiveEntailmentTest",
+      "ProfileIdentificationTest"
+    ],
+    "uri": "http://owl.semanticweb.org/id/DisjointClasses-2D001"
+  },
+  {
+    "conclusion_ofn": null,
+    "id": "DisjointClasses-002",
+    "identifier": "DisjointClasses-002",
+    "premise_ofn": "Tests/owl2-test-cases/approved/ofn/DisjointClasses-002-premise.ofn",
+    "profiles": [
+      "EL",
+      "QL",
+      "RL"
+    ],
+    "semantics": [
+      "DIRECT",
+      "RDF-BASED"
+    ],
+    "sources": [
+      "all.rdf",
+      "profile-EL.rdf",
+      "profile-QL.rdf",
+      "profile-RL.rdf",
+      "semantics-direct.rdf",
+      "syntax-dl.rdf",
+      "type-consistency.rdf",
+      "type-inconsistency.rdf"
+    ],
+    "species": [
+      "DL",
+      "FULL"
+    ],
+    "types": [
+      "InconsistencyTest",
+      "ProfileIdentificationTest"
+    ],
+    "uri": "http://owl.semanticweb.org/id/DisjointClasses-2D002"
+  },
+  {
+    "conclusion_ofn": "Tests/owl2-test-cases/approved/ofn/DisjointClasses-003-conclusion.ofn",
+    "id": "DisjointClasses-003",
+    "identifier": "DisjointClasses-003",
+    "premise_ofn": "Tests/owl2-test-cases/approved/ofn/DisjointClasses-003-premise.ofn",
+    "profiles": [
+      "RL"
+    ],
+    "semantics": [
+      "DIRECT",
+      "RDF-BASED"
+    ],
+    "sources": [
+      "all.rdf",
+      "profile-RL.rdf",
+      "semantics-direct.rdf",
+      "syntax-dl.rdf",
+      "type-positive-entailment.rdf"
+    ],
+    "species": [
+      "DL",
+      "FULL"
+    ],
+    "types": [
+      "ConsistencyTest",
+      "PositiveEntailmentTest",
+      "ProfileIdentificationTest"
+    ],
+    "uri": "http://owl.semanticweb.org/id/DisjointClasses-2D003"
+  },
+  {
+    "conclusion_ofn": null,
+    "id": "FS2RDF-different-individuals-2-ar",
+    "identifier": "FS2RDF-different-individuals-2-ar",
+    "premise_ofn": "Tests/owl2-test-cases/approved/ofn/FS2RDF-different-individuals-2-ar-premise.ofn",
+    "profiles": [
+      "EL",
+      "QL",
+      "RL"
+    ],
+    "semantics": [
+      "DIRECT",
+      "RDF-BASED"
+    ],
+    "sources": [
+      "all.rdf",
+      "profile-EL.rdf",
+      "profile-QL.rdf",
+      "profile-RL.rdf",
+      "semantics-direct.rdf",
+      "syntax-dl.rdf"
+    ],
+    "species": [
+      "DL",
+      "FULL"
+    ],
+    "types": [
+      "ConsistencyTest",
+      "ProfileIdentificationTest"
+    ],
+    "uri": "http://owl.semanticweb.org/id/FS2RDF-2Ddifferent-2Dindividuals-2D2-2Dar"
+  },
+  {
+    "conclusion_ofn": null,
+    "id": "FS2RDF-different-individuals-3-ar",
+    "identifier": "FS2RDF-different-individuals-3-ar",
+    "premise_ofn": "Tests/owl2-test-cases/approved/ofn/FS2RDF-different-individuals-3-ar-premise.ofn",
+    "profiles": [
+      "EL",
+      "QL",
+      "RL"
+    ],
+    "semantics": [
+      "DIRECT",
+      "RDF-BASED"
+    ],
+    "sources": [
+      "all.rdf",
+      "profile-EL.rdf",
+      "profile-QL.rdf",
+      "profile-RL.rdf",
+      "semantics-direct.rdf",
+      "syntax-dl.rdf"
+    ],
+    "species": [
+      "DL",
+      "FULL"
+    ],
+    "types": [
+      "ConsistencyTest",
+      "ProfileIdentificationTest"
+    ],
+    "uri": "http://owl.semanticweb.org/id/FS2RDF-2Ddifferent-2Dindividuals-2D3-2Dar"
+  },
+  {
+    "conclusion_ofn": null,
+    "id": "FS2RDF-no-builtin-prefixes-ar",
+    "identifier": "FS2RDF-no-builtin-prefixes-ar",
+    "premise_ofn": "Tests/owl2-test-cases/approved/ofn/FS2RDF-no-builtin-prefixes-ar-premise.ofn",
+    "profiles": [
+      "EL",
+      "RL"
+    ],
+    "semantics": [
+      "DIRECT",
+      "RDF-BASED"
+    ],
+    "sources": [
+      "all.rdf",
+      "profile-EL.rdf",
+      "profile-RL.rdf",
+      "semantics-direct.rdf",
+      "syntax-dl.rdf"
+    ],
+    "species": [
+      "DL",
+      "FULL"
+    ],
+    "types": [
+      "ConsistencyTest",
+      "ProfileIdentificationTest"
+    ],
+    "uri": "http://owl.semanticweb.org/id/FS2RDF-2Dno-2Dbuiltin-2Dprefixes-2Dar"
+  },
+  {
+    "conclusion_ofn": null,
+    "id": "FS2RDF-same-individual-2-ar",
+    "identifier": "FS2RDF-same-individual-2-ar",
+    "premise_ofn": "Tests/owl2-test-cases/approved/ofn/FS2RDF-same-individual-2-ar-premise.ofn",
+    "profiles": [
+      "EL",
+      "RL"
+    ],
+    "semantics": [
+      "DIRECT",
+      "RDF-BASED"
+    ],
+    "sources": [
+      "all.rdf",
+      "profile-EL.rdf",
+      "profile-RL.rdf",
+      "semantics-direct.rdf",
+      "syntax-dl.rdf"
+    ],
+    "species": [
+      "DL",
+      "FULL"
+    ],
+    "types": [
+      "ConsistencyTest",
+      "ProfileIdentificationTest"
+    ],
+    "uri": "http://owl.semanticweb.org/id/FS2RDF-2Dsame-2Dindividual-2D2-2Dar"
+  },
+  {
+    "conclusion_ofn": null,
+    "id": "Inconsistent-Byte-Filler",
+    "identifier": "Inconsistent Byte Filler",
+    "premise_ofn": "Tests/owl2-test-cases/approved/ofn/Inconsistent-Byte-Filler-premise.ofn",
+    "profiles": [],
+    "semantics": [
+      "DIRECT",
+      "RDF-BASED"
+    ],
+    "sources": [
+      "all.rdf",
+      "semantics-direct.rdf",
+      "syntax-dl.rdf",
+      "type-consistency.rdf",
+      "type-inconsistency.rdf"
+    ],
+    "species": [
+      "DL",
+      "FULL"
+    ],
+    "types": [
+      "InconsistencyTest",
+      "ProfileIdentificationTest"
+    ],
+    "uri": "http://owl.semanticweb.org/id/Inconsistent-2Dbyte-2Dfiller"
+  },
+  {
+    "conclusion_ofn": null,
+    "id": "Inconsistent-Data-Complement-with-the-Restrictions",
+    "identifier": "Inconsistent Data Complement with the Restrictions",
+    "premise_ofn": "Tests/owl2-test-cases/approved/ofn/Inconsistent-Data-Complement-with-the-Restrictions-premise.ofn",
+    "profiles": [],
+    "semantics": [
+      "DIRECT",
+      "RDF-BASED"
+    ],
+    "sources": [
+      "all.rdf",
+      "semantics-direct.rdf",
+      "syntax-dl.rdf",
+      "type-consistency.rdf",
+      "type-inconsistency.rdf"
+    ],
+    "species": [
+      "DL",
+      "FULL"
+    ],
+    "types": [
+      "InconsistencyTest",
+      "ProfileIdentificationTest"
+    ],
+    "uri": "http://owl.semanticweb.org/id/Datacomplement-2Dplus-2Drestrictions"
+  },
+  {
+    "conclusion_ofn": null,
+    "id": "Inconsistent-Disjoint-Dataproperties",
+    "identifier": "Inconsistent Disjoint Dataproperties",
+    "premise_ofn": "Tests/owl2-test-cases/approved/ofn/Inconsistent-Disjoint-Dataproperties-premise.ofn",
+    "profiles": [],
+    "semantics": [
+      "DIRECT",
+      "RDF-BASED"
+    ],
+    "sources": [
+      "all.rdf",
+      "semantics-direct.rdf",
+      "syntax-dl.rdf",
+      "type-consistency.rdf"
+    ],
+    "species": [
+      "DL",
+      "FULL"
+    ],
+    "types": [
+      "InconsistencyTest",
+      "ProfileIdentificationTest"
+    ],
+    "uri": "http://owl.semanticweb.org/id/Inconsistent-2Ddisjoint-2Ddataproperties"
+  },
+  {
+    "conclusion_ofn": null,
+    "id": "Minus-Infinity-is-not-in-owl-real",
+    "identifier": "Minus Infinity is not in owl:real",
+    "premise_ofn": "Tests/owl2-test-cases/approved/ofn/Minus-Infinity-is-not-in-owl-real-premise.ofn",
+    "profiles": [],
+    "semantics": [
+      "DIRECT",
+      "RDF-BASED"
+    ],
+    "sources": [
+      "all.rdf",
+      "semantics-direct.rdf",
+      "syntax-dl.rdf",
+      "type-consistency.rdf",
+      "type-inconsistency.rdf"
+    ],
+    "species": [
+      "DL",
+      "FULL"
+    ],
+    "types": [
+      "InconsistencyTest",
+      "ProfileIdentificationTest"
+    ],
+    "uri": "http://owl.semanticweb.org/id/Minus-2Dinf-2Dnot-2Dowlreal"
+  },
+  {
+    "conclusion_ofn": null,
+    "id": "New-Feature-AnnotationAnnotations-001",
+    "identifier": "New-Feature-AnnotationAnnotations-001",
+    "premise_ofn": "Tests/owl2-test-cases/approved/ofn/New-Feature-AnnotationAnnotations-001-premise.ofn",
+    "profiles": [
+      "EL",
+      "QL",
+      "RL"
+    ],
+    "semantics": [
+      "DIRECT",
+      "RDF-BASED"
+    ],
+    "sources": [
+      "all.rdf",
+      "profile-EL.rdf",
+      "profile-QL.rdf",
+      "profile-RL.rdf",
+      "semantics-direct.rdf",
+      "syntax-dl.rdf"
+    ],
+    "species": [
+      "DL",
+      "FULL"
+    ],
+    "types": [
+      "ConsistencyTest",
+      "ProfileIdentificationTest"
+    ],
+    "uri": "http://owl.semanticweb.org/id/New-2DFeature-2DAnnotationAnnotations-2D001"
+  },
+  {
+    "conclusion_ofn": null,
+    "id": "New-Feature-AsymmetricProperty-001",
+    "identifier": "New-Feature-AsymmetricProperty-001",
+    "premise_ofn": "Tests/owl2-test-cases/approved/ofn/New-Feature-AsymmetricProperty-001-premise.ofn",
+    "profiles": [
+      "QL",
+      "RL"
+    ],
+    "semantics": [
+      "DIRECT",
+      "RDF-BASED"
+    ],
+    "sources": [
+      "all.rdf",
+      "profile-QL.rdf",
+      "profile-RL.rdf",
+      "semantics-direct.rdf",
+      "syntax-dl.rdf",
+      "type-consistency.rdf",
+      "type-inconsistency.rdf"
+    ],
+    "species": [
+      "DL",
+      "FULL"
+    ],
+    "types": [
+      "InconsistencyTest",
+      "ProfileIdentificationTest"
+    ],
+    "uri": "http://owl.semanticweb.org/id/New-2DFeature-2DAsymmetricProperty-2D001"
+  },
+  {
+    "conclusion_ofn": null,
+    "id": "New-Feature-AxiomAnnotations-001",
+    "identifier": "New-Feature-AxiomAnnotations-001",
+    "premise_ofn": "Tests/owl2-test-cases/approved/ofn/New-Feature-AxiomAnnotations-001-premise.ofn",
+    "profiles": [
+      "EL",
+      "QL",
+      "RL"
+    ],
+    "semantics": [
+      "DIRECT",
+      "RDF-BASED"
+    ],
+    "sources": [
+      "all.rdf",
+      "profile-EL.rdf",
+      "profile-QL.rdf",
+      "profile-RL.rdf",
+      "semantics-direct.rdf",
+      "syntax-dl.rdf"
+    ],
+    "species": [
+      "DL",
+      "FULL"
+    ],
+    "types": [
+      "ConsistencyTest",
+      "ProfileIdentificationTest"
+    ],
+    "uri": "http://owl.semanticweb.org/id/New-2DFeature-2DAxiomAnnotations-2D001"
+  },
+  {
+    "conclusion_ofn": null,
+    "id": "New-Feature-BottomDataProperty-001",
+    "identifier": "New-Feature-BottomDataProperty-001",
+    "premise_ofn": "Tests/owl2-test-cases/approved/ofn/New-Feature-BottomDataProperty-001-premise.ofn",
+    "profiles": [
+      "EL"
+    ],
+    "semantics": [
+      "DIRECT",
+      "RDF-BASED"
+    ],
+    "sources": [
+      "all.rdf",
+      "profile-EL.rdf",
+      "semantics-direct.rdf",
+      "syntax-dl.rdf",
+      "type-consistency.rdf"
+    ],
+    "species": [
+      "DL",
+      "FULL"
+    ],
+    "types": [
+      "InconsistencyTest",
+      "ProfileIdentificationTest"
+    ],
+    "uri": "http://owl.semanticweb.org/id/New-2DFeature-2DBottomDataProperty-2D001"
+  },
+  {
+    "conclusion_ofn": null,
+    "id": "New-Feature-BottomObjectProperty-001",
+    "identifier": "New-Feature-BottomObjectProperty-001",
+    "premise_ofn": "Tests/owl2-test-cases/approved/ofn/New-Feature-BottomObjectProperty-001-premise.ofn",
+    "profiles": [
+      "EL"
+    ],
+    "semantics": [
+      "DIRECT",
+      "RDF-BASED"
+    ],
+    "sources": [
+      "all.rdf",
+      "profile-EL.rdf",
+      "semantics-direct.rdf",
+      "syntax-dl.rdf",
+      "type-consistency.rdf"
+    ],
+    "species": [
+      "DL",
+      "FULL"
+    ],
+    "types": [
+      "InconsistencyTest",
+      "ProfileIdentificationTest"
+    ],
+    "uri": "http://owl.semanticweb.org/id/New-2DFeature-2DBottomObjectProperty-2D001"
+  },
+  {
+    "conclusion_ofn": "Tests/owl2-test-cases/approved/ofn/New-Feature-DataQCR-001-conclusion.ofn",
+    "id": "New-Feature-DataQCR-001",
+    "identifier": "New-Feature-DataQCR-001",
+    "premise_ofn": "Tests/owl2-test-cases/approved/ofn/New-Feature-DataQCR-001-premise.ofn",
+    "profiles": [],
+    "semantics": [
+      "DIRECT",
+      "RDF-BASED"
+    ],
+    "sources": [
+      "all.rdf",
+      "semantics-direct.rdf",
+      "syntax-dl.rdf",
+      "type-positive-entailment.rdf"
+    ],
+    "species": [
+      "DL",
+      "FULL"
+    ],
+    "types": [
+      "ConsistencyTest",
+      "PositiveEntailmentTest",
+      "ProfileIdentificationTest"
+    ],
+    "uri": "http://owl.semanticweb.org/id/New-2DFeature-2DDataQCR-2D001"
+  },
+  {
+    "conclusion_ofn": null,
+    "id": "New-Feature-DisjointDataProperties-001",
+    "identifier": "New-Feature-DisjointDataProperties-001",
+    "premise_ofn": "Tests/owl2-test-cases/approved/ofn/New-Feature-DisjointDataProperties-001-premise.ofn",
+    "profiles": [
+      "QL",
+      "RL"
+    ],
+    "semantics": [
+      "DIRECT",
+      "RDF-BASED"
+    ],
+    "sources": [
+      "all.rdf",
+      "profile-QL.rdf",
+      "profile-RL.rdf",
+      "semantics-direct.rdf",
+      "syntax-dl.rdf",
+      "type-consistency.rdf",
+      "type-inconsistency.rdf"
+    ],
+    "species": [
+      "DL",
+      "FULL"
+    ],
+    "types": [
+      "InconsistencyTest",
+      "ProfileIdentificationTest"
+    ],
+    "uri": "http://owl.semanticweb.org/id/New-2DFeature-2DDisjointDataProperties-2D001"
+  },
+  {
+    "conclusion_ofn": "Tests/owl2-test-cases/approved/ofn/New-Feature-DisjointDataProperties-002-conclusion.ofn",
+    "id": "New-Feature-DisjointDataProperties-002",
+    "identifier": "New-Feature-DisjointDataProperties-002",
+    "premise_ofn": "Tests/owl2-test-cases/approved/ofn/New-Feature-DisjointDataProperties-002-premise.ofn",
+    "profiles": [
+      "QL",
+      "RL"
+    ],
+    "semantics": [
+      "DIRECT",
+      "RDF-BASED"
+    ],
+    "sources": [
+      "all.rdf",
+      "profile-QL.rdf",
+      "profile-RL.rdf",
+      "semantics-direct.rdf",
+      "syntax-dl.rdf",
+      "type-positive-entailment.rdf"
+    ],
+    "species": [
+      "DL",
+      "FULL"
+    ],
+    "types": [
+      "ConsistencyTest",
+      "PositiveEntailmentTest",
+      "ProfileIdentificationTest"
+    ],
+    "uri": "http://owl.semanticweb.org/id/New-2DFeature-2DDisjointDataProperties-2D002"
+  },
+  {
+    "conclusion_ofn": "Tests/owl2-test-cases/approved/ofn/New-Feature-DisjointObjectProperties-001-conclusion.ofn",
+    "id": "New-Feature-DisjointObjectProperties-001",
+    "identifier": "New-Feature-DisjointObjectProperties-001",
+    "premise_ofn": "Tests/owl2-test-cases/approved/ofn/New-Feature-DisjointObjectProperties-001-premise.ofn",
+    "profiles": [
+      "QL",
+      "RL"
+    ],
+    "semantics": [
+      "DIRECT",
+      "RDF-BASED"
+    ],
+    "sources": [
+      "all.rdf",
+      "profile-QL.rdf",
+      "profile-RL.rdf",
+      "semantics-direct.rdf",
+      "syntax-dl.rdf",
+      "type-positive-entailment.rdf"
+    ],
+    "species": [
+      "DL",
+      "FULL"
+    ],
+    "types": [
+      "ConsistencyTest",
+      "PositiveEntailmentTest",
+      "ProfileIdentificationTest"
+    ],
+    "uri": "http://owl.semanticweb.org/id/New-2DFeature-2DDisjointObjectProperties-2D001"
+  },
+  {
+    "conclusion_ofn": "Tests/owl2-test-cases/approved/ofn/New-Feature-DisjointObjectProperties-002-conclusion.ofn",
+    "id": "New-Feature-DisjointObjectProperties-002",
+    "identifier": "New-Feature-DisjointObjectProperties-002",
+    "premise_ofn": "Tests/owl2-test-cases/approved/ofn/New-Feature-DisjointObjectProperties-002-premise.ofn",
+    "profiles": [
+      "QL",
+      "RL"
+    ],
+    "semantics": [
+      "DIRECT",
+      "RDF-BASED"
+    ],
+    "sources": [
+      "all.rdf",
+      "profile-QL.rdf",
+      "profile-RL.rdf",
+      "semantics-direct.rdf",
+      "syntax-dl.rdf",
+      "type-positive-entailment.rdf"
+    ],
+    "species": [
+      "DL",
+      "FULL"
+    ],
+    "types": [
+      "ConsistencyTest",
+      "PositiveEntailmentTest",
+      "ProfileIdentificationTest"
+    ],
+    "uri": "http://owl.semanticweb.org/id/New-2DFeature-2DDisjointObjectProperties-2D002"
+  },
+  {
+    "conclusion_ofn": "Tests/owl2-test-cases/approved/ofn/New-Feature-DisjointUnion-001-conclusion.ofn",
+    "id": "New-Feature-DisjointUnion-001",
+    "identifier": "New-Feature-DisjointUnion-001",
+    "premise_ofn": "Tests/owl2-test-cases/approved/ofn/New-Feature-DisjointUnion-001-premise.ofn",
+    "profiles": [],
+    "semantics": [
+      "DIRECT",
+      "RDF-BASED"
+    ],
+    "sources": [
+      "all.rdf",
+      "semantics-direct.rdf",
+      "syntax-dl.rdf",
+      "type-positive-entailment.rdf"
+    ],
+    "species": [
+      "DL",
+      "FULL"
+    ],
+    "types": [
+      "ConsistencyTest",
+      "PositiveEntailmentTest",
+      "ProfileIdentificationTest"
+    ],
+    "uri": "http://owl.semanticweb.org/id/New-2DFeature-2DDisjointUnion-2D001"
+  },
+  {
+    "conclusion_ofn": null,
+    "id": "New-Feature-IrreflexiveProperty-001",
+    "identifier": "New-Feature-IrreflexiveProperty-001",
+    "premise_ofn": "Tests/owl2-test-cases/approved/ofn/New-Feature-IrreflexiveProperty-001-premise.ofn",
+    "profiles": [
+      "RL"
+    ],
+    "semantics": [
+      "DIRECT",
+      "RDF-BASED"
+    ],
+    "sources": [
+      "all.rdf",
+      "profile-RL.rdf",
+      "semantics-direct.rdf",
+      "syntax-dl.rdf",
+      "type-consistency.rdf",
+      "type-inconsistency.rdf"
+    ],
+    "species": [
+      "DL",
+      "FULL"
+    ],
+    "types": [
+      "InconsistencyTest",
+      "ProfileIdentificationTest"
+    ],
+    "uri": "http://owl.semanticweb.org/id/New-2DFeature-2DIrreflexiveProperty-2D001"
+  },
+  {
+    "conclusion_ofn": "Tests/owl2-test-cases/approved/ofn/New-Feature-Keys-001-conclusion.ofn",
+    "id": "New-Feature-Keys-001",
+    "identifier": "New-Feature-Keys-001",
+    "premise_ofn": "Tests/owl2-test-cases/approved/ofn/New-Feature-Keys-001-premise.ofn",
+    "profiles": [
+      "EL"
+    ],
+    "semantics": [
+      "DIRECT",
+      "RDF-BASED"
+    ],
+    "sources": [
+      "all.rdf",
+      "profile-EL.rdf",
+      "semantics-direct.rdf",
+      "syntax-dl.rdf",
+      "type-positive-entailment.rdf"
+    ],
+    "species": [
+      "DL",
+      "FULL"
+    ],
+    "types": [
+      "ConsistencyTest",
+      "PositiveEntailmentTest",
+      "ProfileIdentificationTest"
+    ],
+    "uri": "http://owl.semanticweb.org/id/New-2DFeature-2DKeys-2D001"
+  },
+  {
+    "conclusion_ofn": null,
+    "id": "New-Feature-Keys-002",
+    "identifier": "New-Feature-Keys-002",
+    "premise_ofn": "Tests/owl2-test-cases/approved/ofn/New-Feature-Keys-002-premise.ofn",
+    "profiles": [
+      "EL"
+    ],
+    "semantics": [
+      "DIRECT",
+      "RDF-BASED"
+    ],
+    "sources": [
+      "all.rdf",
+      "profile-EL.rdf",
+      "semantics-direct.rdf",
+      "syntax-dl.rdf",
+      "type-consistency.rdf",
+      "type-inconsistency.rdf"
+    ],
+    "species": [
+      "DL",
+      "FULL"
+    ],
+    "types": [
+      "InconsistencyTest",
+      "ProfileIdentificationTest"
+    ],
+    "uri": "http://owl.semanticweb.org/id/New-2DFeature-2DKeys-2D002"
+  },
+  {
+    "conclusion_ofn": "Tests/owl2-test-cases/approved/ofn/New-Feature-Keys-003-conclusion.ofn",
+    "id": "New-Feature-Keys-003",
+    "identifier": "New-Feature-Keys-003",
+    "premise_ofn": "Tests/owl2-test-cases/approved/ofn/New-Feature-Keys-003-premise.ofn",
+    "profiles": [
+      "EL",
+      "RL"
+    ],
+    "semantics": [
+      "DIRECT",
+      "RDF-BASED"
+    ],
+    "sources": [
+      "all.rdf",
+      "profile-EL.rdf",
+      "profile-RL.rdf",
+      "semantics-direct.rdf",
+      "syntax-dl.rdf",
+      "type-positive-entailment.rdf"
+    ],
+    "species": [
+      "DL",
+      "FULL"
+    ],
+    "types": [
+      "ConsistencyTest",
+      "PositiveEntailmentTest",
+      "ProfileIdentificationTest"
+    ],
+    "uri": "http://owl.semanticweb.org/id/New-2DFeature-2DKeys-2D003"
+  },
+  {
+    "conclusion_ofn": null,
+    "id": "New-Feature-Keys-004",
+    "identifier": "New-Feature-Keys-004",
+    "premise_ofn": "Tests/owl2-test-cases/approved/ofn/New-Feature-Keys-004-premise.ofn",
+    "profiles": [
+      "EL",
+      "RL"
+    ],
+    "semantics": [
+      "DIRECT",
+      "RDF-BASED"
+    ],
+    "sources": [
+      "all.rdf",
+      "profile-EL.rdf",
+      "profile-RL.rdf",
+      "semantics-direct.rdf",
+      "syntax-dl.rdf",
+      "type-negative-entailment.rdf"
+    ],
+    "species": [
+      "DL",
+      "FULL"
+    ],
+    "types": [
+      "ConsistencyTest",
+      "NegativeEntailmentTest",
+      "ProfileIdentificationTest"
+    ],
+    "uri": "http://owl.semanticweb.org/id/New-2DFeature-2DKeys-2D004"
+  },
+  {
+    "conclusion_ofn": null,
+    "id": "New-Feature-Keys-005",
+    "identifier": "New-Feature-Keys-005",
+    "premise_ofn": "Tests/owl2-test-cases/approved/ofn/New-Feature-Keys-005-premise.ofn",
+    "profiles": [
+      "EL",
+      "RL"
+    ],
+    "semantics": [
+      "DIRECT",
+      "RDF-BASED"
+    ],
+    "sources": [
+      "all.rdf",
+      "profile-EL.rdf",
+      "profile-RL.rdf",
+      "semantics-direct.rdf",
+      "syntax-dl.rdf"
+    ],
+    "species": [
+      "DL",
+      "FULL"
+    ],
+    "types": [
+      "ConsistencyTest",
+      "ProfileIdentificationTest"
+    ],
+    "uri": "http://owl.semanticweb.org/id/New-2DFeature-2DKeys-2D005"
+  },
+  {
+    "conclusion_ofn": null,
+    "id": "New-Feature-Keys-006",
+    "identifier": "New-Feature-Keys-006",
+    "premise_ofn": "Tests/owl2-test-cases/approved/ofn/New-Feature-Keys-006-premise.ofn",
+    "profiles": [
+      "EL",
+      "RL"
+    ],
+    "semantics": [
+      "DIRECT",
+      "RDF-BASED"
+    ],
+    "sources": [
+      "all.rdf",
+      "profile-EL.rdf",
+      "profile-RL.rdf",
+      "semantics-direct.rdf",
+      "syntax-dl.rdf",
+      "type-consistency.rdf",
+      "type-inconsistency.rdf"
+    ],
+    "species": [
+      "DL",
+      "FULL"
+    ],
+    "types": [
+      "InconsistencyTest",
+      "ProfileIdentificationTest"
+    ],
+    "uri": "http://owl.semanticweb.org/id/New-2DFeature-2DKeys-2D006"
+  },
+  {
+    "conclusion_ofn": null,
+    "id": "New-Feature-Keys-007",
+    "identifier": "New-Feature-Keys-007",
+    "premise_ofn": "Tests/owl2-test-cases/approved/ofn/New-Feature-Keys-007-premise.ofn",
+    "profiles": [
+      "EL"
+    ],
+    "semantics": [
+      "DIRECT",
+      "RDF-BASED"
+    ],
+    "sources": [
+      "all.rdf",
+      "profile-EL.rdf",
+      "semantics-direct.rdf",
+      "syntax-dl.rdf",
+      "type-negative-entailment.rdf"
+    ],
+    "species": [
+      "DL",
+      "FULL"
+    ],
+    "types": [
+      "ConsistencyTest",
+      "NegativeEntailmentTest",
+      "ProfileIdentificationTest"
+    ],
+    "uri": "http://owl.semanticweb.org/id/New-2DFeature-2DKeys-2D007"
+  },
+  {
+    "conclusion_ofn": null,
+    "id": "New-Feature-NegativeDataPropertyAssertion-001",
+    "identifier": "New-Feature-NegativeDataPropertyAssertion-001",
+    "premise_ofn": "Tests/owl2-test-cases/approved/ofn/New-Feature-NegativeDataPropertyAssertion-001-premise.ofn",
+    "profiles": [
+      "EL",
+      "RL"
+    ],
+    "semantics": [
+      "DIRECT",
+      "RDF-BASED"
+    ],
+    "sources": [
+      "all.rdf",
+      "profile-EL.rdf",
+      "profile-RL.rdf",
+      "semantics-direct.rdf",
+      "syntax-dl.rdf",
+      "type-consistency.rdf",
+      "type-inconsistency.rdf"
+    ],
+    "species": [
+      "DL",
+      "FULL"
+    ],
+    "types": [
+      "InconsistencyTest",
+      "ProfileIdentificationTest"
+    ],
+    "uri": "http://owl.semanticweb.org/id/New-2DFeature-2DNegativeDataPropertyAssertion-2D001"
+  },
+  {
+    "conclusion_ofn": null,
+    "id": "New-Feature-NegativeObjectPropertyAssertion-001",
+    "identifier": "New-Feature-NegativeObjectPropertyAssertion-001",
+    "premise_ofn": "Tests/owl2-test-cases/approved/ofn/New-Feature-NegativeObjectPropertyAssertion-001-premise.ofn",
+    "profiles": [
+      "EL",
+      "RL"
+    ],
+    "semantics": [
+      "DIRECT",
+      "RDF-BASED"
+    ],
+    "sources": [
+      "all.rdf",
+      "profile-EL.rdf",
+      "profile-RL.rdf",
+      "semantics-direct.rdf",
+      "syntax-dl.rdf",
+      "type-consistency.rdf",
+      "type-inconsistency.rdf"
+    ],
+    "species": [
+      "DL",
+      "FULL"
+    ],
+    "types": [
+      "InconsistencyTest",
+      "ProfileIdentificationTest"
+    ],
+    "uri": "http://owl.semanticweb.org/id/New-2DFeature-2DNegativeObjectPropertyAssertion-2D001"
+  },
+  {
+    "conclusion_ofn": "Tests/owl2-test-cases/approved/ofn/New-Feature-ObjectPropertyChain-001-conclusion.ofn",
+    "id": "New-Feature-ObjectPropertyChain-001",
+    "identifier": "New-Feature-ObjectPropertyChain-001",
+    "premise_ofn": "Tests/owl2-test-cases/approved/ofn/New-Feature-ObjectPropertyChain-001-premise.ofn",
+    "profiles": [
+      "EL",
+      "RL"
+    ],
+    "semantics": [
+      "DIRECT",
+      "RDF-BASED"
+    ],
+    "sources": [
+      "all.rdf",
+      "profile-EL.rdf",
+      "profile-RL.rdf",
+      "semantics-direct.rdf",
+      "syntax-dl.rdf",
+      "type-positive-entailment.rdf"
+    ],
+    "species": [
+      "DL",
+      "FULL"
+    ],
+    "types": [
+      "ConsistencyTest",
+      "PositiveEntailmentTest",
+      "ProfileIdentificationTest"
+    ],
+    "uri": "http://owl.semanticweb.org/id/New-2DFeature-2DObjectPropertyChain-2D001"
+  },
+  {
+    "conclusion_ofn": "Tests/owl2-test-cases/approved/ofn/New-Feature-ObjectQCR-001-conclusion.ofn",
+    "id": "New-Feature-ObjectQCR-001",
+    "identifier": "New-Feature-ObjectQCR-001",
+    "premise_ofn": "Tests/owl2-test-cases/approved/ofn/New-Feature-ObjectQCR-001-premise.ofn",
+    "profiles": [],
+    "semantics": [
+      "DIRECT",
+      "RDF-BASED"
+    ],
+    "sources": [
+      "all.rdf",
+      "semantics-direct.rdf",
+      "syntax-dl.rdf",
+      "type-positive-entailment.rdf"
+    ],
+    "species": [
+      "DL",
+      "FULL"
+    ],
+    "types": [
+      "ConsistencyTest",
+      "PositiveEntailmentTest",
+      "ProfileIdentificationTest"
+    ],
+    "uri": "http://owl.semanticweb.org/id/New-2DFeature-2DObjectQCR-2D001"
+  },
+  {
+    "conclusion_ofn": "Tests/owl2-test-cases/approved/ofn/New-Feature-ObjectQCR-002-conclusion.ofn",
+    "id": "New-Feature-ObjectQCR-002",
+    "identifier": "New-Feature-ObjectQCR-002",
+    "premise_ofn": "Tests/owl2-test-cases/approved/ofn/New-Feature-ObjectQCR-002-premise.ofn",
+    "profiles": [
+      "RL"
+    ],
+    "semantics": [
+      "DIRECT",
+      "RDF-BASED"
+    ],
+    "sources": [
+      "all.rdf",
+      "profile-RL.rdf",
+      "semantics-direct.rdf",
+      "syntax-dl.rdf",
+      "type-positive-entailment.rdf"
+    ],
+    "species": [
+      "DL",
+      "FULL"
+    ],
+    "types": [
+      "ConsistencyTest",
+      "PositiveEntailmentTest",
+      "ProfileIdentificationTest"
+    ],
+    "uri": "http://owl.semanticweb.org/id/New-2DFeature-2DObjectQCR-2D002"
+  },
+  {
+    "conclusion_ofn": null,
+    "id": "New-Feature-Rational-001",
+    "identifier": "New-Feature-Rational-001",
+    "premise_ofn": "Tests/owl2-test-cases/approved/ofn/New-Feature-Rational-001-premise.ofn",
+    "profiles": [],
+    "semantics": [
+      "DIRECT",
+      "RDF-BASED"
+    ],
+    "sources": [
+      "all.rdf",
+      "semantics-direct.rdf",
+      "syntax-dl.rdf"
+    ],
+    "species": [
+      "DL",
+      "FULL"
+    ],
+    "types": [
+      "ConsistencyTest",
+      "ProfileIdentificationTest"
+    ],
+    "uri": "http://owl.semanticweb.org/id/New-2DFeature-2DRational-2D001"
+  },
+  {
+    "conclusion_ofn": null,
+    "id": "New-Feature-Rational-002",
+    "identifier": "New-Feature-Rational-002",
+    "premise_ofn": "Tests/owl2-test-cases/approved/ofn/New-Feature-Rational-002-premise.ofn",
+    "profiles": [],
+    "semantics": [
+      "DIRECT",
+      "RDF-BASED"
+    ],
+    "sources": [
+      "all.rdf",
+      "semantics-direct.rdf",
+      "syntax-dl.rdf",
+      "type-consistency.rdf"
+    ],
+    "species": [
+      "DL",
+      "FULL"
+    ],
+    "types": [
+      "InconsistencyTest",
+      "ProfileIdentificationTest"
+    ],
+    "uri": "http://owl.semanticweb.org/id/New-2DFeature-2DRational-2D002"
+  },
+  {
+    "conclusion_ofn": null,
+    "id": "New-Feature-Rational-003",
+    "identifier": "New-Feature-Rational-003",
+    "premise_ofn": "Tests/owl2-test-cases/approved/ofn/New-Feature-Rational-003-premise.ofn",
+    "profiles": [],
+    "semantics": [
+      "DIRECT",
+      "RDF-BASED"
+    ],
+    "sources": [
+      "all.rdf",
+      "semantics-direct.rdf",
+      "syntax-dl.rdf"
+    ],
+    "species": [
+      "DL",
+      "FULL"
+    ],
+    "types": [
+      "ConsistencyTest",
+      "ProfileIdentificationTest"
+    ],
+    "uri": "http://owl.semanticweb.org/id/New-2DFeature-2DRational-2D003"
+  },
+  {
+    "conclusion_ofn": "Tests/owl2-test-cases/approved/ofn/New-Feature-ReflexiveProperty-001-conclusion.ofn",
+    "id": "New-Feature-ReflexiveProperty-001",
+    "identifier": "New-Feature-ReflexiveProperty-001",
+    "premise_ofn": "Tests/owl2-test-cases/approved/ofn/New-Feature-ReflexiveProperty-001-premise.ofn",
+    "profiles": [
+      "EL",
+      "QL",
+      "RL"
+    ],
+    "semantics": [
+      "DIRECT",
+      "RDF-BASED"
+    ],
+    "sources": [
+      "all.rdf",
+      "profile-EL.rdf",
+      "profile-QL.rdf",
+      "profile-RL.rdf",
+      "semantics-direct.rdf",
+      "syntax-dl.rdf",
+      "type-positive-entailment.rdf"
+    ],
+    "species": [
+      "DL",
+      "FULL"
+    ],
+    "types": [
+      "ConsistencyTest",
+      "PositiveEntailmentTest",
+      "ProfileIdentificationTest"
+    ],
+    "uri": "http://owl.semanticweb.org/id/New-2DFeature-2DReflexiveProperty-2D001"
+  },
+  {
+    "conclusion_ofn": "Tests/owl2-test-cases/approved/ofn/New-Feature-SelfRestriction-001-conclusion.ofn",
+    "id": "New-Feature-SelfRestriction-001",
+    "identifier": "New-Feature-SelfRestriction-001",
+    "premise_ofn": "Tests/owl2-test-cases/approved/ofn/New-Feature-SelfRestriction-001-premise.ofn",
+    "profiles": [
+      "EL"
+    ],
+    "semantics": [
+      "DIRECT",
+      "RDF-BASED"
+    ],
+    "sources": [
+      "all.rdf",
+      "profile-EL.rdf",
+      "semantics-direct.rdf",
+      "syntax-dl.rdf",
+      "type-positive-entailment.rdf"
+    ],
+    "species": [
+      "DL",
+      "FULL"
+    ],
+    "types": [
+      "ConsistencyTest",
+      "PositiveEntailmentTest",
+      "ProfileIdentificationTest"
+    ],
+    "uri": "http://owl.semanticweb.org/id/New-2DFeature-2DSelfRestriction-2D001"
+  },
+  {
+    "conclusion_ofn": "Tests/owl2-test-cases/approved/ofn/New-Feature-SelfRestriction-002-conclusion.ofn",
+    "id": "New-Feature-SelfRestriction-002",
+    "identifier": "New-Feature-SelfRestriction-002",
+    "premise_ofn": "Tests/owl2-test-cases/approved/ofn/New-Feature-SelfRestriction-002-premise.ofn",
+    "profiles": [
+      "EL"
+    ],
+    "semantics": [
+      "DIRECT",
+      "RDF-BASED"
+    ],
+    "sources": [
+      "all.rdf",
+      "profile-EL.rdf",
+      "semantics-direct.rdf",
+      "syntax-dl.rdf",
+      "type-positive-entailment.rdf"
+    ],
+    "species": [
+      "DL",
+      "FULL"
+    ],
+    "types": [
+      "ConsistencyTest",
+      "PositiveEntailmentTest",
+      "ProfileIdentificationTest"
+    ],
+    "uri": "http://owl.semanticweb.org/id/New-2DFeature-2DSelfRestriction-2D002"
+  },
+  {
+    "conclusion_ofn": null,
+    "id": "New-Feature-TopObjectProperty-001",
+    "identifier": "New-Feature-TopObjectProperty-001",
+    "premise_ofn": "Tests/owl2-test-cases/approved/ofn/New-Feature-TopObjectProperty-001-premise.ofn",
+    "profiles": [],
+    "semantics": [
+      "DIRECT",
+      "RDF-BASED"
+    ],
+    "sources": [
+      "all.rdf",
+      "semantics-direct.rdf",
+      "syntax-dl.rdf",
+      "type-consistency.rdf"
+    ],
+    "species": [
+      "DL",
+      "FULL"
+    ],
+    "types": [
+      "InconsistencyTest",
+      "ProfileIdentificationTest"
+    ],
+    "uri": "http://owl.semanticweb.org/id/New-2DFeature-2DTopObjectProperty-2D001"
+  },
+  {
+    "conclusion_ofn": null,
+    "id": "Plus-and-Minus-Zero-Integer",
+    "identifier": "Plus and Minus Zero Integer",
+    "premise_ofn": "Tests/owl2-test-cases/approved/ofn/Plus-and-Minus-Zero-Integer-premise.ofn",
+    "profiles": [],
+    "semantics": [
+      "DIRECT",
+      "RDF-BASED"
+    ],
+    "sources": [
+      "all.rdf",
+      "semantics-direct.rdf",
+      "syntax-dl.rdf"
+    ],
+    "species": [
+      "DL",
+      "FULL"
+    ],
+    "types": [
+      "ConsistencyTest",
+      "ProfileIdentificationTest"
+    ],
+    "uri": "http://owl.semanticweb.org/id/Plus-2Dand-2Dminus-2D0-2Dintegers"
+  },
+  {
+    "conclusion_ofn": null,
+    "id": "Plus-and-Minus-Zero-are-Distinct",
+    "identifier": "Plus and Minus Zero are Distinct",
+    "premise_ofn": "Tests/owl2-test-cases/approved/ofn/Plus-and-Minus-Zero-are-Distinct-premise.ofn",
+    "profiles": [
+      "EL",
+      "RL"
+    ],
+    "semantics": [
+      "DIRECT",
+      "RDF-BASED"
+    ],
+    "sources": [
+      "all.rdf",
+      "profile-EL.rdf",
+      "profile-RL.rdf",
+      "semantics-direct.rdf",
+      "syntax-dl.rdf",
+      "type-consistency.rdf",
+      "type-inconsistency.rdf"
+    ],
+    "species": [
+      "DL",
+      "FULL"
+    ],
+    "types": [
+      "InconsistencyTest",
+      "ProfileIdentificationTest"
+    ],
+    "uri": "http://owl.semanticweb.org/id/Plus-2Dminus-2D0-2Dplus-2Ddisjointness"
+  },
+  {
+    "conclusion_ofn": "Tests/owl2-test-cases/approved/ofn/Qualified-cardinality-boolean-conclusion.ofn",
+    "id": "Qualified-cardinality-boolean",
+    "identifier": "Qualified-cardinality-boolean",
+    "premise_ofn": "Tests/owl2-test-cases/approved/ofn/Qualified-cardinality-boolean-premise.ofn",
+    "profiles": [],
+    "semantics": [
+      "DIRECT",
+      "RDF-BASED"
+    ],
+    "sources": [
+      "all.rdf",
+      "semantics-direct.rdf",
+      "syntax-dl.rdf",
+      "type-positive-entailment.rdf"
+    ],
+    "species": [
+      "DL",
+      "FULL"
+    ],
+    "types": [
+      "ConsistencyTest",
+      "PositiveEntailmentTest",
+      "ProfileIdentificationTest"
+    ],
+    "uri": "http://owl.semanticweb.org/id/Qualified-2Dcardinality-2Dboolean"
+  },
+  {
+    "conclusion_ofn": null,
+    "id": "consistent-dataproperty-disjointness",
+    "identifier": "consistent-dataproperty-disjointness",
+    "premise_ofn": "Tests/owl2-test-cases/approved/ofn/consistent-dataproperty-disjointness-premise.ofn",
+    "profiles": [],
+    "semantics": [
+      "DIRECT",
+      "RDF-BASED"
+    ],
+    "sources": [
+      "all.rdf",
+      "semantics-direct.rdf",
+      "syntax-dl.rdf"
+    ],
+    "species": [
+      "DL",
+      "FULL"
+    ],
+    "types": [
+      "ConsistencyTest",
+      "ProfileIdentificationTest"
+    ],
+    "uri": "http://owl.semanticweb.org/id/Consistent-2Ddataproperty-2Ddisjointness"
+  },
+  {
+    "conclusion_ofn": null,
+    "id": "consistent-integer-filler",
+    "identifier": "consistent-integer-filler",
+    "premise_ofn": "Tests/owl2-test-cases/approved/ofn/consistent-integer-filler-premise.ofn",
+    "profiles": [],
+    "semantics": [
+      "DIRECT",
+      "RDF-BASED"
+    ],
+    "sources": [
+      "all.rdf",
+      "semantics-direct.rdf",
+      "syntax-dl.rdf"
+    ],
+    "species": [
+      "DL",
+      "FULL"
+    ],
+    "types": [
+      "ConsistencyTest",
+      "ProfileIdentificationTest"
+    ],
+    "uri": "http://owl.semanticweb.org/id/Consistent-2Dinteger-2Dfiller"
+  },
+  {
+    "conclusion_ofn": null,
+    "id": "datatype-restriction-min-max-inconsistency",
+    "identifier": "datatype-restriction-min-max-inconsistency",
+    "premise_ofn": "Tests/owl2-test-cases/approved/ofn/datatype-restriction-min-max-inconsistency-premise.ofn",
+    "profiles": [],
+    "semantics": [
+      "DIRECT",
+      "RDF-BASED"
+    ],
+    "sources": [
+      "all.rdf",
+      "semantics-direct.rdf",
+      "syntax-dl.rdf",
+      "type-consistency.rdf",
+      "type-inconsistency.rdf"
+    ],
+    "species": [
+      "DL",
+      "FULL"
+    ],
+    "types": [
+      "InconsistencyTest",
+      "ProfileIdentificationTest"
+    ],
+    "uri": "http://owl.semanticweb.org/id/Datatype-2Drestriction-2Dmin-2Dmax-2Dinconsistency"
+  },
+  {
+    "conclusion_ofn": null,
+    "id": "functionality-clash",
+    "identifier": "functionality-clash",
+    "premise_ofn": "Tests/owl2-test-cases/approved/ofn/functionality-clash-premise.ofn",
+    "profiles": [
+      "RL"
+    ],
+    "semantics": [
+      "DIRECT",
+      "RDF-BASED"
+    ],
+    "sources": [
+      "all.rdf",
+      "profile-RL.rdf",
+      "semantics-direct.rdf",
+      "syntax-dl.rdf",
+      "type-consistency.rdf",
+      "type-inconsistency.rdf"
+    ],
+    "species": [
+      "DL",
+      "FULL"
+    ],
+    "types": [
+      "InconsistencyTest",
+      "ProfileIdentificationTest"
+    ],
+    "uri": "http://owl.semanticweb.org/id/Functionality-2Dclash"
+  },
+  {
+    "conclusion_ofn": null,
+    "id": "inconsistent-integer-filler",
+    "identifier": "inconsistent-integer-filler",
+    "premise_ofn": "Tests/owl2-test-cases/approved/ofn/inconsistent-integer-filler-premise.ofn",
+    "profiles": [],
+    "semantics": [
+      "DIRECT",
+      "RDF-BASED"
+    ],
+    "sources": [
+      "all.rdf",
+      "semantics-direct.rdf",
+      "syntax-dl.rdf",
+      "type-consistency.rdf",
+      "type-inconsistency.rdf"
+    ],
+    "species": [
+      "DL",
+      "FULL"
+    ],
+    "types": [
+      "InconsistencyTest",
+      "ProfileIdentificationTest"
+    ],
+    "uri": "http://owl.semanticweb.org/id/Inconsistent-2Dinteger-2Dfiller"
+  },
+  {
+    "conclusion_ofn": null,
+    "id": "inconsistent_datatypes",
+    "identifier": "inconsistent_datatypes",
+    "premise_ofn": "Tests/owl2-test-cases/approved/ofn/inconsistent_datatypes-premise.ofn",
+    "profiles": [],
+    "semantics": [
+      "DIRECT",
+      "RDF-BASED"
+    ],
+    "sources": [
+      "all.rdf",
+      "semantics-direct.rdf",
+      "syntax-dl.rdf",
+      "type-consistency.rdf",
+      "type-inconsistency.rdf"
+    ],
+    "species": [
+      "DL",
+      "FULL"
+    ],
+    "types": [
+      "InconsistencyTest",
+      "ProfileIdentificationTest"
+    ],
+    "uri": "http://owl.semanticweb.org/id/Inconsistent_datatypes"
+  },
+  {
+    "conclusion_ofn": null,
+    "id": "string-integer-clash",
+    "identifier": "string-integer-clash",
+    "premise_ofn": "Tests/owl2-test-cases/approved/ofn/string-integer-clash-premise.ofn",
+    "profiles": [
+      "EL",
+      "RL"
+    ],
+    "semantics": [
+      "DIRECT",
+      "RDF-BASED"
+    ],
+    "sources": [
+      "all.rdf",
+      "profile-EL.rdf",
+      "profile-RL.rdf",
+      "semantics-direct.rdf",
+      "syntax-dl.rdf",
+      "type-consistency.rdf",
+      "type-inconsistency.rdf"
+    ],
+    "species": [
+      "DL",
+      "FULL"
+    ],
+    "types": [
+      "InconsistencyTest",
+      "ProfileIdentificationTest"
+    ],
+    "uri": "http://owl.semanticweb.org/id/String-2Dinteger-2Dclash"
+  }
+]

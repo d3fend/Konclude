@@ -1,0 +1,548 @@
+[
+  {
+    "expect": true,
+    "id": "Consistent-Datatype-restrictions-with-Different-Types-consistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/Consistent-Datatype-restrictions-with-Different-Types-premise.ofn",
+    "source": "Consistent-Datatype-restrictions-with-Different-Types",
+    "type": "ConsistencyTest"
+  },
+  {
+    "expect": true,
+    "id": "Consistent-owl-real-range-with-DataOneOf-consistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/Consistent-owl-real-range-with-DataOneOf-premise.ofn",
+    "source": "Consistent-owl-real-range-with-DataOneOf",
+    "type": "ConsistencyTest"
+  },
+  {
+    "expect": true,
+    "id": "Consistent-dateTime-consistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/Consistent-dateTime-premise.ofn",
+    "source": "Consistent-dateTime",
+    "type": "ConsistencyTest"
+  },
+  {
+    "expect": false,
+    "id": "Contradicting-datatype-Restrictions-inconsistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/Contradicting-datatype-Restrictions-premise.ofn",
+    "source": "Contradicting-datatype-Restrictions",
+    "type": "InconsistencyTest"
+  },
+  {
+    "expect": false,
+    "id": "Contradicting-dateTime-restrictions-inconsistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/Contradicting-dateTime-restrictions-premise.ofn",
+    "source": "Contradicting-dateTime-restrictions",
+    "type": "InconsistencyTest"
+  },
+  {
+    "expect": true,
+    "id": "Datatype-DataComplementOf-001-consistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/Datatype-DataComplementOf-001-premise.ofn",
+    "source": "Datatype-DataComplementOf-001",
+    "type": "ConsistencyTest"
+  },
+  {
+    "expect": false,
+    "id": "Datatype-Float-Discrete-001-inconsistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/Datatype-Float-Discrete-001-premise.ofn",
+    "source": "Datatype-Float-Discrete-001",
+    "type": "InconsistencyTest"
+  },
+  {
+    "expect": false,
+    "id": "Different-types-in-Datatype-Restrictions-and-Complement-inconsistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/Different-types-in-Datatype-Restrictions-and-Complement-premise.ofn",
+    "source": "Different-types-in-Datatype-Restrictions-and-Complement",
+    "type": "InconsistencyTest"
+  },
+  {
+    "expect": true,
+    "id": "DisjointClasses-001-consistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/DisjointClasses-001-premise.ofn",
+    "source": "DisjointClasses-001",
+    "type": "ConsistencyTest"
+  },
+  {
+    "expect": false,
+    "id": "DisjointClasses-001-entailment-1",
+    "input": "Tests/owl2-test-cases/approved/ofn/generated/DisjointClasses-001-entailment-1.ofn",
+    "source": "DisjointClasses-001",
+    "type": "PositiveEntailmentTest"
+  },
+  {
+    "expect": false,
+    "id": "DisjointClasses-002-inconsistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/DisjointClasses-002-premise.ofn",
+    "source": "DisjointClasses-002",
+    "type": "InconsistencyTest"
+  },
+  {
+    "expect": true,
+    "id": "DisjointClasses-003-consistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/DisjointClasses-003-premise.ofn",
+    "source": "DisjointClasses-003",
+    "type": "ConsistencyTest"
+  },
+  {
+    "expect": false,
+    "id": "DisjointClasses-003-entailment-1",
+    "input": "Tests/owl2-test-cases/approved/ofn/generated/DisjointClasses-003-entailment-1.ofn",
+    "source": "DisjointClasses-003",
+    "type": "PositiveEntailmentTest"
+  },
+  {
+    "expect": false,
+    "id": "DisjointClasses-003-entailment-2",
+    "input": "Tests/owl2-test-cases/approved/ofn/generated/DisjointClasses-003-entailment-2.ofn",
+    "source": "DisjointClasses-003",
+    "type": "PositiveEntailmentTest"
+  },
+  {
+    "expect": true,
+    "id": "FS2RDF-different-individuals-2-ar-consistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/FS2RDF-different-individuals-2-ar-premise.ofn",
+    "source": "FS2RDF-different-individuals-2-ar",
+    "type": "ConsistencyTest"
+  },
+  {
+    "expect": true,
+    "id": "FS2RDF-different-individuals-3-ar-consistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/FS2RDF-different-individuals-3-ar-premise.ofn",
+    "source": "FS2RDF-different-individuals-3-ar",
+    "type": "ConsistencyTest"
+  },
+  {
+    "expect": true,
+    "id": "FS2RDF-no-builtin-prefixes-ar-consistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/FS2RDF-no-builtin-prefixes-ar-premise.ofn",
+    "source": "FS2RDF-no-builtin-prefixes-ar",
+    "type": "ConsistencyTest"
+  },
+  {
+    "expect": true,
+    "id": "FS2RDF-same-individual-2-ar-consistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/FS2RDF-same-individual-2-ar-premise.ofn",
+    "source": "FS2RDF-same-individual-2-ar",
+    "type": "ConsistencyTest"
+  },
+  {
+    "expect": false,
+    "id": "Inconsistent-Byte-Filler-inconsistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/Inconsistent-Byte-Filler-premise.ofn",
+    "source": "Inconsistent-Byte-Filler",
+    "type": "InconsistencyTest"
+  },
+  {
+    "expect": false,
+    "id": "Inconsistent-Data-Complement-with-the-Restrictions-inconsistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/Inconsistent-Data-Complement-with-the-Restrictions-premise.ofn",
+    "source": "Inconsistent-Data-Complement-with-the-Restrictions",
+    "type": "InconsistencyTest"
+  },
+  {
+    "expect": false,
+    "id": "Inconsistent-Disjoint-Dataproperties-inconsistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/Inconsistent-Disjoint-Dataproperties-premise.ofn",
+    "source": "Inconsistent-Disjoint-Dataproperties",
+    "type": "InconsistencyTest"
+  },
+  {
+    "expect": false,
+    "id": "Minus-Infinity-is-not-in-owl-real-inconsistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/Minus-Infinity-is-not-in-owl-real-premise.ofn",
+    "source": "Minus-Infinity-is-not-in-owl-real",
+    "type": "InconsistencyTest"
+  },
+  {
+    "expect": true,
+    "id": "New-Feature-AnnotationAnnotations-001-consistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/New-Feature-AnnotationAnnotations-001-premise.ofn",
+    "source": "New-Feature-AnnotationAnnotations-001",
+    "type": "ConsistencyTest"
+  },
+  {
+    "expect": false,
+    "id": "New-Feature-AsymmetricProperty-001-inconsistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/New-Feature-AsymmetricProperty-001-premise.ofn",
+    "source": "New-Feature-AsymmetricProperty-001",
+    "type": "InconsistencyTest"
+  },
+  {
+    "expect": true,
+    "id": "New-Feature-AxiomAnnotations-001-consistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/New-Feature-AxiomAnnotations-001-premise.ofn",
+    "source": "New-Feature-AxiomAnnotations-001",
+    "type": "ConsistencyTest"
+  },
+  {
+    "expect": false,
+    "id": "New-Feature-BottomDataProperty-001-inconsistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/New-Feature-BottomDataProperty-001-premise.ofn",
+    "source": "New-Feature-BottomDataProperty-001",
+    "type": "InconsistencyTest"
+  },
+  {
+    "expect": false,
+    "id": "New-Feature-BottomObjectProperty-001-inconsistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/New-Feature-BottomObjectProperty-001-premise.ofn",
+    "source": "New-Feature-BottomObjectProperty-001",
+    "type": "InconsistencyTest"
+  },
+  {
+    "expect": true,
+    "id": "New-Feature-DataQCR-001-consistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/New-Feature-DataQCR-001-premise.ofn",
+    "source": "New-Feature-DataQCR-001",
+    "type": "ConsistencyTest"
+  },
+  {
+    "expect": false,
+    "id": "New-Feature-DataQCR-001-entailment-1",
+    "input": "Tests/owl2-test-cases/approved/ofn/generated/New-Feature-DataQCR-001-entailment-1.ofn",
+    "source": "New-Feature-DataQCR-001",
+    "type": "PositiveEntailmentTest"
+  },
+  {
+    "expect": false,
+    "id": "New-Feature-DisjointDataProperties-001-inconsistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/New-Feature-DisjointDataProperties-001-premise.ofn",
+    "source": "New-Feature-DisjointDataProperties-001",
+    "type": "InconsistencyTest"
+  },
+  {
+    "expect": true,
+    "id": "New-Feature-DisjointDataProperties-002-consistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/New-Feature-DisjointDataProperties-002-premise.ofn",
+    "source": "New-Feature-DisjointDataProperties-002",
+    "type": "ConsistencyTest"
+  },
+  {
+    "expect": false,
+    "id": "New-Feature-DisjointDataProperties-002-entailment-1",
+    "input": "Tests/owl2-test-cases/approved/ofn/generated/New-Feature-DisjointDataProperties-002-entailment-1.ofn",
+    "source": "New-Feature-DisjointDataProperties-002",
+    "type": "PositiveEntailmentTest"
+  },
+  {
+    "expect": true,
+    "id": "New-Feature-DisjointObjectProperties-001-consistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/New-Feature-DisjointObjectProperties-001-premise.ofn",
+    "source": "New-Feature-DisjointObjectProperties-001",
+    "type": "ConsistencyTest"
+  },
+  {
+    "expect": false,
+    "id": "New-Feature-DisjointObjectProperties-001-entailment-1",
+    "input": "Tests/owl2-test-cases/approved/ofn/generated/New-Feature-DisjointObjectProperties-001-entailment-1.ofn",
+    "source": "New-Feature-DisjointObjectProperties-001",
+    "type": "PositiveEntailmentTest"
+  },
+  {
+    "expect": true,
+    "id": "New-Feature-DisjointObjectProperties-002-consistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/New-Feature-DisjointObjectProperties-002-premise.ofn",
+    "source": "New-Feature-DisjointObjectProperties-002",
+    "type": "ConsistencyTest"
+  },
+  {
+    "expect": false,
+    "id": "New-Feature-DisjointObjectProperties-002-entailment-1",
+    "input": "Tests/owl2-test-cases/approved/ofn/generated/New-Feature-DisjointObjectProperties-002-entailment-1.ofn",
+    "source": "New-Feature-DisjointObjectProperties-002",
+    "type": "PositiveEntailmentTest"
+  },
+  {
+    "expect": true,
+    "id": "New-Feature-DisjointUnion-001-consistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/New-Feature-DisjointUnion-001-premise.ofn",
+    "source": "New-Feature-DisjointUnion-001",
+    "type": "ConsistencyTest"
+  },
+  {
+    "expect": false,
+    "id": "New-Feature-DisjointUnion-001-entailment-1",
+    "input": "Tests/owl2-test-cases/approved/ofn/generated/New-Feature-DisjointUnion-001-entailment-1.ofn",
+    "source": "New-Feature-DisjointUnion-001",
+    "type": "PositiveEntailmentTest"
+  },
+  {
+    "expect": false,
+    "id": "New-Feature-IrreflexiveProperty-001-inconsistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/New-Feature-IrreflexiveProperty-001-premise.ofn",
+    "source": "New-Feature-IrreflexiveProperty-001",
+    "type": "InconsistencyTest"
+  },
+  {
+    "expect": true,
+    "id": "New-Feature-Keys-001-consistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/New-Feature-Keys-001-premise.ofn",
+    "source": "New-Feature-Keys-001",
+    "type": "ConsistencyTest"
+  },
+  {
+    "expect": false,
+    "id": "New-Feature-Keys-001-entailment-1",
+    "input": "Tests/owl2-test-cases/approved/ofn/generated/New-Feature-Keys-001-entailment-1.ofn",
+    "source": "New-Feature-Keys-001",
+    "type": "PositiveEntailmentTest"
+  },
+  {
+    "expect": false,
+    "id": "New-Feature-Keys-002-inconsistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/New-Feature-Keys-002-premise.ofn",
+    "source": "New-Feature-Keys-002",
+    "type": "InconsistencyTest"
+  },
+  {
+    "expect": true,
+    "id": "New-Feature-Keys-003-consistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/New-Feature-Keys-003-premise.ofn",
+    "source": "New-Feature-Keys-003",
+    "type": "ConsistencyTest"
+  },
+  {
+    "expect": false,
+    "id": "New-Feature-Keys-003-entailment-1",
+    "input": "Tests/owl2-test-cases/approved/ofn/generated/New-Feature-Keys-003-entailment-1.ofn",
+    "source": "New-Feature-Keys-003",
+    "type": "PositiveEntailmentTest"
+  },
+  {
+    "expect": true,
+    "id": "New-Feature-Keys-004-consistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/New-Feature-Keys-004-premise.ofn",
+    "source": "New-Feature-Keys-004",
+    "type": "ConsistencyTest"
+  },
+  {
+    "expect": true,
+    "id": "New-Feature-Keys-005-consistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/New-Feature-Keys-005-premise.ofn",
+    "source": "New-Feature-Keys-005",
+    "type": "ConsistencyTest"
+  },
+  {
+    "expect": false,
+    "id": "New-Feature-Keys-006-inconsistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/New-Feature-Keys-006-premise.ofn",
+    "source": "New-Feature-Keys-006",
+    "type": "InconsistencyTest"
+  },
+  {
+    "expect": true,
+    "id": "New-Feature-Keys-007-consistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/New-Feature-Keys-007-premise.ofn",
+    "source": "New-Feature-Keys-007",
+    "type": "ConsistencyTest"
+  },
+  {
+    "expect": false,
+    "id": "New-Feature-NegativeDataPropertyAssertion-001-inconsistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/New-Feature-NegativeDataPropertyAssertion-001-premise.ofn",
+    "source": "New-Feature-NegativeDataPropertyAssertion-001",
+    "type": "InconsistencyTest"
+  },
+  {
+    "expect": false,
+    "id": "New-Feature-NegativeObjectPropertyAssertion-001-inconsistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/New-Feature-NegativeObjectPropertyAssertion-001-premise.ofn",
+    "source": "New-Feature-NegativeObjectPropertyAssertion-001",
+    "type": "InconsistencyTest"
+  },
+  {
+    "expect": true,
+    "id": "New-Feature-ObjectPropertyChain-001-consistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/New-Feature-ObjectPropertyChain-001-premise.ofn",
+    "source": "New-Feature-ObjectPropertyChain-001",
+    "type": "ConsistencyTest"
+  },
+  {
+    "expect": false,
+    "id": "New-Feature-ObjectPropertyChain-001-entailment-1",
+    "input": "Tests/owl2-test-cases/approved/ofn/generated/New-Feature-ObjectPropertyChain-001-entailment-1.ofn",
+    "source": "New-Feature-ObjectPropertyChain-001",
+    "type": "PositiveEntailmentTest"
+  },
+  {
+    "expect": true,
+    "id": "New-Feature-ObjectQCR-001-consistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/New-Feature-ObjectQCR-001-premise.ofn",
+    "source": "New-Feature-ObjectQCR-001",
+    "type": "ConsistencyTest"
+  },
+  {
+    "expect": false,
+    "id": "New-Feature-ObjectQCR-001-entailment-1",
+    "input": "Tests/owl2-test-cases/approved/ofn/generated/New-Feature-ObjectQCR-001-entailment-1.ofn",
+    "source": "New-Feature-ObjectQCR-001",
+    "type": "PositiveEntailmentTest"
+  },
+  {
+    "expect": true,
+    "id": "New-Feature-ObjectQCR-002-consistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/New-Feature-ObjectQCR-002-premise.ofn",
+    "source": "New-Feature-ObjectQCR-002",
+    "type": "ConsistencyTest"
+  },
+  {
+    "expect": false,
+    "id": "New-Feature-ObjectQCR-002-entailment-1",
+    "input": "Tests/owl2-test-cases/approved/ofn/generated/New-Feature-ObjectQCR-002-entailment-1.ofn",
+    "source": "New-Feature-ObjectQCR-002",
+    "type": "PositiveEntailmentTest"
+  },
+  {
+    "expect": true,
+    "id": "New-Feature-Rational-001-consistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/New-Feature-Rational-001-premise.ofn",
+    "source": "New-Feature-Rational-001",
+    "type": "ConsistencyTest"
+  },
+  {
+    "expect": false,
+    "id": "New-Feature-Rational-002-inconsistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/New-Feature-Rational-002-premise.ofn",
+    "source": "New-Feature-Rational-002",
+    "type": "InconsistencyTest"
+  },
+  {
+    "expect": true,
+    "id": "New-Feature-Rational-003-consistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/New-Feature-Rational-003-premise.ofn",
+    "source": "New-Feature-Rational-003",
+    "type": "ConsistencyTest"
+  },
+  {
+    "expect": true,
+    "id": "New-Feature-ReflexiveProperty-001-consistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/New-Feature-ReflexiveProperty-001-premise.ofn",
+    "source": "New-Feature-ReflexiveProperty-001",
+    "type": "ConsistencyTest"
+  },
+  {
+    "expect": false,
+    "id": "New-Feature-ReflexiveProperty-001-entailment-1",
+    "input": "Tests/owl2-test-cases/approved/ofn/generated/New-Feature-ReflexiveProperty-001-entailment-1.ofn",
+    "source": "New-Feature-ReflexiveProperty-001",
+    "type": "PositiveEntailmentTest"
+  },
+  {
+    "expect": true,
+    "id": "New-Feature-SelfRestriction-001-consistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/New-Feature-SelfRestriction-001-premise.ofn",
+    "source": "New-Feature-SelfRestriction-001",
+    "type": "ConsistencyTest"
+  },
+  {
+    "expect": false,
+    "id": "New-Feature-SelfRestriction-001-entailment-1",
+    "input": "Tests/owl2-test-cases/approved/ofn/generated/New-Feature-SelfRestriction-001-entailment-1.ofn",
+    "source": "New-Feature-SelfRestriction-001",
+    "type": "PositiveEntailmentTest"
+  },
+  {
+    "expect": true,
+    "id": "New-Feature-SelfRestriction-002-consistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/New-Feature-SelfRestriction-002-premise.ofn",
+    "source": "New-Feature-SelfRestriction-002",
+    "type": "ConsistencyTest"
+  },
+  {
+    "expect": false,
+    "id": "New-Feature-SelfRestriction-002-entailment-1",
+    "input": "Tests/owl2-test-cases/approved/ofn/generated/New-Feature-SelfRestriction-002-entailment-1.ofn",
+    "source": "New-Feature-SelfRestriction-002",
+    "type": "PositiveEntailmentTest"
+  },
+  {
+    "expect": false,
+    "id": "New-Feature-TopObjectProperty-001-inconsistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/New-Feature-TopObjectProperty-001-premise.ofn",
+    "source": "New-Feature-TopObjectProperty-001",
+    "type": "InconsistencyTest"
+  },
+  {
+    "expect": true,
+    "id": "Plus-and-Minus-Zero-Integer-consistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/Plus-and-Minus-Zero-Integer-premise.ofn",
+    "source": "Plus-and-Minus-Zero-Integer",
+    "type": "ConsistencyTest"
+  },
+  {
+    "expect": false,
+    "id": "Plus-and-Minus-Zero-are-Distinct-inconsistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/Plus-and-Minus-Zero-are-Distinct-premise.ofn",
+    "source": "Plus-and-Minus-Zero-are-Distinct",
+    "type": "InconsistencyTest"
+  },
+  {
+    "expect": true,
+    "id": "Qualified-cardinality-boolean-consistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/Qualified-cardinality-boolean-premise.ofn",
+    "source": "Qualified-cardinality-boolean",
+    "type": "ConsistencyTest"
+  },
+  {
+    "expect": false,
+    "id": "Qualified-cardinality-boolean-entailment-1",
+    "input": "Tests/owl2-test-cases/approved/ofn/generated/Qualified-cardinality-boolean-entailment-1.ofn",
+    "source": "Qualified-cardinality-boolean",
+    "type": "PositiveEntailmentTest"
+  },
+  {
+    "expect": false,
+    "id": "Qualified-cardinality-boolean-entailment-2",
+    "input": "Tests/owl2-test-cases/approved/ofn/generated/Qualified-cardinality-boolean-entailment-2.ofn",
+    "source": "Qualified-cardinality-boolean",
+    "type": "PositiveEntailmentTest"
+  },
+  {
+    "expect": true,
+    "id": "consistent-dataproperty-disjointness-consistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/consistent-dataproperty-disjointness-premise.ofn",
+    "source": "consistent-dataproperty-disjointness",
+    "type": "ConsistencyTest"
+  },
+  {
+    "expect": true,
+    "id": "consistent-integer-filler-consistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/consistent-integer-filler-premise.ofn",
+    "source": "consistent-integer-filler",
+    "type": "ConsistencyTest"
+  },
+  {
+    "expect": false,
+    "id": "datatype-restriction-min-max-inconsistency-inconsistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/datatype-restriction-min-max-inconsistency-premise.ofn",
+    "source": "datatype-restriction-min-max-inconsistency",
+    "type": "InconsistencyTest"
+  },
+  {
+    "expect": false,
+    "id": "functionality-clash-inconsistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/functionality-clash-premise.ofn",
+    "source": "functionality-clash",
+    "type": "InconsistencyTest"
+  },
+  {
+    "expect": false,
+    "id": "inconsistent-integer-filler-inconsistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/inconsistent-integer-filler-premise.ofn",
+    "source": "inconsistent-integer-filler",
+    "type": "InconsistencyTest"
+  },
+  {
+    "expect": false,
+    "id": "inconsistent_datatypes-inconsistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/inconsistent_datatypes-premise.ofn",
+    "source": "inconsistent_datatypes",
+    "type": "InconsistencyTest"
+  },
+  {
+    "expect": false,
+    "id": "string-integer-clash-inconsistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/string-integer-clash-premise.ofn",
+    "source": "string-integer-clash",
+    "type": "InconsistencyTest"
+  }
+]

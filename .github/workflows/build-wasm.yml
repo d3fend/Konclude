@@ -40,6 +40,10 @@ jobs:
           BROWSERS: chromium
         run: node e2e.js
 
+      - name: Run OWL2 conformance tests (WASM)
+        working-directory: wasm/tests
+        run: node owl2_conformance_e2e.js
+
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:

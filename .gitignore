@@ -53,6 +53,7 @@ compile_commands.json
 *.log
 *.tmp
 *.cache
+/Tests/owl2-test-cases/approved/ofn/tmp/
 
 # WASM build outputs
 /wasm/build/

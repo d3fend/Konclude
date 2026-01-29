@@ -70,12 +70,6 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
         
-      - name: Setup Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
-          token: ${{ secrets.GITHUB_TOKEN }}
-        
       - name: Install Qt
         uses: jurplel/install-qt-action@v2
         with:
@@ -120,6 +114,11 @@ jobs:
           Release/Konclude sparqlfile -s Tests/lubm-univ-bench-sparql-load-and-query-test.sparql -o Tests/query-answers.xml -c Configs/querying-config.xml
           Release/Konclude sparqlfile -s Tests/roberts-family-full-sparql-existential-variables-query-test.sparql -i Tests/roberts-family-full-D.owl.xml
 
+      - name: Run OWL2 conformance Ubuntu
+        if: startsWith(matrix.config.os, 'ubuntu')
+        run: |
+          Tests/owl2-test-cases/scripts/run_ofn_tests.sh Release/Konclude
+
 
       - name: Run Examples Windows
         if: startsWith(matrix.config.os, 'windows')  
@@ -132,6 +131,11 @@ jobs:
           Release\Konclude.exe sparqlfile -s Tests/lubm-univ-bench-sparql-load-and-query-test.sparql -o Tests/query-answers.xml -c Configs/querying-config.xml
           Release\Konclude.exe sparqlfile -s Tests/roberts-family-full-sparql-existential-variables-query-test.sparql -i Tests/roberts-family-full-D.owl.xml
 
+      - name: Run OWL2 conformance Windows
+        if: startsWith(matrix.config.os, 'windows')
+        run: |
+          powershell -File Tests\\owl2-test-cases\\scripts\\run_ofn_tests.ps1 -Konclude Release\\Konclude.exe
+
 
       - name: Run Examples MacOS
         if: startsWith(matrix.config.os, 'macos')
@@ -143,3 +147,8 @@ jobs:
           Release/Konclude.app/Contents/MacOS/Konclude owllinkfile -c Configs/default-config.xml -i Tests/1b-satisfiability-request.xml
           Release/Konclude.app/Contents/MacOS/Konclude sparqlfile -s Tests/lubm-univ-bench-sparql-load-and-query-test.sparql -o Tests/query-answers.xml -c Configs/querying-config.xml
           Release/Konclude.app/Contents/MacOS/Konclude sparqlfile -s Tests/roberts-family-full-sparql-existential-variables-query-test.sparql -i Tests/roberts-family-full-D.owl.xml
+
+      - name: Run OWL2 conformance MacOS
+        if: startsWith(matrix.config.os, 'macos')
+        run: |
+          Tests/owl2-test-cases/scripts/run_ofn_tests.sh Release/Konclude.app/Contents/MacOS/Konclude
