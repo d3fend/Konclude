@@ -1,19 +1,19 @@
 # OWL 2 DL Conformance Coverage
 
 Source: W3C OWL 2 Test Case Repository (approved).
-Note: This suite includes only tests that provide OWL 2 Functional Syntax (OFN),
-which Konclude parses natively without Redland.
+Note: This suite includes tests with OWL 2 Functional Syntax (OFN),
+including payloads converted from RDF/XML to OFN for Redland-free runs.
 
-- Extracted DL/DIRECT tests with OFN payloads: 60
-- Generated runnable cases: 78
+- Extracted DL/DIRECT tests with OFN payloads: 267
+- Generated runnable cases: 416
 
 ## Case Breakdown
-- ConsistencyTest: 34
-- InconsistencyTest: 26
-- PositiveEntailmentTest: 18
+- ConsistencyTest: 169
+- InconsistencyTest: 98
+- PositiveEntailmentTest: 149
 
 ## Skipped Tests
-- none
+- unsupported_conclusion: 32
 
 ## Expected Failures
-- listed in Tests/owl2-test-cases/expected-failures.txt (17 cases)
+- listed in Tests/owl2-test-cases/expected-failures.txt (37 cases)

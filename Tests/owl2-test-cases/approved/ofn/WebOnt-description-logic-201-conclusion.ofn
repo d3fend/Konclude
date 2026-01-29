@@ -1,0 +1,36 @@
+Prefix(owl:=<http://www.w3.org/2002/07/owl#>)
+Prefix(rdf:=<http://www.w3.org/1999/02/22-rdf-syntax-ns#>)
+Prefix(xml:=<http://www.w3.org/XML/1998/namespace>)
+Prefix(xsd:=<http://www.w3.org/2001/XMLSchema#>)
+Prefix(rdfs:=<http://www.w3.org/2000/01/rdf-schema#>)
+
+
+Ontology(
+Declaration(Class(<http://oiled.man.example.net/test#C110>))
+Declaration(Class(<http://oiled.man.example.net/test#C114>))
+Declaration(Class(<http://oiled.man.example.net/test#C116>))
+Declaration(Class(<http://oiled.man.example.net/test#C136>))
+Declaration(Class(<http://oiled.man.example.net/test#C56>))
+Declaration(Class(<http://oiled.man.example.net/test#C58>))
+Declaration(Class(<http://oiled.man.example.net/test#C80>))
+Declaration(Class(<http://oiled.man.example.net/test#C94>))
+Declaration(NamedIndividual(<http://oiled.man.example.net/test#V822576>))
+
+############################
+#   Named Individuals
+############################
+
+# Individual: <http://oiled.man.example.net/test#V822576> (<http://oiled.man.example.net/test#V822576>)
+
+ClassAssertion(<http://oiled.man.example.net/test#C110> <http://oiled.man.example.net/test#V822576>)
+ClassAssertion(<http://oiled.man.example.net/test#C114> <http://oiled.man.example.net/test#V822576>)
+ClassAssertion(<http://oiled.man.example.net/test#C116> <http://oiled.man.example.net/test#V822576>)
+ClassAssertion(<http://oiled.man.example.net/test#C136> <http://oiled.man.example.net/test#V822576>)
+ClassAssertion(<http://oiled.man.example.net/test#C56> <http://oiled.man.example.net/test#V822576>)
+ClassAssertion(<http://oiled.man.example.net/test#C58> <http://oiled.man.example.net/test#V822576>)
+ClassAssertion(<http://oiled.man.example.net/test#C80> <http://oiled.man.example.net/test#V822576>)
+ClassAssertion(<http://oiled.man.example.net/test#C94> <http://oiled.man.example.net/test#V822576>)
+ClassAssertion(owl:Thing <http://oiled.man.example.net/test#V822576>)
+
+
+)

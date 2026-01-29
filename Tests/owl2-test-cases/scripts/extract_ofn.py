@@ -9,6 +9,8 @@ import html
 import json
 import os
 import re
+import shutil
+import subprocess
 import sys
 import xml.etree.ElementTree as ET
 
@@ -52,10 +54,19 @@ def parse_manifest(path: str):
         fs_premise = fs_premise_el.text if fs_premise_el is not None else None
         fs_concl = fs_concl_el.text if fs_concl_el is not None else None
 
+        rdf_premise_el = tc.find("test:rdfXmlPremiseOntology", NS)
+        rdf_concl_el = tc.find("test:rdfXmlConclusionOntology", NS)
+        rdf_premise = rdf_premise_el.text if rdf_premise_el is not None else None
+        rdf_concl = rdf_concl_el.text if rdf_concl_el is not None else None
+
         if fs_premise is not None:
             fs_premise = html.unescape(fs_premise).strip()
         if fs_concl is not None:
             fs_concl = html.unescape(fs_concl).strip()
+        if rdf_premise is not None:
+            rdf_premise = html.unescape(rdf_premise).strip()
+        if rdf_concl is not None:
+            rdf_concl = html.unescape(rdf_concl).strip()
 
         yield {
             "uri": uri,
@@ -66,8 +77,54 @@ def parse_manifest(path: str):
             "profiles": sorted(set([p for p in profiles if p])),
             "fs_premise": fs_premise,
             "fs_conclusion": fs_concl,
+            "rdfxml_premise": rdf_premise,
+            "rdfxml_conclusion": rdf_concl,
             "source": os.path.basename(path),
         }
+
+
+def convert_rdfxml_to_ofn(rdfxml_text: str, out_path: str, tmp_dir: str, robot_bin: str) -> bool:
+    os.makedirs(tmp_dir, exist_ok=True)
+    tmp_in = os.path.join(tmp_dir, os.path.basename(out_path) + ".rdfxml")
+    with open(tmp_in, "w", encoding="utf-8") as f:
+        f.write(normalize_rdfxml(rdfxml_text))
+        f.write("\n")
+    result = subprocess.run(
+        [robot_bin, "convert", "-i", tmp_in, "-f", "ofn", "-o", out_path],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        text=True,
+    )
+    if result.returncode != 0:
+        sys.stderr.write(result.stdout)
+        return False
+    return True
+
+
+def normalize_rdfxml(text: str) -> str:
+    # Expand internal entity definitions to avoid DOCTYPE parsing issues.
+    entity_map = {}
+    doctype_match = re.search(r"<!DOCTYPE[\s\S]*?\[(.*?)\]>", text, re.S)
+    if doctype_match:
+        subset = doctype_match.group(1)
+        for m in re.finditer(r"<!ENTITY\s+(\w+)\s+(\"[^\"]*\"|'[^']*')\s*>", subset):
+            name = m.group(1)
+            val = m.group(2)[1:-1]
+            entity_map[name] = val
+        text = text[:doctype_match.start()] + text[doctype_match.end():]
+    if entity_map:
+        for name, val in entity_map.items():
+            text = text.replace(f"&{name};", val)
+    # Fix unescaped angle brackets in label literals.
+    def escape_label(match):
+        start = match.group(1)
+        content = match.group(2)
+        end = match.group(3)
+        content = content.replace("<", "&lt;").replace(">", "&gt;")
+        return f"{start}{content}{end}"
+
+    text = re.sub(r"(<rdfs:label\b[^>]*>)([\s\S]*?)(</rdfs:label>)", escape_label, text)
+    return text
 
 
 def main() -> int:
@@ -75,6 +132,8 @@ def main() -> int:
     ap.add_argument("--manifests", required=True, help="Directory with approved RDF manifests")
     ap.add_argument("--out", required=True, help="Output directory for OFN files")
     ap.add_argument("--manifest-json", required=True, help="Path to write JSON index")
+    ap.add_argument("--robot", default=os.environ.get("ROBOT_BIN", "robot"), help="Robot CLI binary")
+    ap.add_argument("--tmp-dir", default=None, help="Temporary directory for RDF/XML conversion")
     args = ap.parse_args()
 
     os.makedirs(args.out, exist_ok=True)
@@ -113,6 +172,10 @@ def main() -> int:
                     entry["fs_premise"] = tc["fs_premise"]
                 if tc["fs_conclusion"] and not entry.get("fs_conclusion"):
                     entry["fs_conclusion"] = tc["fs_conclusion"]
+                if tc.get("rdfxml_premise") and not entry.get("rdfxml_premise"):
+                    entry["rdfxml_premise"] = tc["rdfxml_premise"]
+                if tc.get("rdfxml_conclusion") and not entry.get("rdfxml_conclusion"):
+                    entry["rdfxml_conclusion"] = tc["rdfxml_conclusion"]
                 if tc["source"] not in entry["sources"]:
                     entry["sources"].append(tc["source"])
 
@@ -135,16 +198,33 @@ def main() -> int:
         premise_path = None
         conclusion_path = None
 
+        tmp_dir = args.tmp_dir or os.path.join(args.out, "tmp")
+        robot_bin = args.robot
         if tc.get("fs_premise"):
             premise_path = os.path.join(args.out, f"{base}-premise.ofn")
             with open(premise_path, "w", encoding="utf-8") as f:
                 f.write(tc["fs_premise"])
                 f.write("\n")
+        elif tc.get("rdfxml_premise"):
+            premise_path = os.path.join(args.out, f"{base}-premise.ofn")
+            if not shutil.which(robot_bin):
+                print(f"robot not found: {robot_bin}", file=sys.stderr)
+                return 2
+            if not convert_rdfxml_to_ofn(tc["rdfxml_premise"], premise_path, tmp_dir, robot_bin):
+                continue
+
         if tc.get("fs_conclusion"):
             conclusion_path = os.path.join(args.out, f"{base}-conclusion.ofn")
             with open(conclusion_path, "w", encoding="utf-8") as f:
                 f.write(tc["fs_conclusion"])
                 f.write("\n")
+        elif tc.get("rdfxml_conclusion"):
+            conclusion_path = os.path.join(args.out, f"{base}-conclusion.ofn")
+            if not shutil.which(robot_bin):
+                print(f"robot not found: {robot_bin}", file=sys.stderr)
+                return 2
+            if not convert_rdfxml_to_ofn(tc["rdfxml_conclusion"], conclusion_path, tmp_dir, robot_bin):
+                continue
 
         if not premise_path and not conclusion_path:
             # No functional syntax content to extract.

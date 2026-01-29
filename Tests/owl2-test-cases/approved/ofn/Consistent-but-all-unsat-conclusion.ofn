@@ -1,0 +1,41 @@
+Prefix(:=<http://example.com/>)
+Prefix(owl:=<http://www.w3.org/2002/07/owl#>)
+Prefix(rdf:=<http://www.w3.org/1999/02/22-rdf-syntax-ns#>)
+Prefix(xml:=<http://www.w3.org/XML/1998/namespace>)
+Prefix(xsd:=<http://www.w3.org/2001/XMLSchema#>)
+Prefix(rdfs:=<http://www.w3.org/2000/01/rdf-schema#>)
+Prefix(example:=<http://example.com/>)
+Prefix(owl2xml:=<http://www.w3.org/2006/12/owl2-xml#>)
+
+
+Ontology(<http://example.com/>
+
+Declaration(Class(example:a))
+Declaration(Class(example:b))
+Declaration(Class(example:c))
+Declaration(Class(<http://example.com/2a>))
+Declaration(Class(owl:Nothing))
+Declaration(Class(owl:Thing))
+############################
+#   Classes
+############################
+
+# Class: example:a (example:a)
+
+SubClassOf(example:a owl:Nothing)
+SubClassOf(example:a owl:Thing)
+
+# Class: example:b (example:b)
+
+SubClassOf(example:b owl:Nothing)
+
+# Class: example:c (example:c)
+
+SubClassOf(example:c owl:Nothing)
+
+# Class: <http://example.com/2a> (<http://example.com/2a>)
+
+SubClassOf(<http://example.com/2a> owl:Nothing)
+
+
+)

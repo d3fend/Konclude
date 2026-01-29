@@ -1,0 +1,131 @@
+Prefix(owl:=<http://www.w3.org/2002/07/owl#>)
+Prefix(rdf:=<http://www.w3.org/1999/02/22-rdf-syntax-ns#>)
+Prefix(xml:=<http://www.w3.org/XML/1998/namespace>)
+Prefix(xsd:=<http://www.w3.org/2001/XMLSchema#>)
+Prefix(rdfs:=<http://www.w3.org/2000/01/rdf-schema#>)
+
+
+Ontology(
+Declaration(Class(<http://oiled.man.example.net/test#C104>))
+Declaration(Class(<http://oiled.man.example.net/test#C106>))
+Declaration(Class(<http://oiled.man.example.net/test#C108>))
+Declaration(Class(<http://oiled.man.example.net/test#C130>))
+Declaration(Class(<http://oiled.man.example.net/test#C28>))
+Declaration(Class(<http://oiled.man.example.net/test#C34>))
+Declaration(Class(<http://oiled.man.example.net/test#C38>))
+Declaration(Class(<http://oiled.man.example.net/test#C42>))
+Declaration(Class(<http://oiled.man.example.net/test#C44>))
+Declaration(Class(<http://oiled.man.example.net/test#C50>))
+Declaration(Class(<http://oiled.man.example.net/test#C56>))
+Declaration(Class(<http://oiled.man.example.net/test#C60>))
+Declaration(Class(<http://oiled.man.example.net/test#C62>))
+Declaration(Class(<http://oiled.man.example.net/test#C68>))
+Declaration(Class(<http://oiled.man.example.net/test#C76>))
+Declaration(Class(<http://oiled.man.example.net/test#C80>))
+Declaration(Class(<http://oiled.man.example.net/test#C82>))
+Declaration(Class(<http://oiled.man.example.net/test#C88>))
+Declaration(Class(<http://oiled.man.example.net/test#C98>))
+Declaration(NamedIndividual(<http://oiled.man.example.net/test#V16439>))
+Declaration(NamedIndividual(<http://oiled.man.example.net/test#V16440>))
+Declaration(NamedIndividual(<http://oiled.man.example.net/test#V16448>))
+Declaration(NamedIndividual(<http://oiled.man.example.net/test#V16453>))
+Declaration(NamedIndividual(<http://oiled.man.example.net/test#V16455>))
+Declaration(NamedIndividual(<http://oiled.man.example.net/test#V16457>))
+Declaration(NamedIndividual(<http://oiled.man.example.net/test#V16459>))
+Declaration(NamedIndividual(<http://oiled.man.example.net/test#V16460>))
+Declaration(NamedIndividual(<http://oiled.man.example.net/test#V16461>))
+Declaration(NamedIndividual(<http://oiled.man.example.net/test#V16462>))
+Declaration(NamedIndividual(<http://oiled.man.example.net/test#V16463>))
+Declaration(NamedIndividual(<http://oiled.man.example.net/test#V16464>))
+Declaration(NamedIndividual(<http://oiled.man.example.net/test#V16465>))
+
+############################
+#   Named Individuals
+############################
+
+# Individual: <http://oiled.man.example.net/test#V16439> (<http://oiled.man.example.net/test#V16439>)
+
+ClassAssertion(<http://oiled.man.example.net/test#C104> <http://oiled.man.example.net/test#V16439>)
+ClassAssertion(<http://oiled.man.example.net/test#C106> <http://oiled.man.example.net/test#V16439>)
+ClassAssertion(<http://oiled.man.example.net/test#C108> <http://oiled.man.example.net/test#V16439>)
+ClassAssertion(<http://oiled.man.example.net/test#C130> <http://oiled.man.example.net/test#V16439>)
+ClassAssertion(<http://oiled.man.example.net/test#C28> <http://oiled.man.example.net/test#V16439>)
+ClassAssertion(owl:Thing <http://oiled.man.example.net/test#V16439>)
+
+# Individual: <http://oiled.man.example.net/test#V16440> (<http://oiled.man.example.net/test#V16440>)
+
+ClassAssertion(<http://oiled.man.example.net/test#C80> <http://oiled.man.example.net/test#V16440>)
+ClassAssertion(<http://oiled.man.example.net/test#C82> <http://oiled.man.example.net/test#V16440>)
+ClassAssertion(<http://oiled.man.example.net/test#C98> <http://oiled.man.example.net/test#V16440>)
+ClassAssertion(owl:Thing <http://oiled.man.example.net/test#V16440>)
+
+# Individual: <http://oiled.man.example.net/test#V16448> (<http://oiled.man.example.net/test#V16448>)
+
+ClassAssertion(<http://oiled.man.example.net/test#C38> <http://oiled.man.example.net/test#V16448>)
+ClassAssertion(owl:Thing <http://oiled.man.example.net/test#V16448>)
+
+# Individual: <http://oiled.man.example.net/test#V16453> (<http://oiled.man.example.net/test#V16453>)
+
+ClassAssertion(<http://oiled.man.example.net/test#C60> <http://oiled.man.example.net/test#V16453>)
+ClassAssertion(<http://oiled.man.example.net/test#C62> <http://oiled.man.example.net/test#V16453>)
+ClassAssertion(<http://oiled.man.example.net/test#C76> <http://oiled.man.example.net/test#V16453>)
+ClassAssertion(owl:Thing <http://oiled.man.example.net/test#V16453>)
+
+# Individual: <http://oiled.man.example.net/test#V16455> (<http://oiled.man.example.net/test#V16455>)
+
+ClassAssertion(<http://oiled.man.example.net/test#C42> <http://oiled.man.example.net/test#V16455>)
+ClassAssertion(<http://oiled.man.example.net/test#C44> <http://oiled.man.example.net/test#V16455>)
+ClassAssertion(<http://oiled.man.example.net/test#C56> <http://oiled.man.example.net/test#V16455>)
+ClassAssertion(owl:Thing <http://oiled.man.example.net/test#V16455>)
+
+# Individual: <http://oiled.man.example.net/test#V16457> (<http://oiled.man.example.net/test#V16457>)
+
+ClassAssertion(<http://oiled.man.example.net/test#C38> <http://oiled.man.example.net/test#V16457>)
+ClassAssertion(owl:Thing <http://oiled.man.example.net/test#V16457>)
+
+# Individual: <http://oiled.man.example.net/test#V16459> (<http://oiled.man.example.net/test#V16459>)
+
+ClassAssertion(<http://oiled.man.example.net/test#C34> <http://oiled.man.example.net/test#V16459>)
+ClassAssertion(<http://oiled.man.example.net/test#C50> <http://oiled.man.example.net/test#V16459>)
+ClassAssertion(<http://oiled.man.example.net/test#C68> <http://oiled.man.example.net/test#V16459>)
+ClassAssertion(<http://oiled.man.example.net/test#C88> <http://oiled.man.example.net/test#V16459>)
+ClassAssertion(owl:Thing <http://oiled.man.example.net/test#V16459>)
+
+# Individual: <http://oiled.man.example.net/test#V16460> (<http://oiled.man.example.net/test#V16460>)
+
+ClassAssertion(<http://oiled.man.example.net/test#C38> <http://oiled.man.example.net/test#V16460>)
+ClassAssertion(owl:Thing <http://oiled.man.example.net/test#V16460>)
+
+# Individual: <http://oiled.man.example.net/test#V16461> (<http://oiled.man.example.net/test#V16461>)
+
+ClassAssertion(<http://oiled.man.example.net/test#C42> <http://oiled.man.example.net/test#V16461>)
+ClassAssertion(<http://oiled.man.example.net/test#C44> <http://oiled.man.example.net/test#V16461>)
+ClassAssertion(<http://oiled.man.example.net/test#C56> <http://oiled.man.example.net/test#V16461>)
+ClassAssertion(owl:Thing <http://oiled.man.example.net/test#V16461>)
+
+# Individual: <http://oiled.man.example.net/test#V16462> (<http://oiled.man.example.net/test#V16462>)
+
+ClassAssertion(<http://oiled.man.example.net/test#C38> <http://oiled.man.example.net/test#V16462>)
+ClassAssertion(owl:Thing <http://oiled.man.example.net/test#V16462>)
+
+# Individual: <http://oiled.man.example.net/test#V16463> (<http://oiled.man.example.net/test#V16463>)
+
+ClassAssertion(<http://oiled.man.example.net/test#C60> <http://oiled.man.example.net/test#V16463>)
+ClassAssertion(<http://oiled.man.example.net/test#C62> <http://oiled.man.example.net/test#V16463>)
+ClassAssertion(<http://oiled.man.example.net/test#C76> <http://oiled.man.example.net/test#V16463>)
+ClassAssertion(owl:Thing <http://oiled.man.example.net/test#V16463>)
+
+# Individual: <http://oiled.man.example.net/test#V16464> (<http://oiled.man.example.net/test#V16464>)
+
+ClassAssertion(<http://oiled.man.example.net/test#C42> <http://oiled.man.example.net/test#V16464>)
+ClassAssertion(<http://oiled.man.example.net/test#C44> <http://oiled.man.example.net/test#V16464>)
+ClassAssertion(<http://oiled.man.example.net/test#C56> <http://oiled.man.example.net/test#V16464>)
+ClassAssertion(owl:Thing <http://oiled.man.example.net/test#V16464>)
+
+# Individual: <http://oiled.man.example.net/test#V16465> (<http://oiled.man.example.net/test#V16465>)
+
+ClassAssertion(<http://oiled.man.example.net/test#C38> <http://oiled.man.example.net/test#V16465>)
+ClassAssertion(owl:Thing <http://oiled.man.example.net/test#V16465>)
+
+
+)

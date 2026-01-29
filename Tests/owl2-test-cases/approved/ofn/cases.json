@@ -15,6 +15,13 @@
   },
   {
     "expect": true,
+    "id": "Consistent-but-all-unsat-consistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/Consistent-but-all-unsat-premise.ofn",
+    "source": "Consistent-but-all-unsat",
+    "type": "ConsistencyTest"
+  },
+  {
+    "expect": true,
     "id": "Consistent-dateTime-consistency",
     "input": "Tests/owl2-test-cases/approved/ofn/Consistent-dateTime-premise.ofn",
     "source": "Consistent-dateTime",
@@ -365,6 +372,20 @@
   },
   {
     "expect": true,
+    "id": "New-Feature-ObjectPropertyChain-BJP-003-consistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/New-Feature-ObjectPropertyChain-BJP-003-premise.ofn",
+    "source": "New-Feature-ObjectPropertyChain-BJP-003",
+    "type": "ConsistencyTest"
+  },
+  {
+    "expect": true,
+    "id": "New-Feature-ObjectPropertyChain-BJP-004-consistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/New-Feature-ObjectPropertyChain-BJP-004-premise.ofn",
+    "source": "New-Feature-ObjectPropertyChain-BJP-004",
+    "type": "ConsistencyTest"
+  },
+  {
+    "expect": true,
     "id": "New-Feature-ObjectQCR-001-consistency",
     "input": "Tests/owl2-test-cases/approved/ofn/New-Feature-ObjectQCR-001-premise.ofn",
     "source": "New-Feature-ObjectQCR-001",
@@ -498,6 +519,2225 @@
   },
   {
     "expect": true,
+    "id": "WebOnt-AnnotationProperty-002-consistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/WebOnt-AnnotationProperty-002-premise.ofn",
+    "source": "WebOnt-AnnotationProperty-002",
+    "type": "ConsistencyTest"
+  },
+  {
+    "expect": false,
+    "id": "WebOnt-AnnotationProperty-002-entailment-1",
+    "input": "Tests/owl2-test-cases/approved/ofn/generated/WebOnt-AnnotationProperty-002-entailment-1.ofn",
+    "source": "WebOnt-AnnotationProperty-002",
+    "type": "PositiveEntailmentTest"
+  },
+  {
+    "expect": true,
+    "id": "WebOnt-AnnotationProperty-003-consistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/WebOnt-AnnotationProperty-003-premise.ofn",
+    "source": "WebOnt-AnnotationProperty-003",
+    "type": "ConsistencyTest"
+  },
+  {
+    "expect": true,
+    "id": "WebOnt-AnnotationProperty-004-consistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/WebOnt-AnnotationProperty-004-premise.ofn",
+    "source": "WebOnt-AnnotationProperty-004",
+    "type": "ConsistencyTest"
+  },
+  {
+    "expect": true,
+    "id": "WebOnt-I4.5-001-consistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/WebOnt-I4.5-001-premise.ofn",
+    "source": "WebOnt-I4.5-001",
+    "type": "ConsistencyTest"
+  },
+  {
+    "expect": false,
+    "id": "WebOnt-I4.5-001-entailment-1",
+    "input": "Tests/owl2-test-cases/approved/ofn/generated/WebOnt-I4.5-001-entailment-1.ofn",
+    "source": "WebOnt-I4.5-001",
+    "type": "PositiveEntailmentTest"
+  },
+  {
+    "expect": false,
+    "id": "WebOnt-I4.5-002-inconsistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/WebOnt-I4.5-002-premise.ofn",
+    "source": "WebOnt-I4.5-002",
+    "type": "InconsistencyTest"
+  },
+  {
+    "expect": true,
+    "id": "WebOnt-I4.6-004-consistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/WebOnt-I4.6-004-premise.ofn",
+    "source": "WebOnt-I4.6-004",
+    "type": "ConsistencyTest"
+  },
+  {
+    "expect": true,
+    "id": "WebOnt-I4.6-005-Direct-consistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/WebOnt-I4.6-005-Direct-premise.ofn",
+    "source": "WebOnt-I4.6-005-Direct",
+    "type": "ConsistencyTest"
+  },
+  {
+    "expect": true,
+    "id": "WebOnt-I5.2-001-consistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/WebOnt-I5.2-001-premise.ofn",
+    "source": "WebOnt-I5.2-001",
+    "type": "ConsistencyTest"
+  },
+  {
+    "expect": true,
+    "id": "WebOnt-I5.2-002-consistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/WebOnt-I5.2-002-premise.ofn",
+    "source": "WebOnt-I5.2-002",
+    "type": "ConsistencyTest"
+  },
+  {
+    "expect": true,
+    "id": "WebOnt-I5.2-003-consistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/WebOnt-I5.2-003-premise.ofn",
+    "source": "WebOnt-I5.2-003",
+    "type": "ConsistencyTest"
+  },
+  {
+    "expect": true,
+    "id": "WebOnt-I5.2-004-consistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/WebOnt-I5.2-004-premise.ofn",
+    "source": "WebOnt-I5.2-004",
+    "type": "ConsistencyTest"
+  },
+  {
+    "expect": true,
+    "id": "WebOnt-I5.2-005-consistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/WebOnt-I5.2-005-premise.ofn",
+    "source": "WebOnt-I5.2-005",
+    "type": "ConsistencyTest"
+  },
+  {
+    "expect": true,
+    "id": "WebOnt-I5.2-006-consistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/WebOnt-I5.2-006-premise.ofn",
+    "source": "WebOnt-I5.2-006",
+    "type": "ConsistencyTest"
+  },
+  {
+    "expect": true,
+    "id": "WebOnt-I5.21-002-consistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/WebOnt-I5.21-002-premise.ofn",
+    "source": "WebOnt-I5.21-002",
+    "type": "ConsistencyTest"
+  },
+  {
+    "expect": true,
+    "id": "WebOnt-I5.24-003-consistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/WebOnt-I5.24-003-premise.ofn",
+    "source": "WebOnt-I5.24-003",
+    "type": "ConsistencyTest"
+  },
+  {
+    "expect": true,
+    "id": "WebOnt-I5.24-004-consistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/WebOnt-I5.24-004-premise.ofn",
+    "source": "WebOnt-I5.24-004",
+    "type": "ConsistencyTest"
+  },
+  {
+    "expect": true,
+    "id": "WebOnt-I5.26-001-consistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/WebOnt-I5.26-001-premise.ofn",
+    "source": "WebOnt-I5.26-001",
+    "type": "ConsistencyTest"
+  },
+  {
+    "expect": true,
+    "id": "WebOnt-I5.26-002-consistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/WebOnt-I5.26-002-premise.ofn",
+    "source": "WebOnt-I5.26-002",
+    "type": "ConsistencyTest"
+  },
+  {
+    "expect": true,
+    "id": "WebOnt-I5.26-003-consistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/WebOnt-I5.26-003-premise.ofn",
+    "source": "WebOnt-I5.26-003",
+    "type": "ConsistencyTest"
+  },
+  {
+    "expect": true,
+    "id": "WebOnt-I5.26-004-consistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/WebOnt-I5.26-004-premise.ofn",
+    "source": "WebOnt-I5.26-004",
+    "type": "ConsistencyTest"
+  },
+  {
+    "expect": true,
+    "id": "WebOnt-I5.26-005-consistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/WebOnt-I5.26-005-premise.ofn",
+    "source": "WebOnt-I5.26-005",
+    "type": "ConsistencyTest"
+  },
+  {
+    "expect": true,
+    "id": "WebOnt-I5.26-009-consistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/WebOnt-I5.26-009-premise.ofn",
+    "source": "WebOnt-I5.26-009",
+    "type": "ConsistencyTest"
+  },
+  {
+    "expect": true,
+    "id": "WebOnt-I5.26-010-consistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/WebOnt-I5.26-010-premise.ofn",
+    "source": "WebOnt-I5.26-010",
+    "type": "ConsistencyTest"
+  },
+  {
+    "expect": true,
+    "id": "WebOnt-I5.3-006-consistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/WebOnt-I5.3-006-premise.ofn",
+    "source": "WebOnt-I5.3-006",
+    "type": "ConsistencyTest"
+  },
+  {
+    "expect": true,
+    "id": "WebOnt-I5.3-008-consistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/WebOnt-I5.3-008-premise.ofn",
+    "source": "WebOnt-I5.3-008",
+    "type": "ConsistencyTest"
+  },
+  {
+    "expect": true,
+    "id": "WebOnt-I5.3-010-consistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/WebOnt-I5.3-010-premise.ofn",
+    "source": "WebOnt-I5.3-010",
+    "type": "ConsistencyTest"
+  },
+  {
+    "expect": true,
+    "id": "WebOnt-I5.3-011-consistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/WebOnt-I5.3-011-premise.ofn",
+    "source": "WebOnt-I5.3-011",
+    "type": "ConsistencyTest"
+  },
+  {
+    "expect": true,
+    "id": "WebOnt-I5.5-005-consistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/WebOnt-I5.5-005-premise.ofn",
+    "source": "WebOnt-I5.5-005",
+    "type": "ConsistencyTest"
+  },
+  {
+    "expect": false,
+    "id": "WebOnt-I5.8-001-inconsistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/WebOnt-I5.8-001-premise.ofn",
+    "source": "WebOnt-I5.8-001",
+    "type": "InconsistencyTest"
+  },
+  {
+    "expect": true,
+    "id": "WebOnt-I5.8-006-consistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/WebOnt-I5.8-006-premise.ofn",
+    "source": "WebOnt-I5.8-006",
+    "type": "ConsistencyTest"
+  },
+  {
+    "expect": true,
+    "id": "WebOnt-I5.8-007-consistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/WebOnt-I5.8-007-premise.ofn",
+    "source": "WebOnt-I5.8-007",
+    "type": "ConsistencyTest"
+  },
+  {
+    "expect": true,
+    "id": "WebOnt-I5.8-008-consistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/WebOnt-I5.8-008-premise.ofn",
+    "source": "WebOnt-I5.8-008",
+    "type": "ConsistencyTest"
+  },
+  {
+    "expect": true,
+    "id": "WebOnt-I5.8-009-consistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/WebOnt-I5.8-009-premise.ofn",
+    "source": "WebOnt-I5.8-009",
+    "type": "ConsistencyTest"
+  },
+  {
+    "expect": true,
+    "id": "WebOnt-I5.8-010-consistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/WebOnt-I5.8-010-premise.ofn",
+    "source": "WebOnt-I5.8-010",
+    "type": "ConsistencyTest"
+  },
+  {
+    "expect": false,
+    "id": "WebOnt-I5.8-010-entailment-1",
+    "input": "Tests/owl2-test-cases/approved/ofn/generated/WebOnt-I5.8-010-entailment-1.ofn",
+    "source": "WebOnt-I5.8-010",
+    "type": "PositiveEntailmentTest"
+  },
+  {
+    "expect": false,
+    "id": "WebOnt-I5.8-010-entailment-2",
+    "input": "Tests/owl2-test-cases/approved/ofn/generated/WebOnt-I5.8-010-entailment-2.ofn",
+    "source": "WebOnt-I5.8-010",
+    "type": "PositiveEntailmentTest"
+  },
+  {
+    "expect": true,
+    "id": "WebOnt-I5.8-011-consistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/WebOnt-I5.8-011-premise.ofn",
+    "source": "WebOnt-I5.8-011",
+    "type": "ConsistencyTest"
+  },
+  {
+    "expect": false,
+    "id": "WebOnt-Nothing-001-inconsistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/WebOnt-Nothing-001-premise.ofn",
+    "source": "WebOnt-Nothing-001",
+    "type": "InconsistencyTest"
+  },
+  {
+    "expect": true,
+    "id": "WebOnt-Ontology-001-consistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/WebOnt-Ontology-001-premise.ofn",
+    "source": "WebOnt-Ontology-001",
+    "type": "ConsistencyTest"
+  },
+  {
+    "expect": false,
+    "id": "WebOnt-Ontology-001-entailment-1",
+    "input": "Tests/owl2-test-cases/approved/ofn/generated/WebOnt-Ontology-001-entailment-1.ofn",
+    "source": "WebOnt-Ontology-001",
+    "type": "PositiveEntailmentTest"
+  },
+  {
+    "expect": false,
+    "id": "WebOnt-Ontology-001-entailment-2",
+    "input": "Tests/owl2-test-cases/approved/ofn/generated/WebOnt-Ontology-001-entailment-2.ofn",
+    "source": "WebOnt-Ontology-001",
+    "type": "PositiveEntailmentTest"
+  },
+  {
+    "expect": false,
+    "id": "WebOnt-Ontology-001-entailment-3",
+    "input": "Tests/owl2-test-cases/approved/ofn/generated/WebOnt-Ontology-001-entailment-3.ofn",
+    "source": "WebOnt-Ontology-001",
+    "type": "PositiveEntailmentTest"
+  },
+  {
+    "expect": false,
+    "id": "WebOnt-Ontology-001-entailment-4",
+    "input": "Tests/owl2-test-cases/approved/ofn/generated/WebOnt-Ontology-001-entailment-4.ofn",
+    "source": "WebOnt-Ontology-001",
+    "type": "PositiveEntailmentTest"
+  },
+  {
+    "expect": false,
+    "id": "WebOnt-Restriction-001-inconsistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/WebOnt-Restriction-001-premise.ofn",
+    "source": "WebOnt-Restriction-001",
+    "type": "InconsistencyTest"
+  },
+  {
+    "expect": false,
+    "id": "WebOnt-Restriction-002-inconsistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/WebOnt-Restriction-002-premise.ofn",
+    "source": "WebOnt-Restriction-002",
+    "type": "InconsistencyTest"
+  },
+  {
+    "expect": true,
+    "id": "WebOnt-Restriction-003-consistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/WebOnt-Restriction-003-premise.ofn",
+    "source": "WebOnt-Restriction-003",
+    "type": "ConsistencyTest"
+  },
+  {
+    "expect": true,
+    "id": "WebOnt-Restriction-004-consistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/WebOnt-Restriction-004-premise.ofn",
+    "source": "WebOnt-Restriction-004",
+    "type": "ConsistencyTest"
+  },
+  {
+    "expect": true,
+    "id": "WebOnt-SymmetricProperty-002-consistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/WebOnt-SymmetricProperty-002-premise.ofn",
+    "source": "WebOnt-SymmetricProperty-002",
+    "type": "ConsistencyTest"
+  },
+  {
+    "expect": false,
+    "id": "WebOnt-SymmetricProperty-002-entailment-1",
+    "input": "Tests/owl2-test-cases/approved/ofn/generated/WebOnt-SymmetricProperty-002-entailment-1.ofn",
+    "source": "WebOnt-SymmetricProperty-002",
+    "type": "PositiveEntailmentTest"
+  },
+  {
+    "expect": false,
+    "id": "WebOnt-SymmetricProperty-002-entailment-2",
+    "input": "Tests/owl2-test-cases/approved/ofn/generated/WebOnt-SymmetricProperty-002-entailment-2.ofn",
+    "source": "WebOnt-SymmetricProperty-002",
+    "type": "PositiveEntailmentTest"
+  },
+  {
+    "expect": false,
+    "id": "WebOnt-SymmetricProperty-002-entailment-3",
+    "input": "Tests/owl2-test-cases/approved/ofn/generated/WebOnt-SymmetricProperty-002-entailment-3.ofn",
+    "source": "WebOnt-SymmetricProperty-002",
+    "type": "PositiveEntailmentTest"
+  },
+  {
+    "expect": false,
+    "id": "WebOnt-SymmetricProperty-002-entailment-4",
+    "input": "Tests/owl2-test-cases/approved/ofn/generated/WebOnt-SymmetricProperty-002-entailment-4.ofn",
+    "source": "WebOnt-SymmetricProperty-002",
+    "type": "PositiveEntailmentTest"
+  },
+  {
+    "expect": false,
+    "id": "WebOnt-Thing-003-inconsistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/WebOnt-Thing-003-premise.ofn",
+    "source": "WebOnt-Thing-003",
+    "type": "InconsistencyTest"
+  },
+  {
+    "expect": true,
+    "id": "WebOnt-Thing-004-consistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/WebOnt-Thing-004-premise.ofn",
+    "source": "WebOnt-Thing-004",
+    "type": "ConsistencyTest"
+  },
+  {
+    "expect": true,
+    "id": "WebOnt-TransitiveProperty-002-consistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/WebOnt-TransitiveProperty-002-premise.ofn",
+    "source": "WebOnt-TransitiveProperty-002",
+    "type": "ConsistencyTest"
+  },
+  {
+    "expect": false,
+    "id": "WebOnt-TransitiveProperty-002-entailment-1",
+    "input": "Tests/owl2-test-cases/approved/ofn/generated/WebOnt-TransitiveProperty-002-entailment-1.ofn",
+    "source": "WebOnt-TransitiveProperty-002",
+    "type": "PositiveEntailmentTest"
+  },
+  {
+    "expect": true,
+    "id": "WebOnt-allValuesFrom-001-consistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/WebOnt-allValuesFrom-001-premise.ofn",
+    "source": "WebOnt-allValuesFrom-001",
+    "type": "ConsistencyTest"
+  },
+  {
+    "expect": false,
+    "id": "WebOnt-allValuesFrom-001-entailment-1",
+    "input": "Tests/owl2-test-cases/approved/ofn/generated/WebOnt-allValuesFrom-001-entailment-1.ofn",
+    "source": "WebOnt-allValuesFrom-001",
+    "type": "PositiveEntailmentTest"
+  },
+  {
+    "expect": false,
+    "id": "WebOnt-allValuesFrom-001-entailment-2",
+    "input": "Tests/owl2-test-cases/approved/ofn/generated/WebOnt-allValuesFrom-001-entailment-2.ofn",
+    "source": "WebOnt-allValuesFrom-001",
+    "type": "PositiveEntailmentTest"
+  },
+  {
+    "expect": true,
+    "id": "WebOnt-allValuesFrom-002-consistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/WebOnt-allValuesFrom-002-premise.ofn",
+    "source": "WebOnt-allValuesFrom-002",
+    "type": "ConsistencyTest"
+  },
+  {
+    "expect": true,
+    "id": "WebOnt-backwardCompatibleWith-002-consistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/WebOnt-backwardCompatibleWith-002-premise.ofn",
+    "source": "WebOnt-backwardCompatibleWith-002",
+    "type": "ConsistencyTest"
+  },
+  {
+    "expect": true,
+    "id": "WebOnt-cardinality-001-consistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/WebOnt-cardinality-001-premise.ofn",
+    "source": "WebOnt-cardinality-001",
+    "type": "ConsistencyTest"
+  },
+  {
+    "expect": true,
+    "id": "WebOnt-cardinality-002-consistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/WebOnt-cardinality-002-premise.ofn",
+    "source": "WebOnt-cardinality-002",
+    "type": "ConsistencyTest"
+  },
+  {
+    "expect": true,
+    "id": "WebOnt-cardinality-003-consistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/WebOnt-cardinality-003-premise.ofn",
+    "source": "WebOnt-cardinality-003",
+    "type": "ConsistencyTest"
+  },
+  {
+    "expect": true,
+    "id": "WebOnt-cardinality-004-consistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/WebOnt-cardinality-004-premise.ofn",
+    "source": "WebOnt-cardinality-004",
+    "type": "ConsistencyTest"
+  },
+  {
+    "expect": false,
+    "id": "WebOnt-description-logic-001-inconsistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/WebOnt-description-logic-001-premise.ofn",
+    "source": "WebOnt-description-logic-001",
+    "type": "InconsistencyTest"
+  },
+  {
+    "expect": false,
+    "id": "WebOnt-description-logic-002-inconsistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/WebOnt-description-logic-002-premise.ofn",
+    "source": "WebOnt-description-logic-002",
+    "type": "InconsistencyTest"
+  },
+  {
+    "expect": false,
+    "id": "WebOnt-description-logic-003-inconsistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/WebOnt-description-logic-003-premise.ofn",
+    "source": "WebOnt-description-logic-003",
+    "type": "InconsistencyTest"
+  },
+  {
+    "expect": false,
+    "id": "WebOnt-description-logic-004-inconsistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/WebOnt-description-logic-004-premise.ofn",
+    "source": "WebOnt-description-logic-004",
+    "type": "InconsistencyTest"
+  },
+  {
+    "expect": true,
+    "id": "WebOnt-description-logic-005-consistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/WebOnt-description-logic-005-premise.ofn",
+    "source": "WebOnt-description-logic-005",
+    "type": "ConsistencyTest"
+  },
+  {
+    "expect": true,
+    "id": "WebOnt-description-logic-006-consistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/WebOnt-description-logic-006-premise.ofn",
+    "source": "WebOnt-description-logic-006",
+    "type": "ConsistencyTest"
+  },
+  {
+    "expect": false,
+    "id": "WebOnt-description-logic-007-inconsistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/WebOnt-description-logic-007-premise.ofn",
+    "source": "WebOnt-description-logic-007",
+    "type": "InconsistencyTest"
+  },
+  {
+    "expect": false,
+    "id": "WebOnt-description-logic-008-inconsistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/WebOnt-description-logic-008-premise.ofn",
+    "source": "WebOnt-description-logic-008",
+    "type": "InconsistencyTest"
+  },
+  {
+    "expect": true,
+    "id": "WebOnt-description-logic-009-consistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/WebOnt-description-logic-009-premise.ofn",
+    "source": "WebOnt-description-logic-009",
+    "type": "ConsistencyTest"
+  },
+  {
+    "expect": false,
+    "id": "WebOnt-description-logic-010-inconsistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/WebOnt-description-logic-010-premise.ofn",
+    "source": "WebOnt-description-logic-010",
+    "type": "InconsistencyTest"
+  },
+  {
+    "expect": false,
+    "id": "WebOnt-description-logic-011-inconsistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/WebOnt-description-logic-011-premise.ofn",
+    "source": "WebOnt-description-logic-011",
+    "type": "InconsistencyTest"
+  },
+  {
+    "expect": false,
+    "id": "WebOnt-description-logic-012-inconsistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/WebOnt-description-logic-012-premise.ofn",
+    "source": "WebOnt-description-logic-012",
+    "type": "InconsistencyTest"
+  },
+  {
+    "expect": false,
+    "id": "WebOnt-description-logic-013-inconsistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/WebOnt-description-logic-013-premise.ofn",
+    "source": "WebOnt-description-logic-013",
+    "type": "InconsistencyTest"
+  },
+  {
+    "expect": false,
+    "id": "WebOnt-description-logic-014-inconsistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/WebOnt-description-logic-014-premise.ofn",
+    "source": "WebOnt-description-logic-014",
+    "type": "InconsistencyTest"
+  },
+  {
+    "expect": false,
+    "id": "WebOnt-description-logic-015-inconsistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/WebOnt-description-logic-015-premise.ofn",
+    "source": "WebOnt-description-logic-015",
+    "type": "InconsistencyTest"
+  },
+  {
+    "expect": true,
+    "id": "WebOnt-description-logic-016-consistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/WebOnt-description-logic-016-premise.ofn",
+    "source": "WebOnt-description-logic-016",
+    "type": "ConsistencyTest"
+  },
+  {
+    "expect": false,
+    "id": "WebOnt-description-logic-017-inconsistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/WebOnt-description-logic-017-premise.ofn",
+    "source": "WebOnt-description-logic-017",
+    "type": "InconsistencyTest"
+  },
+  {
+    "expect": true,
+    "id": "WebOnt-description-logic-018-consistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/WebOnt-description-logic-018-premise.ofn",
+    "source": "WebOnt-description-logic-018",
+    "type": "ConsistencyTest"
+  },
+  {
+    "expect": false,
+    "id": "WebOnt-description-logic-019-inconsistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/WebOnt-description-logic-019-premise.ofn",
+    "source": "WebOnt-description-logic-019",
+    "type": "InconsistencyTest"
+  },
+  {
+    "expect": true,
+    "id": "WebOnt-description-logic-020-consistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/WebOnt-description-logic-020-premise.ofn",
+    "source": "WebOnt-description-logic-020",
+    "type": "ConsistencyTest"
+  },
+  {
+    "expect": true,
+    "id": "WebOnt-description-logic-021-consistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/WebOnt-description-logic-021-premise.ofn",
+    "source": "WebOnt-description-logic-021",
+    "type": "ConsistencyTest"
+  },
+  {
+    "expect": false,
+    "id": "WebOnt-description-logic-022-inconsistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/WebOnt-description-logic-022-premise.ofn",
+    "source": "WebOnt-description-logic-022",
+    "type": "InconsistencyTest"
+  },
+  {
+    "expect": false,
+    "id": "WebOnt-description-logic-023-inconsistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/WebOnt-description-logic-023-premise.ofn",
+    "source": "WebOnt-description-logic-023",
+    "type": "InconsistencyTest"
+  },
+  {
+    "expect": true,
+    "id": "WebOnt-description-logic-024-consistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/WebOnt-description-logic-024-premise.ofn",
+    "source": "WebOnt-description-logic-024",
+    "type": "ConsistencyTest"
+  },
+  {
+    "expect": true,
+    "id": "WebOnt-description-logic-025-consistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/WebOnt-description-logic-025-premise.ofn",
+    "source": "WebOnt-description-logic-025",
+    "type": "ConsistencyTest"
+  },
+  {
+    "expect": false,
+    "id": "WebOnt-description-logic-026-inconsistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/WebOnt-description-logic-026-premise.ofn",
+    "source": "WebOnt-description-logic-026",
+    "type": "InconsistencyTest"
+  },
+  {
+    "expect": false,
+    "id": "WebOnt-description-logic-027-inconsistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/WebOnt-description-logic-027-premise.ofn",
+    "source": "WebOnt-description-logic-027",
+    "type": "InconsistencyTest"
+  },
+  {
+    "expect": true,
+    "id": "WebOnt-description-logic-028-consistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/WebOnt-description-logic-028-premise.ofn",
+    "source": "WebOnt-description-logic-028",
+    "type": "ConsistencyTest"
+  },
+  {
+    "expect": false,
+    "id": "WebOnt-description-logic-029-inconsistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/WebOnt-description-logic-029-premise.ofn",
+    "source": "WebOnt-description-logic-029",
+    "type": "InconsistencyTest"
+  },
+  {
+    "expect": false,
+    "id": "WebOnt-description-logic-030-inconsistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/WebOnt-description-logic-030-premise.ofn",
+    "source": "WebOnt-description-logic-030",
+    "type": "InconsistencyTest"
+  },
+  {
+    "expect": true,
+    "id": "WebOnt-description-logic-031-consistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/WebOnt-description-logic-031-premise.ofn",
+    "source": "WebOnt-description-logic-031",
+    "type": "ConsistencyTest"
+  },
+  {
+    "expect": false,
+    "id": "WebOnt-description-logic-032-inconsistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/WebOnt-description-logic-032-premise.ofn",
+    "source": "WebOnt-description-logic-032",
+    "type": "InconsistencyTest"
+  },
+  {
+    "expect": false,
+    "id": "WebOnt-description-logic-033-inconsistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/WebOnt-description-logic-033-premise.ofn",
+    "source": "WebOnt-description-logic-033",
+    "type": "InconsistencyTest"
+  },
+  {
+    "expect": true,
+    "id": "WebOnt-description-logic-034-consistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/WebOnt-description-logic-034-premise.ofn",
+    "source": "WebOnt-description-logic-034",
+    "type": "ConsistencyTest"
+  },
+  {
+    "expect": false,
+    "id": "WebOnt-description-logic-035-inconsistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/WebOnt-description-logic-035-premise.ofn",
+    "source": "WebOnt-description-logic-035",
+    "type": "InconsistencyTest"
+  },
+  {
+    "expect": false,
+    "id": "WebOnt-description-logic-040-inconsistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/WebOnt-description-logic-040-premise.ofn",
+    "source": "WebOnt-description-logic-040",
+    "type": "InconsistencyTest"
+  },
+  {
+    "expect": false,
+    "id": "WebOnt-description-logic-101-inconsistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/WebOnt-description-logic-101-premise.ofn",
+    "source": "WebOnt-description-logic-101",
+    "type": "InconsistencyTest"
+  },
+  {
+    "expect": false,
+    "id": "WebOnt-description-logic-102-inconsistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/WebOnt-description-logic-102-premise.ofn",
+    "source": "WebOnt-description-logic-102",
+    "type": "InconsistencyTest"
+  },
+  {
+    "expect": false,
+    "id": "WebOnt-description-logic-103-inconsistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/WebOnt-description-logic-103-premise.ofn",
+    "source": "WebOnt-description-logic-103",
+    "type": "InconsistencyTest"
+  },
+  {
+    "expect": false,
+    "id": "WebOnt-description-logic-104-inconsistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/WebOnt-description-logic-104-premise.ofn",
+    "source": "WebOnt-description-logic-104",
+    "type": "InconsistencyTest"
+  },
+  {
+    "expect": false,
+    "id": "WebOnt-description-logic-105-inconsistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/WebOnt-description-logic-105-premise.ofn",
+    "source": "WebOnt-description-logic-105",
+    "type": "InconsistencyTest"
+  },
+  {
+    "expect": false,
+    "id": "WebOnt-description-logic-106-inconsistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/WebOnt-description-logic-106-premise.ofn",
+    "source": "WebOnt-description-logic-106",
+    "type": "InconsistencyTest"
+  },
+  {
+    "expect": false,
+    "id": "WebOnt-description-logic-107-inconsistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/WebOnt-description-logic-107-premise.ofn",
+    "source": "WebOnt-description-logic-107",
+    "type": "InconsistencyTest"
+  },
+  {
+    "expect": false,
+    "id": "WebOnt-description-logic-108-inconsistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/WebOnt-description-logic-108-premise.ofn",
+    "source": "WebOnt-description-logic-108",
+    "type": "InconsistencyTest"
+  },
+  {
+    "expect": false,
+    "id": "WebOnt-description-logic-109-inconsistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/WebOnt-description-logic-109-premise.ofn",
+    "source": "WebOnt-description-logic-109",
+    "type": "InconsistencyTest"
+  },
+  {
+    "expect": false,
+    "id": "WebOnt-description-logic-110-inconsistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/WebOnt-description-logic-110-premise.ofn",
+    "source": "WebOnt-description-logic-110",
+    "type": "InconsistencyTest"
+  },
+  {
+    "expect": false,
+    "id": "WebOnt-description-logic-111-inconsistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/WebOnt-description-logic-111-premise.ofn",
+    "source": "WebOnt-description-logic-111",
+    "type": "InconsistencyTest"
+  },
+  {
+    "expect": true,
+    "id": "WebOnt-description-logic-201-consistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/WebOnt-description-logic-201-premise.ofn",
+    "source": "WebOnt-description-logic-201",
+    "type": "ConsistencyTest"
+  },
+  {
+    "expect": false,
+    "id": "WebOnt-description-logic-201-entailment-1",
+    "input": "Tests/owl2-test-cases/approved/ofn/generated/WebOnt-description-logic-201-entailment-1.ofn",
+    "source": "WebOnt-description-logic-201",
+    "type": "PositiveEntailmentTest"
+  },
+  {
+    "expect": false,
+    "id": "WebOnt-description-logic-201-entailment-2",
+    "input": "Tests/owl2-test-cases/approved/ofn/generated/WebOnt-description-logic-201-entailment-2.ofn",
+    "source": "WebOnt-description-logic-201",
+    "type": "PositiveEntailmentTest"
+  },
+  {
+    "expect": false,
+    "id": "WebOnt-description-logic-201-entailment-3",
+    "input": "Tests/owl2-test-cases/approved/ofn/generated/WebOnt-description-logic-201-entailment-3.ofn",
+    "source": "WebOnt-description-logic-201",
+    "type": "PositiveEntailmentTest"
+  },
+  {
+    "expect": false,
+    "id": "WebOnt-description-logic-201-entailment-4",
+    "input": "Tests/owl2-test-cases/approved/ofn/generated/WebOnt-description-logic-201-entailment-4.ofn",
+    "source": "WebOnt-description-logic-201",
+    "type": "PositiveEntailmentTest"
+  },
+  {
+    "expect": false,
+    "id": "WebOnt-description-logic-201-entailment-5",
+    "input": "Tests/owl2-test-cases/approved/ofn/generated/WebOnt-description-logic-201-entailment-5.ofn",
+    "source": "WebOnt-description-logic-201",
+    "type": "PositiveEntailmentTest"
+  },
+  {
+    "expect": false,
+    "id": "WebOnt-description-logic-201-entailment-6",
+    "input": "Tests/owl2-test-cases/approved/ofn/generated/WebOnt-description-logic-201-entailment-6.ofn",
+    "source": "WebOnt-description-logic-201",
+    "type": "PositiveEntailmentTest"
+  },
+  {
+    "expect": false,
+    "id": "WebOnt-description-logic-201-entailment-7",
+    "input": "Tests/owl2-test-cases/approved/ofn/generated/WebOnt-description-logic-201-entailment-7.ofn",
+    "source": "WebOnt-description-logic-201",
+    "type": "PositiveEntailmentTest"
+  },
+  {
+    "expect": false,
+    "id": "WebOnt-description-logic-201-entailment-8",
+    "input": "Tests/owl2-test-cases/approved/ofn/generated/WebOnt-description-logic-201-entailment-8.ofn",
+    "source": "WebOnt-description-logic-201",
+    "type": "PositiveEntailmentTest"
+  },
+  {
+    "expect": false,
+    "id": "WebOnt-description-logic-201-entailment-9",
+    "input": "Tests/owl2-test-cases/approved/ofn/generated/WebOnt-description-logic-201-entailment-9.ofn",
+    "source": "WebOnt-description-logic-201",
+    "type": "PositiveEntailmentTest"
+  },
+  {
+    "expect": true,
+    "id": "WebOnt-description-logic-205-consistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/WebOnt-description-logic-205-premise.ofn",
+    "source": "WebOnt-description-logic-205",
+    "type": "ConsistencyTest"
+  },
+  {
+    "expect": false,
+    "id": "WebOnt-description-logic-205-entailment-1",
+    "input": "Tests/owl2-test-cases/approved/ofn/generated/WebOnt-description-logic-205-entailment-1.ofn",
+    "source": "WebOnt-description-logic-205",
+    "type": "PositiveEntailmentTest"
+  },
+  {
+    "expect": false,
+    "id": "WebOnt-description-logic-205-entailment-2",
+    "input": "Tests/owl2-test-cases/approved/ofn/generated/WebOnt-description-logic-205-entailment-2.ofn",
+    "source": "WebOnt-description-logic-205",
+    "type": "PositiveEntailmentTest"
+  },
+  {
+    "expect": false,
+    "id": "WebOnt-description-logic-205-entailment-3",
+    "input": "Tests/owl2-test-cases/approved/ofn/generated/WebOnt-description-logic-205-entailment-3.ofn",
+    "source": "WebOnt-description-logic-205",
+    "type": "PositiveEntailmentTest"
+  },
+  {
+    "expect": false,
+    "id": "WebOnt-description-logic-205-entailment-4",
+    "input": "Tests/owl2-test-cases/approved/ofn/generated/WebOnt-description-logic-205-entailment-4.ofn",
+    "source": "WebOnt-description-logic-205",
+    "type": "PositiveEntailmentTest"
+  },
+  {
+    "expect": false,
+    "id": "WebOnt-description-logic-205-entailment-5",
+    "input": "Tests/owl2-test-cases/approved/ofn/generated/WebOnt-description-logic-205-entailment-5.ofn",
+    "source": "WebOnt-description-logic-205",
+    "type": "PositiveEntailmentTest"
+  },
+  {
+    "expect": false,
+    "id": "WebOnt-description-logic-205-entailment-6",
+    "input": "Tests/owl2-test-cases/approved/ofn/generated/WebOnt-description-logic-205-entailment-6.ofn",
+    "source": "WebOnt-description-logic-205",
+    "type": "PositiveEntailmentTest"
+  },
+  {
+    "expect": false,
+    "id": "WebOnt-description-logic-205-entailment-7",
+    "input": "Tests/owl2-test-cases/approved/ofn/generated/WebOnt-description-logic-205-entailment-7.ofn",
+    "source": "WebOnt-description-logic-205",
+    "type": "PositiveEntailmentTest"
+  },
+  {
+    "expect": false,
+    "id": "WebOnt-description-logic-205-entailment-8",
+    "input": "Tests/owl2-test-cases/approved/ofn/generated/WebOnt-description-logic-205-entailment-8.ofn",
+    "source": "WebOnt-description-logic-205",
+    "type": "PositiveEntailmentTest"
+  },
+  {
+    "expect": false,
+    "id": "WebOnt-description-logic-205-entailment-9",
+    "input": "Tests/owl2-test-cases/approved/ofn/generated/WebOnt-description-logic-205-entailment-9.ofn",
+    "source": "WebOnt-description-logic-205",
+    "type": "PositiveEntailmentTest"
+  },
+  {
+    "expect": true,
+    "id": "WebOnt-description-logic-207-consistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/WebOnt-description-logic-207-premise.ofn",
+    "source": "WebOnt-description-logic-207",
+    "type": "ConsistencyTest"
+  },
+  {
+    "expect": false,
+    "id": "WebOnt-description-logic-207-entailment-1",
+    "input": "Tests/owl2-test-cases/approved/ofn/generated/WebOnt-description-logic-207-entailment-1.ofn",
+    "source": "WebOnt-description-logic-207",
+    "type": "PositiveEntailmentTest"
+  },
+  {
+    "expect": false,
+    "id": "WebOnt-description-logic-207-entailment-2",
+    "input": "Tests/owl2-test-cases/approved/ofn/generated/WebOnt-description-logic-207-entailment-2.ofn",
+    "source": "WebOnt-description-logic-207",
+    "type": "PositiveEntailmentTest"
+  },
+  {
+    "expect": false,
+    "id": "WebOnt-description-logic-207-entailment-3",
+    "input": "Tests/owl2-test-cases/approved/ofn/generated/WebOnt-description-logic-207-entailment-3.ofn",
+    "source": "WebOnt-description-logic-207",
+    "type": "PositiveEntailmentTest"
+  },
+  {
+    "expect": false,
+    "id": "WebOnt-description-logic-207-entailment-4",
+    "input": "Tests/owl2-test-cases/approved/ofn/generated/WebOnt-description-logic-207-entailment-4.ofn",
+    "source": "WebOnt-description-logic-207",
+    "type": "PositiveEntailmentTest"
+  },
+  {
+    "expect": true,
+    "id": "WebOnt-description-logic-208-consistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/WebOnt-description-logic-208-premise.ofn",
+    "source": "WebOnt-description-logic-208",
+    "type": "ConsistencyTest"
+  },
+  {
+    "expect": false,
+    "id": "WebOnt-description-logic-208-entailment-1",
+    "input": "Tests/owl2-test-cases/approved/ofn/generated/WebOnt-description-logic-208-entailment-1.ofn",
+    "source": "WebOnt-description-logic-208",
+    "type": "PositiveEntailmentTest"
+  },
+  {
+    "expect": false,
+    "id": "WebOnt-description-logic-208-entailment-2",
+    "input": "Tests/owl2-test-cases/approved/ofn/generated/WebOnt-description-logic-208-entailment-2.ofn",
+    "source": "WebOnt-description-logic-208",
+    "type": "PositiveEntailmentTest"
+  },
+  {
+    "expect": false,
+    "id": "WebOnt-description-logic-208-entailment-3",
+    "input": "Tests/owl2-test-cases/approved/ofn/generated/WebOnt-description-logic-208-entailment-3.ofn",
+    "source": "WebOnt-description-logic-208",
+    "type": "PositiveEntailmentTest"
+  },
+  {
+    "expect": false,
+    "id": "WebOnt-description-logic-208-entailment-4",
+    "input": "Tests/owl2-test-cases/approved/ofn/generated/WebOnt-description-logic-208-entailment-4.ofn",
+    "source": "WebOnt-description-logic-208",
+    "type": "PositiveEntailmentTest"
+  },
+  {
+    "expect": false,
+    "id": "WebOnt-description-logic-208-entailment-5",
+    "input": "Tests/owl2-test-cases/approved/ofn/generated/WebOnt-description-logic-208-entailment-5.ofn",
+    "source": "WebOnt-description-logic-208",
+    "type": "PositiveEntailmentTest"
+  },
+  {
+    "expect": false,
+    "id": "WebOnt-description-logic-208-entailment-6",
+    "input": "Tests/owl2-test-cases/approved/ofn/generated/WebOnt-description-logic-208-entailment-6.ofn",
+    "source": "WebOnt-description-logic-208",
+    "type": "PositiveEntailmentTest"
+  },
+  {
+    "expect": false,
+    "id": "WebOnt-description-logic-208-entailment-7",
+    "input": "Tests/owl2-test-cases/approved/ofn/generated/WebOnt-description-logic-208-entailment-7.ofn",
+    "source": "WebOnt-description-logic-208",
+    "type": "PositiveEntailmentTest"
+  },
+  {
+    "expect": false,
+    "id": "WebOnt-description-logic-208-entailment-8",
+    "input": "Tests/owl2-test-cases/approved/ofn/generated/WebOnt-description-logic-208-entailment-8.ofn",
+    "source": "WebOnt-description-logic-208",
+    "type": "PositiveEntailmentTest"
+  },
+  {
+    "expect": false,
+    "id": "WebOnt-description-logic-208-entailment-9",
+    "input": "Tests/owl2-test-cases/approved/ofn/generated/WebOnt-description-logic-208-entailment-9.ofn",
+    "source": "WebOnt-description-logic-208",
+    "type": "PositiveEntailmentTest"
+  },
+  {
+    "expect": false,
+    "id": "WebOnt-description-logic-208-entailment-10",
+    "input": "Tests/owl2-test-cases/approved/ofn/generated/WebOnt-description-logic-208-entailment-10.ofn",
+    "source": "WebOnt-description-logic-208",
+    "type": "PositiveEntailmentTest"
+  },
+  {
+    "expect": false,
+    "id": "WebOnt-description-logic-208-entailment-11",
+    "input": "Tests/owl2-test-cases/approved/ofn/generated/WebOnt-description-logic-208-entailment-11.ofn",
+    "source": "WebOnt-description-logic-208",
+    "type": "PositiveEntailmentTest"
+  },
+  {
+    "expect": false,
+    "id": "WebOnt-description-logic-208-entailment-12",
+    "input": "Tests/owl2-test-cases/approved/ofn/generated/WebOnt-description-logic-208-entailment-12.ofn",
+    "source": "WebOnt-description-logic-208",
+    "type": "PositiveEntailmentTest"
+  },
+  {
+    "expect": false,
+    "id": "WebOnt-description-logic-208-entailment-13",
+    "input": "Tests/owl2-test-cases/approved/ofn/generated/WebOnt-description-logic-208-entailment-13.ofn",
+    "source": "WebOnt-description-logic-208",
+    "type": "PositiveEntailmentTest"
+  },
+  {
+    "expect": false,
+    "id": "WebOnt-description-logic-208-entailment-14",
+    "input": "Tests/owl2-test-cases/approved/ofn/generated/WebOnt-description-logic-208-entailment-14.ofn",
+    "source": "WebOnt-description-logic-208",
+    "type": "PositiveEntailmentTest"
+  },
+  {
+    "expect": false,
+    "id": "WebOnt-description-logic-208-entailment-15",
+    "input": "Tests/owl2-test-cases/approved/ofn/generated/WebOnt-description-logic-208-entailment-15.ofn",
+    "source": "WebOnt-description-logic-208",
+    "type": "PositiveEntailmentTest"
+  },
+  {
+    "expect": false,
+    "id": "WebOnt-description-logic-208-entailment-16",
+    "input": "Tests/owl2-test-cases/approved/ofn/generated/WebOnt-description-logic-208-entailment-16.ofn",
+    "source": "WebOnt-description-logic-208",
+    "type": "PositiveEntailmentTest"
+  },
+  {
+    "expect": false,
+    "id": "WebOnt-description-logic-208-entailment-17",
+    "input": "Tests/owl2-test-cases/approved/ofn/generated/WebOnt-description-logic-208-entailment-17.ofn",
+    "source": "WebOnt-description-logic-208",
+    "type": "PositiveEntailmentTest"
+  },
+  {
+    "expect": false,
+    "id": "WebOnt-description-logic-208-entailment-18",
+    "input": "Tests/owl2-test-cases/approved/ofn/generated/WebOnt-description-logic-208-entailment-18.ofn",
+    "source": "WebOnt-description-logic-208",
+    "type": "PositiveEntailmentTest"
+  },
+  {
+    "expect": false,
+    "id": "WebOnt-description-logic-208-entailment-19",
+    "input": "Tests/owl2-test-cases/approved/ofn/generated/WebOnt-description-logic-208-entailment-19.ofn",
+    "source": "WebOnt-description-logic-208",
+    "type": "PositiveEntailmentTest"
+  },
+  {
+    "expect": false,
+    "id": "WebOnt-description-logic-208-entailment-20",
+    "input": "Tests/owl2-test-cases/approved/ofn/generated/WebOnt-description-logic-208-entailment-20.ofn",
+    "source": "WebOnt-description-logic-208",
+    "type": "PositiveEntailmentTest"
+  },
+  {
+    "expect": false,
+    "id": "WebOnt-description-logic-208-entailment-21",
+    "input": "Tests/owl2-test-cases/approved/ofn/generated/WebOnt-description-logic-208-entailment-21.ofn",
+    "source": "WebOnt-description-logic-208",
+    "type": "PositiveEntailmentTest"
+  },
+  {
+    "expect": false,
+    "id": "WebOnt-description-logic-208-entailment-22",
+    "input": "Tests/owl2-test-cases/approved/ofn/generated/WebOnt-description-logic-208-entailment-22.ofn",
+    "source": "WebOnt-description-logic-208",
+    "type": "PositiveEntailmentTest"
+  },
+  {
+    "expect": false,
+    "id": "WebOnt-description-logic-208-entailment-23",
+    "input": "Tests/owl2-test-cases/approved/ofn/generated/WebOnt-description-logic-208-entailment-23.ofn",
+    "source": "WebOnt-description-logic-208",
+    "type": "PositiveEntailmentTest"
+  },
+  {
+    "expect": false,
+    "id": "WebOnt-description-logic-208-entailment-24",
+    "input": "Tests/owl2-test-cases/approved/ofn/generated/WebOnt-description-logic-208-entailment-24.ofn",
+    "source": "WebOnt-description-logic-208",
+    "type": "PositiveEntailmentTest"
+  },
+  {
+    "expect": false,
+    "id": "WebOnt-description-logic-208-entailment-25",
+    "input": "Tests/owl2-test-cases/approved/ofn/generated/WebOnt-description-logic-208-entailment-25.ofn",
+    "source": "WebOnt-description-logic-208",
+    "type": "PositiveEntailmentTest"
+  },
+  {
+    "expect": false,
+    "id": "WebOnt-description-logic-208-entailment-26",
+    "input": "Tests/owl2-test-cases/approved/ofn/generated/WebOnt-description-logic-208-entailment-26.ofn",
+    "source": "WebOnt-description-logic-208",
+    "type": "PositiveEntailmentTest"
+  },
+  {
+    "expect": false,
+    "id": "WebOnt-description-logic-208-entailment-27",
+    "input": "Tests/owl2-test-cases/approved/ofn/generated/WebOnt-description-logic-208-entailment-27.ofn",
+    "source": "WebOnt-description-logic-208",
+    "type": "PositiveEntailmentTest"
+  },
+  {
+    "expect": false,
+    "id": "WebOnt-description-logic-208-entailment-28",
+    "input": "Tests/owl2-test-cases/approved/ofn/generated/WebOnt-description-logic-208-entailment-28.ofn",
+    "source": "WebOnt-description-logic-208",
+    "type": "PositiveEntailmentTest"
+  },
+  {
+    "expect": false,
+    "id": "WebOnt-description-logic-208-entailment-29",
+    "input": "Tests/owl2-test-cases/approved/ofn/generated/WebOnt-description-logic-208-entailment-29.ofn",
+    "source": "WebOnt-description-logic-208",
+    "type": "PositiveEntailmentTest"
+  },
+  {
+    "expect": false,
+    "id": "WebOnt-description-logic-208-entailment-30",
+    "input": "Tests/owl2-test-cases/approved/ofn/generated/WebOnt-description-logic-208-entailment-30.ofn",
+    "source": "WebOnt-description-logic-208",
+    "type": "PositiveEntailmentTest"
+  },
+  {
+    "expect": false,
+    "id": "WebOnt-description-logic-208-entailment-31",
+    "input": "Tests/owl2-test-cases/approved/ofn/generated/WebOnt-description-logic-208-entailment-31.ofn",
+    "source": "WebOnt-description-logic-208",
+    "type": "PositiveEntailmentTest"
+  },
+  {
+    "expect": false,
+    "id": "WebOnt-description-logic-208-entailment-32",
+    "input": "Tests/owl2-test-cases/approved/ofn/generated/WebOnt-description-logic-208-entailment-32.ofn",
+    "source": "WebOnt-description-logic-208",
+    "type": "PositiveEntailmentTest"
+  },
+  {
+    "expect": false,
+    "id": "WebOnt-description-logic-208-entailment-33",
+    "input": "Tests/owl2-test-cases/approved/ofn/generated/WebOnt-description-logic-208-entailment-33.ofn",
+    "source": "WebOnt-description-logic-208",
+    "type": "PositiveEntailmentTest"
+  },
+  {
+    "expect": false,
+    "id": "WebOnt-description-logic-208-entailment-34",
+    "input": "Tests/owl2-test-cases/approved/ofn/generated/WebOnt-description-logic-208-entailment-34.ofn",
+    "source": "WebOnt-description-logic-208",
+    "type": "PositiveEntailmentTest"
+  },
+  {
+    "expect": false,
+    "id": "WebOnt-description-logic-208-entailment-35",
+    "input": "Tests/owl2-test-cases/approved/ofn/generated/WebOnt-description-logic-208-entailment-35.ofn",
+    "source": "WebOnt-description-logic-208",
+    "type": "PositiveEntailmentTest"
+  },
+  {
+    "expect": false,
+    "id": "WebOnt-description-logic-208-entailment-36",
+    "input": "Tests/owl2-test-cases/approved/ofn/generated/WebOnt-description-logic-208-entailment-36.ofn",
+    "source": "WebOnt-description-logic-208",
+    "type": "PositiveEntailmentTest"
+  },
+  {
+    "expect": false,
+    "id": "WebOnt-description-logic-208-entailment-37",
+    "input": "Tests/owl2-test-cases/approved/ofn/generated/WebOnt-description-logic-208-entailment-37.ofn",
+    "source": "WebOnt-description-logic-208",
+    "type": "PositiveEntailmentTest"
+  },
+  {
+    "expect": false,
+    "id": "WebOnt-description-logic-208-entailment-38",
+    "input": "Tests/owl2-test-cases/approved/ofn/generated/WebOnt-description-logic-208-entailment-38.ofn",
+    "source": "WebOnt-description-logic-208",
+    "type": "PositiveEntailmentTest"
+  },
+  {
+    "expect": false,
+    "id": "WebOnt-description-logic-208-entailment-39",
+    "input": "Tests/owl2-test-cases/approved/ofn/generated/WebOnt-description-logic-208-entailment-39.ofn",
+    "source": "WebOnt-description-logic-208",
+    "type": "PositiveEntailmentTest"
+  },
+  {
+    "expect": false,
+    "id": "WebOnt-description-logic-208-entailment-40",
+    "input": "Tests/owl2-test-cases/approved/ofn/generated/WebOnt-description-logic-208-entailment-40.ofn",
+    "source": "WebOnt-description-logic-208",
+    "type": "PositiveEntailmentTest"
+  },
+  {
+    "expect": false,
+    "id": "WebOnt-description-logic-208-entailment-41",
+    "input": "Tests/owl2-test-cases/approved/ofn/generated/WebOnt-description-logic-208-entailment-41.ofn",
+    "source": "WebOnt-description-logic-208",
+    "type": "PositiveEntailmentTest"
+  },
+  {
+    "expect": false,
+    "id": "WebOnt-description-logic-208-entailment-42",
+    "input": "Tests/owl2-test-cases/approved/ofn/generated/WebOnt-description-logic-208-entailment-42.ofn",
+    "source": "WebOnt-description-logic-208",
+    "type": "PositiveEntailmentTest"
+  },
+  {
+    "expect": false,
+    "id": "WebOnt-description-logic-208-entailment-43",
+    "input": "Tests/owl2-test-cases/approved/ofn/generated/WebOnt-description-logic-208-entailment-43.ofn",
+    "source": "WebOnt-description-logic-208",
+    "type": "PositiveEntailmentTest"
+  },
+  {
+    "expect": false,
+    "id": "WebOnt-description-logic-208-entailment-44",
+    "input": "Tests/owl2-test-cases/approved/ofn/generated/WebOnt-description-logic-208-entailment-44.ofn",
+    "source": "WebOnt-description-logic-208",
+    "type": "PositiveEntailmentTest"
+  },
+  {
+    "expect": false,
+    "id": "WebOnt-description-logic-208-entailment-45",
+    "input": "Tests/owl2-test-cases/approved/ofn/generated/WebOnt-description-logic-208-entailment-45.ofn",
+    "source": "WebOnt-description-logic-208",
+    "type": "PositiveEntailmentTest"
+  },
+  {
+    "expect": true,
+    "id": "WebOnt-description-logic-209-consistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/WebOnt-description-logic-209-premise.ofn",
+    "source": "WebOnt-description-logic-209",
+    "type": "ConsistencyTest"
+  },
+  {
+    "expect": true,
+    "id": "WebOnt-description-logic-501-consistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/WebOnt-description-logic-501-premise.ofn",
+    "source": "WebOnt-description-logic-501",
+    "type": "ConsistencyTest"
+  },
+  {
+    "expect": false,
+    "id": "WebOnt-description-logic-502-inconsistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/WebOnt-description-logic-502-premise.ofn",
+    "source": "WebOnt-description-logic-502",
+    "type": "InconsistencyTest"
+  },
+  {
+    "expect": true,
+    "id": "WebOnt-description-logic-503-consistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/WebOnt-description-logic-503-premise.ofn",
+    "source": "WebOnt-description-logic-503",
+    "type": "ConsistencyTest"
+  },
+  {
+    "expect": false,
+    "id": "WebOnt-description-logic-504-inconsistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/WebOnt-description-logic-504-premise.ofn",
+    "source": "WebOnt-description-logic-504",
+    "type": "InconsistencyTest"
+  },
+  {
+    "expect": false,
+    "id": "WebOnt-description-logic-601-inconsistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/WebOnt-description-logic-601-premise.ofn",
+    "source": "WebOnt-description-logic-601",
+    "type": "InconsistencyTest"
+  },
+  {
+    "expect": false,
+    "id": "WebOnt-description-logic-602-inconsistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/WebOnt-description-logic-602-premise.ofn",
+    "source": "WebOnt-description-logic-602",
+    "type": "InconsistencyTest"
+  },
+  {
+    "expect": false,
+    "id": "WebOnt-description-logic-603-inconsistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/WebOnt-description-logic-603-premise.ofn",
+    "source": "WebOnt-description-logic-603",
+    "type": "InconsistencyTest"
+  },
+  {
+    "expect": false,
+    "id": "WebOnt-description-logic-604-inconsistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/WebOnt-description-logic-604-premise.ofn",
+    "source": "WebOnt-description-logic-604",
+    "type": "InconsistencyTest"
+  },
+  {
+    "expect": true,
+    "id": "WebOnt-description-logic-605-consistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/WebOnt-description-logic-605-premise.ofn",
+    "source": "WebOnt-description-logic-605",
+    "type": "ConsistencyTest"
+  },
+  {
+    "expect": true,
+    "id": "WebOnt-description-logic-606-consistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/WebOnt-description-logic-606-premise.ofn",
+    "source": "WebOnt-description-logic-606",
+    "type": "ConsistencyTest"
+  },
+  {
+    "expect": false,
+    "id": "WebOnt-description-logic-608-inconsistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/WebOnt-description-logic-608-premise.ofn",
+    "source": "WebOnt-description-logic-608",
+    "type": "InconsistencyTest"
+  },
+  {
+    "expect": true,
+    "id": "WebOnt-description-logic-609-consistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/WebOnt-description-logic-609-premise.ofn",
+    "source": "WebOnt-description-logic-609",
+    "type": "ConsistencyTest"
+  },
+  {
+    "expect": false,
+    "id": "WebOnt-description-logic-610-inconsistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/WebOnt-description-logic-610-premise.ofn",
+    "source": "WebOnt-description-logic-610",
+    "type": "InconsistencyTest"
+  },
+  {
+    "expect": false,
+    "id": "WebOnt-description-logic-611-inconsistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/WebOnt-description-logic-611-premise.ofn",
+    "source": "WebOnt-description-logic-611",
+    "type": "InconsistencyTest"
+  },
+  {
+    "expect": false,
+    "id": "WebOnt-description-logic-612-inconsistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/WebOnt-description-logic-612-premise.ofn",
+    "source": "WebOnt-description-logic-612",
+    "type": "InconsistencyTest"
+  },
+  {
+    "expect": false,
+    "id": "WebOnt-description-logic-613-inconsistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/WebOnt-description-logic-613-premise.ofn",
+    "source": "WebOnt-description-logic-613",
+    "type": "InconsistencyTest"
+  },
+  {
+    "expect": false,
+    "id": "WebOnt-description-logic-614-inconsistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/WebOnt-description-logic-614-premise.ofn",
+    "source": "WebOnt-description-logic-614",
+    "type": "InconsistencyTest"
+  },
+  {
+    "expect": false,
+    "id": "WebOnt-description-logic-615-inconsistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/WebOnt-description-logic-615-premise.ofn",
+    "source": "WebOnt-description-logic-615",
+    "type": "InconsistencyTest"
+  },
+  {
+    "expect": true,
+    "id": "WebOnt-description-logic-616-consistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/WebOnt-description-logic-616-premise.ofn",
+    "source": "WebOnt-description-logic-616",
+    "type": "ConsistencyTest"
+  },
+  {
+    "expect": false,
+    "id": "WebOnt-description-logic-617-inconsistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/WebOnt-description-logic-617-premise.ofn",
+    "source": "WebOnt-description-logic-617",
+    "type": "InconsistencyTest"
+  },
+  {
+    "expect": false,
+    "id": "WebOnt-description-logic-623-inconsistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/WebOnt-description-logic-623-premise.ofn",
+    "source": "WebOnt-description-logic-623",
+    "type": "InconsistencyTest"
+  },
+  {
+    "expect": true,
+    "id": "WebOnt-description-logic-624-consistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/WebOnt-description-logic-624-premise.ofn",
+    "source": "WebOnt-description-logic-624",
+    "type": "ConsistencyTest"
+  },
+  {
+    "expect": true,
+    "id": "WebOnt-description-logic-625-consistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/WebOnt-description-logic-625-premise.ofn",
+    "source": "WebOnt-description-logic-625",
+    "type": "ConsistencyTest"
+  },
+  {
+    "expect": false,
+    "id": "WebOnt-description-logic-626-inconsistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/WebOnt-description-logic-626-premise.ofn",
+    "source": "WebOnt-description-logic-626",
+    "type": "InconsistencyTest"
+  },
+  {
+    "expect": false,
+    "id": "WebOnt-description-logic-627-inconsistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/WebOnt-description-logic-627-premise.ofn",
+    "source": "WebOnt-description-logic-627",
+    "type": "InconsistencyTest"
+  },
+  {
+    "expect": true,
+    "id": "WebOnt-description-logic-628-consistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/WebOnt-description-logic-628-premise.ofn",
+    "source": "WebOnt-description-logic-628",
+    "type": "ConsistencyTest"
+  },
+  {
+    "expect": false,
+    "id": "WebOnt-description-logic-629-inconsistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/WebOnt-description-logic-629-premise.ofn",
+    "source": "WebOnt-description-logic-629",
+    "type": "InconsistencyTest"
+  },
+  {
+    "expect": false,
+    "id": "WebOnt-description-logic-630-inconsistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/WebOnt-description-logic-630-premise.ofn",
+    "source": "WebOnt-description-logic-630",
+    "type": "InconsistencyTest"
+  },
+  {
+    "expect": true,
+    "id": "WebOnt-description-logic-631-consistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/WebOnt-description-logic-631-premise.ofn",
+    "source": "WebOnt-description-logic-631",
+    "type": "ConsistencyTest"
+  },
+  {
+    "expect": false,
+    "id": "WebOnt-description-logic-632-inconsistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/WebOnt-description-logic-632-premise.ofn",
+    "source": "WebOnt-description-logic-632",
+    "type": "InconsistencyTest"
+  },
+  {
+    "expect": false,
+    "id": "WebOnt-description-logic-633-inconsistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/WebOnt-description-logic-633-premise.ofn",
+    "source": "WebOnt-description-logic-633",
+    "type": "InconsistencyTest"
+  },
+  {
+    "expect": true,
+    "id": "WebOnt-description-logic-634-consistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/WebOnt-description-logic-634-premise.ofn",
+    "source": "WebOnt-description-logic-634",
+    "type": "ConsistencyTest"
+  },
+  {
+    "expect": false,
+    "id": "WebOnt-description-logic-641-inconsistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/WebOnt-description-logic-641-premise.ofn",
+    "source": "WebOnt-description-logic-641",
+    "type": "InconsistencyTest"
+  },
+  {
+    "expect": false,
+    "id": "WebOnt-description-logic-642-inconsistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/WebOnt-description-logic-642-premise.ofn",
+    "source": "WebOnt-description-logic-642",
+    "type": "InconsistencyTest"
+  },
+  {
+    "expect": false,
+    "id": "WebOnt-description-logic-643-inconsistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/WebOnt-description-logic-643-premise.ofn",
+    "source": "WebOnt-description-logic-643",
+    "type": "InconsistencyTest"
+  },
+  {
+    "expect": false,
+    "id": "WebOnt-description-logic-644-inconsistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/WebOnt-description-logic-644-premise.ofn",
+    "source": "WebOnt-description-logic-644",
+    "type": "InconsistencyTest"
+  },
+  {
+    "expect": false,
+    "id": "WebOnt-description-logic-646-inconsistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/WebOnt-description-logic-646-premise.ofn",
+    "source": "WebOnt-description-logic-646",
+    "type": "InconsistencyTest"
+  },
+  {
+    "expect": false,
+    "id": "WebOnt-description-logic-650-inconsistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/WebOnt-description-logic-650-premise.ofn",
+    "source": "WebOnt-description-logic-650",
+    "type": "InconsistencyTest"
+  },
+  {
+    "expect": true,
+    "id": "WebOnt-description-logic-661-consistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/WebOnt-description-logic-661-premise.ofn",
+    "source": "WebOnt-description-logic-661",
+    "type": "ConsistencyTest"
+  },
+  {
+    "expect": false,
+    "id": "WebOnt-description-logic-661-entailment-1",
+    "input": "Tests/owl2-test-cases/approved/ofn/generated/WebOnt-description-logic-661-entailment-1.ofn",
+    "source": "WebOnt-description-logic-661",
+    "type": "PositiveEntailmentTest"
+  },
+  {
+    "expect": false,
+    "id": "WebOnt-description-logic-661-entailment-2",
+    "input": "Tests/owl2-test-cases/approved/ofn/generated/WebOnt-description-logic-661-entailment-2.ofn",
+    "source": "WebOnt-description-logic-661",
+    "type": "PositiveEntailmentTest"
+  },
+  {
+    "expect": false,
+    "id": "WebOnt-description-logic-661-entailment-3",
+    "input": "Tests/owl2-test-cases/approved/ofn/generated/WebOnt-description-logic-661-entailment-3.ofn",
+    "source": "WebOnt-description-logic-661",
+    "type": "PositiveEntailmentTest"
+  },
+  {
+    "expect": false,
+    "id": "WebOnt-description-logic-661-entailment-4",
+    "input": "Tests/owl2-test-cases/approved/ofn/generated/WebOnt-description-logic-661-entailment-4.ofn",
+    "source": "WebOnt-description-logic-661",
+    "type": "PositiveEntailmentTest"
+  },
+  {
+    "expect": false,
+    "id": "WebOnt-description-logic-661-entailment-5",
+    "input": "Tests/owl2-test-cases/approved/ofn/generated/WebOnt-description-logic-661-entailment-5.ofn",
+    "source": "WebOnt-description-logic-661",
+    "type": "PositiveEntailmentTest"
+  },
+  {
+    "expect": false,
+    "id": "WebOnt-description-logic-661-entailment-6",
+    "input": "Tests/owl2-test-cases/approved/ofn/generated/WebOnt-description-logic-661-entailment-6.ofn",
+    "source": "WebOnt-description-logic-661",
+    "type": "PositiveEntailmentTest"
+  },
+  {
+    "expect": false,
+    "id": "WebOnt-description-logic-661-entailment-7",
+    "input": "Tests/owl2-test-cases/approved/ofn/generated/WebOnt-description-logic-661-entailment-7.ofn",
+    "source": "WebOnt-description-logic-661",
+    "type": "PositiveEntailmentTest"
+  },
+  {
+    "expect": false,
+    "id": "WebOnt-description-logic-661-entailment-8",
+    "input": "Tests/owl2-test-cases/approved/ofn/generated/WebOnt-description-logic-661-entailment-8.ofn",
+    "source": "WebOnt-description-logic-661",
+    "type": "PositiveEntailmentTest"
+  },
+  {
+    "expect": false,
+    "id": "WebOnt-description-logic-661-entailment-9",
+    "input": "Tests/owl2-test-cases/approved/ofn/generated/WebOnt-description-logic-661-entailment-9.ofn",
+    "source": "WebOnt-description-logic-661",
+    "type": "PositiveEntailmentTest"
+  },
+  {
+    "expect": true,
+    "id": "WebOnt-description-logic-665-consistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/WebOnt-description-logic-665-premise.ofn",
+    "source": "WebOnt-description-logic-665",
+    "type": "ConsistencyTest"
+  },
+  {
+    "expect": false,
+    "id": "WebOnt-description-logic-665-entailment-1",
+    "input": "Tests/owl2-test-cases/approved/ofn/generated/WebOnt-description-logic-665-entailment-1.ofn",
+    "source": "WebOnt-description-logic-665",
+    "type": "PositiveEntailmentTest"
+  },
+  {
+    "expect": false,
+    "id": "WebOnt-description-logic-665-entailment-2",
+    "input": "Tests/owl2-test-cases/approved/ofn/generated/WebOnt-description-logic-665-entailment-2.ofn",
+    "source": "WebOnt-description-logic-665",
+    "type": "PositiveEntailmentTest"
+  },
+  {
+    "expect": false,
+    "id": "WebOnt-description-logic-665-entailment-3",
+    "input": "Tests/owl2-test-cases/approved/ofn/generated/WebOnt-description-logic-665-entailment-3.ofn",
+    "source": "WebOnt-description-logic-665",
+    "type": "PositiveEntailmentTest"
+  },
+  {
+    "expect": false,
+    "id": "WebOnt-description-logic-665-entailment-4",
+    "input": "Tests/owl2-test-cases/approved/ofn/generated/WebOnt-description-logic-665-entailment-4.ofn",
+    "source": "WebOnt-description-logic-665",
+    "type": "PositiveEntailmentTest"
+  },
+  {
+    "expect": false,
+    "id": "WebOnt-description-logic-665-entailment-5",
+    "input": "Tests/owl2-test-cases/approved/ofn/generated/WebOnt-description-logic-665-entailment-5.ofn",
+    "source": "WebOnt-description-logic-665",
+    "type": "PositiveEntailmentTest"
+  },
+  {
+    "expect": false,
+    "id": "WebOnt-description-logic-665-entailment-6",
+    "input": "Tests/owl2-test-cases/approved/ofn/generated/WebOnt-description-logic-665-entailment-6.ofn",
+    "source": "WebOnt-description-logic-665",
+    "type": "PositiveEntailmentTest"
+  },
+  {
+    "expect": false,
+    "id": "WebOnt-description-logic-665-entailment-7",
+    "input": "Tests/owl2-test-cases/approved/ofn/generated/WebOnt-description-logic-665-entailment-7.ofn",
+    "source": "WebOnt-description-logic-665",
+    "type": "PositiveEntailmentTest"
+  },
+  {
+    "expect": false,
+    "id": "WebOnt-description-logic-665-entailment-8",
+    "input": "Tests/owl2-test-cases/approved/ofn/generated/WebOnt-description-logic-665-entailment-8.ofn",
+    "source": "WebOnt-description-logic-665",
+    "type": "PositiveEntailmentTest"
+  },
+  {
+    "expect": false,
+    "id": "WebOnt-description-logic-665-entailment-9",
+    "input": "Tests/owl2-test-cases/approved/ofn/generated/WebOnt-description-logic-665-entailment-9.ofn",
+    "source": "WebOnt-description-logic-665",
+    "type": "PositiveEntailmentTest"
+  },
+  {
+    "expect": true,
+    "id": "WebOnt-description-logic-667-consistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/WebOnt-description-logic-667-premise.ofn",
+    "source": "WebOnt-description-logic-667",
+    "type": "ConsistencyTest"
+  },
+  {
+    "expect": false,
+    "id": "WebOnt-description-logic-667-entailment-1",
+    "input": "Tests/owl2-test-cases/approved/ofn/generated/WebOnt-description-logic-667-entailment-1.ofn",
+    "source": "WebOnt-description-logic-667",
+    "type": "PositiveEntailmentTest"
+  },
+  {
+    "expect": false,
+    "id": "WebOnt-description-logic-667-entailment-2",
+    "input": "Tests/owl2-test-cases/approved/ofn/generated/WebOnt-description-logic-667-entailment-2.ofn",
+    "source": "WebOnt-description-logic-667",
+    "type": "PositiveEntailmentTest"
+  },
+  {
+    "expect": false,
+    "id": "WebOnt-description-logic-667-entailment-3",
+    "input": "Tests/owl2-test-cases/approved/ofn/generated/WebOnt-description-logic-667-entailment-3.ofn",
+    "source": "WebOnt-description-logic-667",
+    "type": "PositiveEntailmentTest"
+  },
+  {
+    "expect": false,
+    "id": "WebOnt-description-logic-667-entailment-4",
+    "input": "Tests/owl2-test-cases/approved/ofn/generated/WebOnt-description-logic-667-entailment-4.ofn",
+    "source": "WebOnt-description-logic-667",
+    "type": "PositiveEntailmentTest"
+  },
+  {
+    "expect": true,
+    "id": "WebOnt-description-logic-901-consistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/WebOnt-description-logic-901-premise.ofn",
+    "source": "WebOnt-description-logic-901",
+    "type": "ConsistencyTest"
+  },
+  {
+    "expect": true,
+    "id": "WebOnt-description-logic-902-consistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/WebOnt-description-logic-902-premise.ofn",
+    "source": "WebOnt-description-logic-902",
+    "type": "ConsistencyTest"
+  },
+  {
+    "expect": true,
+    "id": "WebOnt-description-logic-905-consistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/WebOnt-description-logic-905-premise.ofn",
+    "source": "WebOnt-description-logic-905",
+    "type": "ConsistencyTest"
+  },
+  {
+    "expect": true,
+    "id": "WebOnt-description-logic-908-consistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/WebOnt-description-logic-908-premise.ofn",
+    "source": "WebOnt-description-logic-908",
+    "type": "ConsistencyTest"
+  },
+  {
+    "expect": true,
+    "id": "WebOnt-differentFrom-001-consistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/WebOnt-differentFrom-001-premise.ofn",
+    "source": "WebOnt-differentFrom-001",
+    "type": "ConsistencyTest"
+  },
+  {
+    "expect": false,
+    "id": "WebOnt-differentFrom-001-entailment-1",
+    "input": "Tests/owl2-test-cases/approved/ofn/generated/WebOnt-differentFrom-001-entailment-1.ofn",
+    "source": "WebOnt-differentFrom-001",
+    "type": "PositiveEntailmentTest"
+  },
+  {
+    "expect": true,
+    "id": "WebOnt-disjointWith-001-consistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/WebOnt-disjointWith-001-premise.ofn",
+    "source": "WebOnt-disjointWith-001",
+    "type": "ConsistencyTest"
+  },
+  {
+    "expect": false,
+    "id": "WebOnt-disjointWith-001-entailment-1",
+    "input": "Tests/owl2-test-cases/approved/ofn/generated/WebOnt-disjointWith-001-entailment-1.ofn",
+    "source": "WebOnt-disjointWith-001",
+    "type": "PositiveEntailmentTest"
+  },
+  {
+    "expect": false,
+    "id": "WebOnt-disjointWith-001-entailment-2",
+    "input": "Tests/owl2-test-cases/approved/ofn/generated/WebOnt-disjointWith-001-entailment-2.ofn",
+    "source": "WebOnt-disjointWith-001",
+    "type": "PositiveEntailmentTest"
+  },
+  {
+    "expect": false,
+    "id": "WebOnt-disjointWith-001-entailment-3",
+    "input": "Tests/owl2-test-cases/approved/ofn/generated/WebOnt-disjointWith-001-entailment-3.ofn",
+    "source": "WebOnt-disjointWith-001",
+    "type": "PositiveEntailmentTest"
+  },
+  {
+    "expect": true,
+    "id": "WebOnt-disjointWith-003-consistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/WebOnt-disjointWith-003-premise.ofn",
+    "source": "WebOnt-disjointWith-003",
+    "type": "ConsistencyTest"
+  },
+  {
+    "expect": true,
+    "id": "WebOnt-disjointWith-004-consistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/WebOnt-disjointWith-004-premise.ofn",
+    "source": "WebOnt-disjointWith-004",
+    "type": "ConsistencyTest"
+  },
+  {
+    "expect": true,
+    "id": "WebOnt-disjointWith-005-consistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/WebOnt-disjointWith-005-premise.ofn",
+    "source": "WebOnt-disjointWith-005",
+    "type": "ConsistencyTest"
+  },
+  {
+    "expect": true,
+    "id": "WebOnt-disjointWith-006-consistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/WebOnt-disjointWith-006-premise.ofn",
+    "source": "WebOnt-disjointWith-006",
+    "type": "ConsistencyTest"
+  },
+  {
+    "expect": true,
+    "id": "WebOnt-disjointWith-007-consistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/WebOnt-disjointWith-007-premise.ofn",
+    "source": "WebOnt-disjointWith-007",
+    "type": "ConsistencyTest"
+  },
+  {
+    "expect": true,
+    "id": "WebOnt-disjointWith-008-consistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/WebOnt-disjointWith-008-premise.ofn",
+    "source": "WebOnt-disjointWith-008",
+    "type": "ConsistencyTest"
+  },
+  {
+    "expect": true,
+    "id": "WebOnt-disjointWith-009-consistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/WebOnt-disjointWith-009-premise.ofn",
+    "source": "WebOnt-disjointWith-009",
+    "type": "ConsistencyTest"
+  },
+  {
+    "expect": true,
+    "id": "WebOnt-equivalentClass-001-consistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/WebOnt-equivalentClass-001-premise.ofn",
+    "source": "WebOnt-equivalentClass-001",
+    "type": "ConsistencyTest"
+  },
+  {
+    "expect": false,
+    "id": "WebOnt-equivalentClass-001-entailment-1",
+    "input": "Tests/owl2-test-cases/approved/ofn/generated/WebOnt-equivalentClass-001-entailment-1.ofn",
+    "source": "WebOnt-equivalentClass-001",
+    "type": "PositiveEntailmentTest"
+  },
+  {
+    "expect": false,
+    "id": "WebOnt-equivalentClass-001-entailment-2",
+    "input": "Tests/owl2-test-cases/approved/ofn/generated/WebOnt-equivalentClass-001-entailment-2.ofn",
+    "source": "WebOnt-equivalentClass-001",
+    "type": "PositiveEntailmentTest"
+  },
+  {
+    "expect": false,
+    "id": "WebOnt-equivalentClass-001-entailment-3",
+    "input": "Tests/owl2-test-cases/approved/ofn/generated/WebOnt-equivalentClass-001-entailment-3.ofn",
+    "source": "WebOnt-equivalentClass-001",
+    "type": "PositiveEntailmentTest"
+  },
+  {
+    "expect": false,
+    "id": "WebOnt-equivalentClass-001-entailment-4",
+    "input": "Tests/owl2-test-cases/approved/ofn/generated/WebOnt-equivalentClass-001-entailment-4.ofn",
+    "source": "WebOnt-equivalentClass-001",
+    "type": "PositiveEntailmentTest"
+  },
+  {
+    "expect": true,
+    "id": "WebOnt-equivalentClass-002-consistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/WebOnt-equivalentClass-002-premise.ofn",
+    "source": "WebOnt-equivalentClass-002",
+    "type": "ConsistencyTest"
+  },
+  {
+    "expect": true,
+    "id": "WebOnt-equivalentClass-003-consistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/WebOnt-equivalentClass-003-premise.ofn",
+    "source": "WebOnt-equivalentClass-003",
+    "type": "ConsistencyTest"
+  },
+  {
+    "expect": true,
+    "id": "WebOnt-equivalentClass-004-consistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/WebOnt-equivalentClass-004-premise.ofn",
+    "source": "WebOnt-equivalentClass-004",
+    "type": "ConsistencyTest"
+  },
+  {
+    "expect": true,
+    "id": "WebOnt-equivalentClass-005-consistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/WebOnt-equivalentClass-005-premise.ofn",
+    "source": "WebOnt-equivalentClass-005",
+    "type": "ConsistencyTest"
+  },
+  {
+    "expect": true,
+    "id": "WebOnt-equivalentClass-006-consistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/WebOnt-equivalentClass-006-premise.ofn",
+    "source": "WebOnt-equivalentClass-006",
+    "type": "ConsistencyTest"
+  },
+  {
+    "expect": true,
+    "id": "WebOnt-equivalentClass-008-Direct-consistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/WebOnt-equivalentClass-008-Direct-premise.ofn",
+    "source": "WebOnt-equivalentClass-008-Direct",
+    "type": "ConsistencyTest"
+  },
+  {
+    "expect": true,
+    "id": "WebOnt-equivalentClass-009-consistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/WebOnt-equivalentClass-009-premise.ofn",
+    "source": "WebOnt-equivalentClass-009",
+    "type": "ConsistencyTest"
+  },
+  {
+    "expect": true,
+    "id": "WebOnt-equivalentProperty-001-consistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/WebOnt-equivalentProperty-001-premise.ofn",
+    "source": "WebOnt-equivalentProperty-001",
+    "type": "ConsistencyTest"
+  },
+  {
+    "expect": false,
+    "id": "WebOnt-equivalentProperty-001-entailment-1",
+    "input": "Tests/owl2-test-cases/approved/ofn/generated/WebOnt-equivalentProperty-001-entailment-1.ofn",
+    "source": "WebOnt-equivalentProperty-001",
+    "type": "PositiveEntailmentTest"
+  },
+  {
+    "expect": false,
+    "id": "WebOnt-equivalentProperty-001-entailment-2",
+    "input": "Tests/owl2-test-cases/approved/ofn/generated/WebOnt-equivalentProperty-001-entailment-2.ofn",
+    "source": "WebOnt-equivalentProperty-001",
+    "type": "PositiveEntailmentTest"
+  },
+  {
+    "expect": false,
+    "id": "WebOnt-equivalentProperty-001-entailment-3",
+    "input": "Tests/owl2-test-cases/approved/ofn/generated/WebOnt-equivalentProperty-001-entailment-3.ofn",
+    "source": "WebOnt-equivalentProperty-001",
+    "type": "PositiveEntailmentTest"
+  },
+  {
+    "expect": true,
+    "id": "WebOnt-equivalentProperty-002-consistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/WebOnt-equivalentProperty-002-premise.ofn",
+    "source": "WebOnt-equivalentProperty-002",
+    "type": "ConsistencyTest"
+  },
+  {
+    "expect": true,
+    "id": "WebOnt-equivalentProperty-003-consistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/WebOnt-equivalentProperty-003-premise.ofn",
+    "source": "WebOnt-equivalentProperty-003",
+    "type": "ConsistencyTest"
+  },
+  {
+    "expect": true,
+    "id": "WebOnt-equivalentProperty-004-consistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/WebOnt-equivalentProperty-004-premise.ofn",
+    "source": "WebOnt-equivalentProperty-004",
+    "type": "ConsistencyTest"
+  },
+  {
+    "expect": true,
+    "id": "WebOnt-imports-011-consistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/WebOnt-imports-011-premise.ofn",
+    "source": "WebOnt-imports-011",
+    "type": "ConsistencyTest"
+  },
+  {
+    "expect": false,
+    "id": "WebOnt-imports-011-entailment-1",
+    "input": "Tests/owl2-test-cases/approved/ofn/generated/WebOnt-imports-011-entailment-1.ofn",
+    "source": "WebOnt-imports-011",
+    "type": "PositiveEntailmentTest"
+  },
+  {
+    "expect": false,
+    "id": "WebOnt-maxCardinality-001-inconsistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/WebOnt-maxCardinality-001-premise.ofn",
+    "source": "WebOnt-maxCardinality-001",
+    "type": "InconsistencyTest"
+  },
+  {
+    "expect": true,
+    "id": "WebOnt-miscellaneous-001-consistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/WebOnt-miscellaneous-001-premise.ofn",
+    "source": "WebOnt-miscellaneous-001",
+    "type": "ConsistencyTest"
+  },
+  {
+    "expect": true,
+    "id": "WebOnt-miscellaneous-002-consistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/WebOnt-miscellaneous-002-premise.ofn",
+    "source": "WebOnt-miscellaneous-002",
+    "type": "ConsistencyTest"
+  },
+  {
+    "expect": true,
+    "id": "WebOnt-miscellaneous-102-consistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/WebOnt-miscellaneous-102-premise.ofn",
+    "source": "WebOnt-miscellaneous-102",
+    "type": "ConsistencyTest"
+  },
+  {
+    "expect": true,
+    "id": "WebOnt-miscellaneous-103-consistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/WebOnt-miscellaneous-103-premise.ofn",
+    "source": "WebOnt-miscellaneous-103",
+    "type": "ConsistencyTest"
+  },
+  {
+    "expect": true,
+    "id": "WebOnt-miscellaneous-202-consistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/WebOnt-miscellaneous-202-premise.ofn",
+    "source": "WebOnt-miscellaneous-202",
+    "type": "ConsistencyTest"
+  },
+  {
+    "expect": false,
+    "id": "WebOnt-miscellaneous-203-inconsistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/WebOnt-miscellaneous-203-premise.ofn",
+    "source": "WebOnt-miscellaneous-203",
+    "type": "InconsistencyTest"
+  },
+  {
+    "expect": false,
+    "id": "WebOnt-miscellaneous-204-inconsistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/WebOnt-miscellaneous-204-premise.ofn",
+    "source": "WebOnt-miscellaneous-204",
+    "type": "InconsistencyTest"
+  },
+  {
+    "expect": true,
+    "id": "WebOnt-miscellaneous-302-Direct-consistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/WebOnt-miscellaneous-302-Direct-premise.ofn",
+    "source": "WebOnt-miscellaneous-302-Direct",
+    "type": "ConsistencyTest"
+  },
+  {
+    "expect": false,
+    "id": "WebOnt-miscellaneous-302-Direct-entailment-1",
+    "input": "Tests/owl2-test-cases/approved/ofn/generated/WebOnt-miscellaneous-302-Direct-entailment-1.ofn",
+    "source": "WebOnt-miscellaneous-302-Direct",
+    "type": "PositiveEntailmentTest"
+  },
+  {
+    "expect": true,
+    "id": "WebOnt-miscellaneous-303-consistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/WebOnt-miscellaneous-303-premise.ofn",
+    "source": "WebOnt-miscellaneous-303",
+    "type": "ConsistencyTest"
+  },
+  {
+    "expect": true,
+    "id": "WebOnt-oneOf-001-consistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/WebOnt-oneOf-001-premise.ofn",
+    "source": "WebOnt-oneOf-001",
+    "type": "ConsistencyTest"
+  },
+  {
+    "expect": true,
+    "id": "WebOnt-oneOf-004-consistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/WebOnt-oneOf-004-premise.ofn",
+    "source": "WebOnt-oneOf-004",
+    "type": "ConsistencyTest"
+  },
+  {
+    "expect": false,
+    "id": "WebOnt-oneOf-004-entailment-1",
+    "input": "Tests/owl2-test-cases/approved/ofn/generated/WebOnt-oneOf-004-entailment-1.ofn",
+    "source": "WebOnt-oneOf-004",
+    "type": "PositiveEntailmentTest"
+  },
+  {
+    "expect": false,
+    "id": "WebOnt-oneOf-004-entailment-2",
+    "input": "Tests/owl2-test-cases/approved/ofn/generated/WebOnt-oneOf-004-entailment-2.ofn",
+    "source": "WebOnt-oneOf-004",
+    "type": "PositiveEntailmentTest"
+  },
+  {
+    "expect": true,
+    "id": "WebOnt-sameAs-001-consistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/WebOnt-sameAs-001-premise.ofn",
+    "source": "WebOnt-sameAs-001",
+    "type": "ConsistencyTest"
+  },
+  {
+    "expect": true,
+    "id": "WebOnt-someValuesFrom-003-consistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/WebOnt-someValuesFrom-003-premise.ofn",
+    "source": "WebOnt-someValuesFrom-003",
+    "type": "ConsistencyTest"
+  },
+  {
+    "expect": false,
+    "id": "WebOnt-someValuesFrom-003-entailment-1",
+    "input": "Tests/owl2-test-cases/approved/ofn/generated/WebOnt-someValuesFrom-003-entailment-1.ofn",
+    "source": "WebOnt-someValuesFrom-003",
+    "type": "PositiveEntailmentTest"
+  },
+  {
+    "expect": false,
+    "id": "WebOnt-someValuesFrom-003-entailment-2",
+    "input": "Tests/owl2-test-cases/approved/ofn/generated/WebOnt-someValuesFrom-003-entailment-2.ofn",
+    "source": "WebOnt-someValuesFrom-003",
+    "type": "PositiveEntailmentTest"
+  },
+  {
+    "expect": false,
+    "id": "WebOnt-someValuesFrom-003-entailment-3",
+    "input": "Tests/owl2-test-cases/approved/ofn/generated/WebOnt-someValuesFrom-003-entailment-3.ofn",
+    "source": "WebOnt-someValuesFrom-003",
+    "type": "PositiveEntailmentTest"
+  },
+  {
+    "expect": false,
+    "id": "WebOnt-someValuesFrom-003-entailment-4",
+    "input": "Tests/owl2-test-cases/approved/ofn/generated/WebOnt-someValuesFrom-003-entailment-4.ofn",
+    "source": "WebOnt-someValuesFrom-003",
+    "type": "PositiveEntailmentTest"
+  },
+  {
+    "expect": false,
+    "id": "WebOnt-someValuesFrom-003-entailment-5",
+    "input": "Tests/owl2-test-cases/approved/ofn/generated/WebOnt-someValuesFrom-003-entailment-5.ofn",
+    "source": "WebOnt-someValuesFrom-003",
+    "type": "PositiveEntailmentTest"
+  },
+  {
+    "expect": true,
+    "id": "WebOnt-unionOf-003-consistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/WebOnt-unionOf-003-premise.ofn",
+    "source": "WebOnt-unionOf-003",
+    "type": "ConsistencyTest"
+  },
+  {
+    "expect": true,
+    "id": "WebOnt-unionOf-004-consistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/WebOnt-unionOf-004-premise.ofn",
+    "source": "WebOnt-unionOf-004",
+    "type": "ConsistencyTest"
+  },
+  {
+    "expect": false,
+    "id": "WebOnt-unionOf-004-entailment-1",
+    "input": "Tests/owl2-test-cases/approved/ofn/generated/WebOnt-unionOf-004-entailment-1.ofn",
+    "source": "WebOnt-unionOf-004",
+    "type": "PositiveEntailmentTest"
+  },
+  {
+    "expect": false,
+    "id": "WebOnt-unionOf-004-entailment-2",
+    "input": "Tests/owl2-test-cases/approved/ofn/generated/WebOnt-unionOf-004-entailment-2.ofn",
+    "source": "WebOnt-unionOf-004",
+    "type": "PositiveEntailmentTest"
+  },
+  {
+    "expect": true,
+    "id": "bnode2somevaluesfrom-consistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/bnode2somevaluesfrom-premise.ofn",
+    "source": "bnode2somevaluesfrom",
+    "type": "ConsistencyTest"
+  },
+  {
+    "expect": false,
+    "id": "bnode2somevaluesfrom-entailment-1",
+    "input": "Tests/owl2-test-cases/approved/ofn/generated/bnode2somevaluesfrom-entailment-1.ofn",
+    "source": "bnode2somevaluesfrom",
+    "type": "PositiveEntailmentTest"
+  },
+  {
+    "expect": false,
+    "id": "bnode2somevaluesfrom-entailment-2",
+    "input": "Tests/owl2-test-cases/approved/ofn/generated/bnode2somevaluesfrom-entailment-2.ofn",
+    "source": "bnode2somevaluesfrom",
+    "type": "PositiveEntailmentTest"
+  },
+  {
+    "expect": true,
+    "id": "chain2trans1-consistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/chain2trans1-premise.ofn",
+    "source": "chain2trans1",
+    "type": "ConsistencyTest"
+  },
+  {
+    "expect": true,
     "id": "consistent-dataproperty-disjointness-consistency",
     "input": "Tests/owl2-test-cases/approved/ofn/consistent-dataproperty-disjointness-premise.ofn",
     "source": "consistent-dataproperty-disjointness",
@@ -537,6 +2777,132 @@
     "input": "Tests/owl2-test-cases/approved/ofn/inconsistent_datatypes-premise.ofn",
     "source": "inconsistent_datatypes",
     "type": "InconsistencyTest"
+  },
+  {
+    "expect": false,
+    "id": "one-two-inconsistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/one-two-premise.ofn",
+    "source": "one-two",
+    "type": "InconsistencyTest"
+  },
+  {
+    "expect": true,
+    "id": "owl2-rl-anonymous-individual-consistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/owl2-rl-anonymous-individual-premise.ofn",
+    "source": "owl2-rl-anonymous-individual",
+    "type": "ConsistencyTest"
+  },
+  {
+    "expect": true,
+    "id": "owl2-rl-invalid-leftside-allvaluesfrom-consistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/owl2-rl-invalid-leftside-allvaluesfrom-premise.ofn",
+    "source": "owl2-rl-invalid-leftside-allvaluesfrom",
+    "type": "ConsistencyTest"
+  },
+  {
+    "expect": true,
+    "id": "owl2-rl-invalid-leftside-maxcard-consistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/owl2-rl-invalid-leftside-maxcard-premise.ofn",
+    "source": "owl2-rl-invalid-leftside-maxcard",
+    "type": "ConsistencyTest"
+  },
+  {
+    "expect": true,
+    "id": "owl2-rl-invalid-oneof-consistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/owl2-rl-invalid-oneof-premise.ofn",
+    "source": "owl2-rl-invalid-oneof",
+    "type": "ConsistencyTest"
+  },
+  {
+    "expect": true,
+    "id": "owl2-rl-invalid-owlreal-consistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/owl2-rl-invalid-owlreal-premise.ofn",
+    "source": "owl2-rl-invalid-owlreal",
+    "type": "ConsistencyTest"
+  },
+  {
+    "expect": true,
+    "id": "owl2-rl-invalid-rightside-somevaluesfrom-consistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/owl2-rl-invalid-rightside-somevaluesfrom-premise.ofn",
+    "source": "owl2-rl-invalid-rightside-somevaluesfrom",
+    "type": "ConsistencyTest"
+  },
+  {
+    "expect": true,
+    "id": "owl2-rl-invalid-rightside-unionof-consistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/owl2-rl-invalid-rightside-unionof-premise.ofn",
+    "source": "owl2-rl-invalid-rightside-unionof",
+    "type": "ConsistencyTest"
+  },
+  {
+    "expect": true,
+    "id": "owl2-rl-invalid-unionof-consistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/owl2-rl-invalid-unionof-premise.ofn",
+    "source": "owl2-rl-invalid-unionof",
+    "type": "ConsistencyTest"
+  },
+  {
+    "expect": true,
+    "id": "owl2-rl-rules-fp-differentFrom-consistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/owl2-rl-rules-fp-differentFrom-premise.ofn",
+    "source": "owl2-rl-rules-fp-differentFrom",
+    "type": "ConsistencyTest"
+  },
+  {
+    "expect": false,
+    "id": "owl2-rl-rules-fp-differentFrom-entailment-1",
+    "input": "Tests/owl2-test-cases/approved/ofn/generated/owl2-rl-rules-fp-differentFrom-entailment-1.ofn",
+    "source": "owl2-rl-rules-fp-differentFrom",
+    "type": "PositiveEntailmentTest"
+  },
+  {
+    "expect": true,
+    "id": "owl2-rl-rules-ifp-differentFrom-consistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/owl2-rl-rules-ifp-differentFrom-premise.ofn",
+    "source": "owl2-rl-rules-ifp-differentFrom",
+    "type": "ConsistencyTest"
+  },
+  {
+    "expect": false,
+    "id": "owl2-rl-rules-ifp-differentFrom-entailment-1",
+    "input": "Tests/owl2-test-cases/approved/ofn/generated/owl2-rl-rules-ifp-differentFrom-entailment-1.ofn",
+    "source": "owl2-rl-rules-ifp-differentFrom",
+    "type": "PositiveEntailmentTest"
+  },
+  {
+    "expect": true,
+    "id": "owl2-rl-valid-mincard-consistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/owl2-rl-valid-mincard-premise.ofn",
+    "source": "owl2-rl-valid-mincard",
+    "type": "ConsistencyTest"
+  },
+  {
+    "expect": true,
+    "id": "owl2-rl-valid-oneof-consistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/owl2-rl-valid-oneof-premise.ofn",
+    "source": "owl2-rl-valid-oneof",
+    "type": "ConsistencyTest"
+  },
+  {
+    "expect": true,
+    "id": "owl2-rl-valid-rightside-allvaluesfrom-consistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/owl2-rl-valid-rightside-allvaluesfrom-premise.ofn",
+    "source": "owl2-rl-valid-rightside-allvaluesfrom",
+    "type": "ConsistencyTest"
+  },
+  {
+    "expect": true,
+    "id": "somevaluesfrom2bnode-consistency",
+    "input": "Tests/owl2-test-cases/approved/ofn/somevaluesfrom2bnode-premise.ofn",
+    "source": "somevaluesfrom2bnode",
+    "type": "ConsistencyTest"
+  },
+  {
+    "expect": false,
+    "id": "somevaluesfrom2bnode-entailment-1",
+    "input": "Tests/owl2-test-cases/approved/ofn/generated/somevaluesfrom2bnode-entailment-1.ofn",
+    "source": "somevaluesfrom2bnode",
+    "type": "PositiveEntailmentTest"
   },
   {
     "expect": false,

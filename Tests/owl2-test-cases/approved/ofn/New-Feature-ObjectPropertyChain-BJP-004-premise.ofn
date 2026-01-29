@@ -1,0 +1,29 @@
+Prefix(owl:=<http://www.w3.org/2002/07/owl#>)
+Prefix(rdf:=<http://www.w3.org/1999/02/22-rdf-syntax-ns#>)
+Prefix(xml:=<http://www.w3.org/XML/1998/namespace>)
+Prefix(xsd:=<http://www.w3.org/2001/XMLSchema#>)
+Prefix(rdfs:=<http://www.w3.org/2000/01/rdf-schema#>)
+
+
+Ontology(
+Declaration(ObjectProperty(<http://example.org/p>))
+Declaration(ObjectProperty(<http://example.org/q>))
+Declaration(NamedIndividual(<http://example.org/a>))
+Declaration(NamedIndividual(<http://example.org/b>))
+Declaration(NamedIndividual(<http://example.org/c>))
+
+############################
+#   Named Individuals
+############################
+
+# Individual: <http://example.org/a> (<http://example.org/a>)
+
+ObjectPropertyAssertion(<http://example.org/q> <http://example.org/a> <http://example.org/b>)
+
+# Individual: <http://example.org/b> (<http://example.org/b>)
+
+ObjectPropertyAssertion(<http://example.org/q> <http://example.org/b> <http://example.org/c>)
+
+
+SubObjectPropertyOf(ObjectPropertyChain(<http://example.org/p> <http://example.org/q>) <http://example.org/p>)
+)

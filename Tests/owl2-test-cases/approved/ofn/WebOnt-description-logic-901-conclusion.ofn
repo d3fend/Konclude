@@ -1,0 +1,17 @@
+Prefix(owl:=<http://www.w3.org/2002/07/owl#>)
+Prefix(rdf:=<http://www.w3.org/1999/02/22-rdf-syntax-ns#>)
+Prefix(xml:=<http://www.w3.org/XML/1998/namespace>)
+Prefix(xsd:=<http://www.w3.org/2001/XMLSchema#>)
+Prefix(rdfs:=<http://www.w3.org/2000/01/rdf-schema#>)
+Prefix(first:=<http://www.w3.org/2002/03owlt/description-logic/premises901#>)
+Prefix(second:=<http://www.w3.org/2002/03owlt/description-logic/conclusions901#>)
+
+
+Ontology(
+Declaration(ObjectProperty(first:p))
+Declaration(ObjectProperty(first:q))
+Declaration(ObjectProperty(first:r))
+
+
+SubClassOf(ObjectIntersectionOf(ObjectMinCardinality(2 first:p) ObjectMinCardinality(3 first:q)) ObjectMinCardinality(5 first:r))
+)

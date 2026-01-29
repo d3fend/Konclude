@@ -274,8 +274,8 @@ def main():
     with open(args.coverage_md, "w", encoding="utf-8") as f:
         f.write("# OWL 2 DL Conformance Coverage\n\n")
         f.write("Source: W3C OWL 2 Test Case Repository (approved).\n")
-        f.write("Note: This suite includes only tests that provide OWL 2 Functional Syntax (OFN),\n")
-        f.write("which Konclude parses natively without Redland.\n\n")
+        f.write("Note: This suite includes tests with OWL 2 Functional Syntax (OFN),\n")
+        f.write("including payloads converted from RDF/XML to OFN for Redland-free runs.\n\n")
         f.write(f"- Extracted DL/DIRECT tests with OFN payloads: {total_tests}\n")
         f.write(f"- Generated runnable cases: {total_cases}\n\n")
         f.write("## Case Breakdown\n")
