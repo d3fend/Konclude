@@ -307,6 +307,17 @@ namespace Konclude {
 					mRoleObjPropTermHash->insert(bottomObjectRole,mBottomObjPropExpression);
 					rBox->setBottomObjectRole(bottomObjectRole);
 				}
+				if (bottomObjectRole) {
+					CConcept* bottomConcept = tBox->getBottomConcept();
+					if (bottomConcept) {
+						CSortedNegLinker<CConcept*>* domainConLinker = CObjectAllocator< CSortedNegLinker<CConcept*> >::allocateAndConstruct(tBoxMemMan);
+						domainConLinker->init(bottomConcept,false);
+						bottomObjectRole->addDomainConceptLinker(domainConLinker);
+						CSortedNegLinker<CConcept*>* rangeConLinker = CObjectAllocator< CSortedNegLinker<CConcept*> >::allocateAndConstruct(tBoxMemMan);
+						rangeConLinker->init(bottomConcept,false);
+						bottomObjectRole->addRangeConceptLinker(rangeConLinker);
+					}
+				}
 				CRole* topDataRole = rBox->getTopDataRole();
 				if (!topDataRole) {
 					topDataRole = CObjectAllocator<CRole>::allocateAndConstruct(tBoxMemMan);

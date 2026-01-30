@@ -2,19 +2,11 @@
 # Update when tests start passing.
 Datatype-DataComplementOf-001-consistency
 Datatype-Float-Discrete-001-inconsistency
-Inconsistent-Disjoint-Dataproperties-inconsistency
 Minus-Infinity-is-not-in-owl-real-inconsistency
-New-Feature-AsymmetricProperty-001-inconsistency
-New-Feature-BottomObjectProperty-001-inconsistency
-New-Feature-DisjointDataProperties-001-inconsistency
-New-Feature-DisjointDataProperties-002-entailment-1
-New-Feature-IrreflexiveProperty-001-inconsistency
 New-Feature-Keys-001-entailment-1
 New-Feature-Keys-002-inconsistency
 New-Feature-Keys-003-entailment-1
 New-Feature-Rational-003-consistency
-New-Feature-SelfRestriction-002-entailment-1
-Plus-and-Minus-Zero-are-Distinct-inconsistency
 Qualified-cardinality-boolean-entailment-1
 Qualified-cardinality-boolean-entailment-2
 WebOnt-I5.8-001-inconsistency
@@ -32,7 +24,4 @@ WebOnt-description-logic-615-inconsistency
 WebOnt-description-logic-617-inconsistency
 WebOnt-miscellaneous-203-inconsistency
 WebOnt-miscellaneous-204-inconsistency
-WebOnt-someValuesFrom-003-entailment-4
-WebOnt-someValuesFrom-003-entailment-5
 one-two-inconsistency
-somevaluesfrom2bnode-entailment-1

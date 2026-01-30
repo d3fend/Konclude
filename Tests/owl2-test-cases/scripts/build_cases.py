@@ -126,6 +126,89 @@ def negate_axiom(axiom: str):
     return None
 
 
+def is_blank_node(term: str) -> bool:
+    return term.startswith("_:")
+
+
+def extract_object_property_assertions(text: str):
+    assertions = []
+    for axiom in extract_axioms(text, "ObjectPropertyAssertion"):
+        m = re.match(r"^ObjectPropertyAssertion\s*\((.*)\)$", axiom.strip(), re.S)
+        if not m:
+            continue
+        args = split_top_level_args(m.group(1).strip())
+        if len(args) >= 3:
+            assertions.append((args[0], args[1], args[2]))
+    return assertions
+
+
+def extract_class_assertions(text: str):
+    assertions = []
+    for axiom in extract_axioms(text, "ClassAssertion"):
+        m = re.match(r"^ClassAssertion\s*\((.*)\)$", axiom.strip(), re.S)
+        if not m:
+            continue
+        args = split_top_level_args(m.group(1).strip())
+        if len(args) >= 2:
+            assertions.append((args[0], args[1]))
+    return assertions
+
+
+def build_bnode_negations(concl_text: str):
+    obj_assertions = extract_object_property_assertions(concl_text)
+    class_assertions = extract_class_assertions(concl_text)
+
+    has_bnodes = any(is_blank_node(s) or is_blank_node(o) for _, s, o in obj_assertions) or any(
+        is_blank_node(ind) for _, ind in class_assertions
+    )
+    if not has_bnodes:
+        return []
+
+    class_map = defaultdict(list)
+    for class_expr, indiv in class_assertions:
+        if class_expr != "owl:Thing":
+            class_map[indiv].append(class_expr)
+
+    obj_map = defaultdict(list)
+    for prop, subj, obj in obj_assertions:
+        obj_map[subj].append((prop, obj))
+
+    roots = sorted({node for node in set(class_map.keys()) | set(obj_map.keys()) if not is_blank_node(node)})
+    if not roots:
+        return []
+
+    memo = {}
+
+    def build_expr(node, stack):
+        if node in memo:
+            return memo[node]
+        if node in stack:
+            return "owl:Thing"
+        stack.add(node)
+        parts = []
+        for cls in class_map.get(node, []):
+            if cls != "owl:Thing":
+                parts.append(cls)
+        for prop, obj in obj_map.get(node, []):
+            filler = build_expr(obj, stack)
+            parts.append(f"ObjectSomeValuesFrom({prop} {filler})")
+        if not parts:
+            expr = "owl:Thing"
+        elif len(parts) == 1:
+            expr = parts[0]
+        else:
+            expr = "ObjectIntersectionOf(" + " ".join(parts) + ")"
+        memo[node] = expr
+        stack.remove(node)
+        return expr
+
+    neg_axioms = []
+    for root in roots:
+        expr = build_expr(root, set())
+        neg_axioms.append(f"ClassAssertion(ObjectComplementOf({expr}) {root})")
+    return neg_axioms
+
+
 def find_ontology_insertion(text: str):
     idx = text.find("Ontology(")
     if idx == -1:
@@ -219,12 +302,13 @@ def main():
                 skipped.append({"id": t["id"], "reason": "missing_conclusion"})
                 continue
             concl_text = open(conclusion).read()
-            neg_axioms = []
-            for ax in AXIOMS:
-                for axiom in extract_axioms(concl_text, ax):
-                    neg = negate_axiom(axiom)
-                    if neg:
-                        neg_axioms.append(neg)
+            neg_axioms = build_bnode_negations(concl_text)
+            if not neg_axioms:
+                for ax in AXIOMS:
+                    for axiom in extract_axioms(concl_text, ax):
+                        neg = negate_axiom(axiom)
+                        if neg:
+                            neg_axioms.append(neg)
             if not neg_axioms:
                 skipped.append({"id": t["id"], "reason": "unsupported_conclusion"})
                 continue

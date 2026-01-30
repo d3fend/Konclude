@@ -20,6 +20,8 @@
 
 #include "CDataLiteralFloatValue.h"
 
+#include <cmath>
+
 
 namespace Konclude {
 
@@ -138,7 +140,19 @@ namespace Konclude {
 			}
 
 			bool CDataLiteralFloatValue::isEqualTo(CDataLiteralFloatValue* floatValue) {
-				return mFloat == floatValue->mFloat;
+				if (!floatValue) {
+					return false;
+				}
+				if (std::isnan(mFloat) && std::isnan(floatValue->mFloat)) {
+					return true;
+				}
+				if (mFloat == floatValue->mFloat) {
+					if (mFloat == 0.0f) {
+						return std::signbit(mFloat) == std::signbit(floatValue->mFloat);
+					}
+					return true;
+				}
+				return false;
 			}
 
 			bool CDataLiteralFloatValue::isGreaterEqualThan(CDataLiteralFloatValue* floatValue) {
@@ -172,11 +186,25 @@ namespace Konclude {
 
 
 			bool CDataLiteralFloatValue::isLessThan(CDataLiteralFloatValue* floatValue) {
-				if (mFloat < floatValue->mFloat) {
-					return true;
-				} else {
+				if (!floatValue) {
 					return false;
 				}
+				bool thisNaN = std::isnan(mFloat);
+				bool otherNaN = std::isnan(floatValue->mFloat);
+				if (thisNaN || otherNaN) {
+					if (thisNaN && otherNaN) {
+						return false;
+					}
+					// Treat NaN as greater than any non-NaN value.
+					return !thisNaN && otherNaN;
+				}
+				if (mFloat == floatValue->mFloat) {
+					if (mFloat == 0.0f) {
+						return std::signbit(mFloat) && !std::signbit(floatValue->mFloat);
+					}
+					return false;
+				}
+				return mFloat < floatValue->mFloat;
 			}
 
 

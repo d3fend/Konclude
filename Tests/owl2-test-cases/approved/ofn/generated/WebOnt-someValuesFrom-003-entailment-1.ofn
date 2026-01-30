@@ -30,5 +30,5 @@ ClassAssertion(first:person first:fred)
 
 
 
-  ClassAssertion(ObjectComplementOf(owl:Thing) first:fred)
+  ClassAssertion(ObjectComplementOf(ObjectSomeValuesFrom(first:parent ObjectSomeValuesFrom(first:parent owl:Thing))) first:fred)
 )

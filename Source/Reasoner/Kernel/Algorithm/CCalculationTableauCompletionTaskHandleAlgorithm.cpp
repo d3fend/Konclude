@@ -71,6 +71,123 @@ namespace Konclude {
 
 			namespace Algorithm {
 
+				namespace {
+					bool hasEqualDataLiteral(CIndividualProcessNode* indi1, CIndividualProcessNode* indi2) {
+						if (!indi1 || !indi2) {
+							return false;
+						}
+						auto isSameLiteral = [&](CDataLiteral* lit1, CDataLiteral* lit2) -> bool {
+							if (!lit1 || !lit2) {
+								return false;
+							}
+							if (lit1 == lit2) {
+								return true;
+							}
+							CDataLiteralValue* val1 = lit1->getDataLiteralValue();
+							CDataLiteralValue* val2 = lit2->getDataLiteralValue();
+							return val1 && val2 && val1->isEqualTo(val2);
+						};
+
+						auto matchesLiteral = [&](CDataLiteral* dataLit1) -> bool {
+							if (!dataLit1) {
+								return false;
+							}
+							for (CProcessAssertedDataLiteralLinker* dataLitIt2 = indi2->getAssertedDataLiteralLinker(); dataLitIt2; dataLitIt2 = dataLitIt2->getNext()) {
+								if (isSameLiteral(dataLit1, dataLitIt2->getDataLiteral())) {
+									return true;
+								}
+							}
+							CReapplyConceptLabelSet* labelSet2 = indi2->getReapplyConceptLabelSet(false);
+							if (labelSet2) {
+								bool minMatch = false;
+								bool maxMatch = false;
+								CReapplyConceptLabelSetIterator it2 = labelSet2->getConceptLabelSetIterator(false, false, true);
+								while (it2.hasNext()) {
+									CConceptDescriptor* conDes2 = it2.next();
+									if (!conDes2 || conDes2->isNegated()) {
+										continue;
+									}
+									CConcept* con2 = conDes2->getConcept();
+									if (!con2) {
+										continue;
+									}
+									if (con2->getOperatorCode() == CCDATALITERAL) {
+										if (isSameLiteral(dataLit1, con2->getDataLiteral())) {
+											return true;
+										}
+									} else if (con2->getOperatorCode() == CCDATARESTRICTION) {
+										CDataLiteral* dataLit2 = con2->getDataLiteral();
+										if (!dataLit2) {
+											continue;
+										}
+										if (isSameLiteral(dataLit1, dataLit2)) {
+											cint64 restrictionCode = con2->getParameter();
+											if (restrictionCode == CDFC_MIN_INCLUSIVE) {
+												minMatch = true;
+											} else if (restrictionCode == CDFC_MAX_INCLUSIVE) {
+												maxMatch = true;
+											}
+											if (minMatch && maxMatch) {
+												return true;
+											}
+										}
+									}
+								}
+								if (minMatch && maxMatch) {
+									return true;
+								}
+							}
+							return false;
+						};
+
+						for (CProcessAssertedDataLiteralLinker* dataLitIt1 = indi1->getAssertedDataLiteralLinker(); dataLitIt1; dataLitIt1 = dataLitIt1->getNext()) {
+							if (matchesLiteral(dataLitIt1->getDataLiteral())) {
+								return true;
+							}
+						}
+						CReapplyConceptLabelSet* labelSet1 = indi1->getReapplyConceptLabelSet(false);
+						if (labelSet1) {
+							QList<CDataLiteral*> minLiterals;
+							QList<CDataLiteral*> maxLiterals;
+							CReapplyConceptLabelSetIterator it1 = labelSet1->getConceptLabelSetIterator(false, false, true);
+							while (it1.hasNext()) {
+								CConceptDescriptor* conDes1 = it1.next();
+								if (!conDes1 || conDes1->isNegated()) {
+									continue;
+								}
+								CConcept* con1 = conDes1->getConcept();
+								if (!con1) {
+									continue;
+								}
+								if (con1->getOperatorCode() == CCDATALITERAL) {
+									if (matchesLiteral(con1->getDataLiteral())) {
+										return true;
+									}
+								} else if (con1->getOperatorCode() == CCDATARESTRICTION) {
+									CDataLiteral* dataLit1 = con1->getDataLiteral();
+									if (!dataLit1) {
+										continue;
+									}
+									cint64 restrictionCode = con1->getParameter();
+									if (restrictionCode == CDFC_MIN_INCLUSIVE) {
+										minLiterals.append(dataLit1);
+									} else if (restrictionCode == CDFC_MAX_INCLUSIVE) {
+										maxLiterals.append(dataLit1);
+									}
+								}
+							}
+							for (CDataLiteral* minLit : minLiterals) {
+								for (CDataLiteral* maxLit : maxLiterals) {
+									if (isSameLiteral(minLit, maxLit) && matchesLiteral(minLit)) {
+										return true;
+									}
+								}
+							}
+						}
+						return false;
+					}
+				}
+
 
 				
 				CCalculationTableauCompletionTaskHandleAlgorithm::CCalculationTableauCompletionTaskHandleAlgorithm(CUnsatisfiableCacheHandler* unsatCacheHandler, CSatisfiableExpanderCacheHandler* satExpCacheHandler, CReuseCompletionGraphCacheHandler* reuseCompGraphCacheHandler, CSaturationNodeExpansionCacheHandler* satNodeExpCacheHandler, CComputedConsequencesCacheHandler* compConsCacheHandler, CIndividualNodeBackendCacheHandler* backendCacheHandler, COccurrenceStatisticsCacheHandler* occStatsCacheHandler) {
@@ -20267,6 +20384,20 @@ namespace Konclude {
 							CNegationDisjointEdge* negDisEdge = CObjectParameterizingAllocator< CNegationDisjointEdge,CProcessContext* >::allocateAndConstructAndParameterize(taskMemMan,calcAlgContext->getUsedProcessContext());
 							negDisEdge->initNegationDisjointEdge(sourceIndi,destinationIndi,disjointRole,depTrackPoint);
 
+							if (disjointRole->isDataRole()) {
+								CRoleSuccessorLinkIterator disRoleLinkIt = sourceIndi->getRoleSuccessorLinkIterator(disjointRole);
+								while (disRoleLinkIt.hasNext()) {
+									CIndividualLinkEdge* linkIndi = disRoleLinkIt.next();
+									CIndividualProcessNode* otherDestIndi = linkIndi->getDestinationIndividual();
+									if (otherDestIndi && hasEqualDataLiteral(destinationIndi, otherDestIndi)) {
+										CClashedDependencyDescriptor* clashDes = nullptr;
+										clashDes = createClashedIndividualLinkDescriptor(clashDes,linkIndi,linkIndi->getDependencyTrackPoint(),calcAlgContext);
+										clashDes = createClashedNegationDisjointDescriptor(clashDes,negDisEdge,depTrackPoint,calcAlgContext);
+										throw CCalculationClashProcessingException(clashDes);
+									}
+								}
+							}
+
 							CIndividualLinkEdge* linkIndi = sourceIndi->getRoleSuccessorToIndividualLink(disjointRole,destinationIndi,true);
 							if (linkIndi) {
 								// create clash
@@ -20769,6 +20900,12 @@ namespace Konclude {
 
 				bool CCalculationTableauCompletionTaskHandleAlgorithm::areIndividualNodesDisjointRolesMergeable(CIndividualProcessNode* indi1, CIndividualProcessNode* indi2, CClashedDependencyDescriptor*& clashDescriptors, CCalculationAlgorithmContextBase* calcAlgContext) {
 					if (indi1->hasDisjointRoleConnections() || indi2->hasDisjointRoleConnections()) {
+						if (!isIndividualNodeDataDisjointRolesMergeable(indi1,indi2,clashDescriptors,calcAlgContext)) {
+							return false;
+						}
+						if (!isIndividualNodeDataDisjointRolesMergeable(indi2,indi1,clashDescriptors,calcAlgContext)) {
+							return false;
+						}
 						if (!isIndividualNodeDisjointRolesMergeable(indi1,indi2,clashDescriptors,calcAlgContext)) {
 							return false;
 						}
@@ -20873,6 +21010,50 @@ namespace Konclude {
 									}
 								}
 							}
+						}
+					}
+					return true;
+				}
+
+
+
+				bool CCalculationTableauCompletionTaskHandleAlgorithm::isIndividualNodeDataDisjointRolesMergeable(CIndividualProcessNode* indi1, CIndividualProcessNode* indi2, CClashedDependencyDescriptor*& clashDescriptors, CCalculationAlgorithmContextBase* calcAlgContext) {
+					CRoleSuccessorIterator roleIt = indi1->getRoleIterator();
+					while (roleIt.hasNext()) {
+						CRole* role = roleIt.next();
+						if (!role || !role->isDataRole()) {
+							continue;
+						}
+						CSortedNegLinker<CRole*>* disRoleLinkerIt = role->getDisjointRoleList();
+						if (!disRoleLinkerIt) {
+							continue;
+						}
+						while (disRoleLinkerIt) {
+							CRole* disRole = disRoleLinkerIt->getData();
+							if (disRole && disRole->isDataRole() && indi2->getRoleSuccessorCount(disRole) > 0) {
+								CRoleSuccessorLinkIterator roleLinkIt = indi1->getRoleSuccessorLinkIterator(role);
+								while (roleLinkIt.hasNext()) {
+									CIndividualLinkEdge* link1 = roleLinkIt.next();
+									CIndividualProcessNode* dataIndi1 = link1->getDestinationIndividual();
+									if (!dataIndi1) {
+										continue;
+									}
+									CRoleSuccessorLinkIterator disRoleLinkIt = indi2->getRoleSuccessorLinkIterator(disRole);
+									while (disRoleLinkIt.hasNext()) {
+										CIndividualLinkEdge* link2 = disRoleLinkIt.next();
+										CIndividualProcessNode* dataIndi2 = link2->getDestinationIndividual();
+										if (!dataIndi2) {
+											continue;
+										}
+										if (hasEqualDataLiteral(dataIndi1,dataIndi2)) {
+											clashDescriptors = createClashedIndividualLinkDescriptor(clashDescriptors,link1,link1->getDependencyTrackPoint(),calcAlgContext);
+											clashDescriptors = createClashedIndividualLinkDescriptor(clashDescriptors,link2,link2->getDependencyTrackPoint(),calcAlgContext);
+											return false;
+										}
+									}
+								}
+							}
+							disRoleLinkerIt = disRoleLinkerIt->getNext();
 						}
 					}
 					return true;
@@ -26757,6 +26938,39 @@ namespace Konclude {
 						addBlockingCoreConcept(conceptDescriptor,processIndi,conLabelSet,calcAlgContext);
 						setIndividualNodeConceptLabelSetModified(processIndi,calcAlgContext);
 						addConceptPreprocessedToProcessingQueue(conceptDescriptor,dependencyTrackPoint,conProQueue,processIndi,allowPreprocessing,calcAlgContext);
+						if (!negate && processIndi->hasPartialProcessingRestrictionFlags(CIndividualProcessNode::PRFCONCRETEDATAINDINODE)) {
+							qint64 opCode = addingConcept->getOperatorCode();
+							if (opCode == CCDATALITERAL || opCode == CCDATARESTRICTION) {
+								CIndividualLinkEdge* ancLink = processIndi->getAncestorLink();
+								if (ancLink) {
+									CIndividualProcessNode* sourceIndi = ancLink->getSourceIndividual();
+									CRole* role = ancLink->getLinkRole();
+									if (sourceIndi && role && role->isDataRole() && role->getDisjointRoleList()) {
+										CSortedNegLinker<CRole*>* disRoleLinkerIt = role->getDisjointRoleList();
+										while (disRoleLinkerIt) {
+											CRole* disRole = disRoleLinkerIt->getData();
+											if (disRole && disRole->isDataRole()) {
+												CRoleSuccessorLinkIterator disRoleLinkIt = sourceIndi->getRoleSuccessorLinkIterator(disRole);
+												while (disRoleLinkIt.hasNext()) {
+													CIndividualLinkEdge* disLink = disRoleLinkIt.next();
+													CIndividualProcessNode* otherIndi = disLink->getDestinationIndividual();
+													if (otherIndi && hasEqualDataLiteral(processIndi, otherIndi)) {
+														CClashedDependencyDescriptor* clashDes = nullptr;
+														clashDes = createClashedIndividualLinkDescriptor(clashDes,ancLink,ancLink->getDependencyTrackPoint(),calcAlgContext);
+														clashDes = createClashedIndividualLinkDescriptor(clashDes,disLink,disLink->getDependencyTrackPoint(),calcAlgContext);
+														CNegationDisjointEdge* negDisEdge = CObjectParameterizingAllocator< CNegationDisjointEdge,CProcessContext* >::allocateAndConstructAndParameterize(taskMemMan,calcAlgContext->getUsedProcessContext());
+														negDisEdge->initNegationDisjointEdge(sourceIndi,processIndi,disRole,dependencyTrackPoint);
+														clashDes = createClashedNegationDisjointDescriptor(clashDes,negDisEdge,dependencyTrackPoint,calcAlgContext);
+														throw CCalculationClashProcessingException(clashDes);
+													}
+												}
+											}
+											disRoleLinkerIt = disRoleLinkerIt->getNext();
+										}
+									}
+								}
+							}
+						}
 						if (reapplyIt.hasNext()) {
 							// reapply reapplying concept
 							applyReapplyQueueConcepts(processIndi,&reapplyIt,calcAlgContext);

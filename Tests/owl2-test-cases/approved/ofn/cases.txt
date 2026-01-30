@@ -378,10 +378,6 @@ false	Tests/owl2-test-cases/approved/ofn/generated/WebOnt-oneOf-004-entailment-2
 true	Tests/owl2-test-cases/approved/ofn/WebOnt-sameAs-001-premise.ofn	WebOnt-sameAs-001-consistency
 true	Tests/owl2-test-cases/approved/ofn/WebOnt-someValuesFrom-003-premise.ofn	WebOnt-someValuesFrom-003-consistency
 false	Tests/owl2-test-cases/approved/ofn/generated/WebOnt-someValuesFrom-003-entailment-1.ofn	WebOnt-someValuesFrom-003-entailment-1
-false	Tests/owl2-test-cases/approved/ofn/generated/WebOnt-someValuesFrom-003-entailment-2.ofn	WebOnt-someValuesFrom-003-entailment-2
-false	Tests/owl2-test-cases/approved/ofn/generated/WebOnt-someValuesFrom-003-entailment-3.ofn	WebOnt-someValuesFrom-003-entailment-3
-false	Tests/owl2-test-cases/approved/ofn/generated/WebOnt-someValuesFrom-003-entailment-4.ofn	WebOnt-someValuesFrom-003-entailment-4
-false	Tests/owl2-test-cases/approved/ofn/generated/WebOnt-someValuesFrom-003-entailment-5.ofn	WebOnt-someValuesFrom-003-entailment-5
 true	Tests/owl2-test-cases/approved/ofn/WebOnt-unionOf-003-premise.ofn	WebOnt-unionOf-003-consistency
 true	Tests/owl2-test-cases/approved/ofn/WebOnt-unionOf-004-premise.ofn	WebOnt-unionOf-004-consistency
 false	Tests/owl2-test-cases/approved/ofn/generated/WebOnt-unionOf-004-entailment-1.ofn	WebOnt-unionOf-004-entailment-1

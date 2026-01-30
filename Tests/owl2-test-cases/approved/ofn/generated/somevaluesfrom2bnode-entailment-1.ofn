@@ -21,5 +21,5 @@ ClassAssertion(ObjectSomeValuesFrom(ex:p owl:Thing) ex:a)
 
 
 
-  NegativeObjectPropertyAssertion(ex:p ex:a _:genid2147483650)
+  ClassAssertion(ObjectComplementOf(ObjectSomeValuesFrom(ex:p owl:Thing)) ex:a)
 )

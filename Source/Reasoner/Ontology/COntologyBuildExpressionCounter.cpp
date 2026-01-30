@@ -288,11 +288,11 @@ namespace Konclude {
 					if (getRefferedBottomClassCount() > 0) {
 						mConsistencyProblematicExpressions = true;
 					}
-					if (getRefferedBottomClassCount() > 0) {
-						mRefferedBottomObjectPropertyCount = true;
+					if (getRefferedBottomObjectPropertyCount() > 0) {
+						mConsistencyProblematicExpressions = true;
 					}
-					if (getRefferedBottomClassCount() > 0) {
-						mRefferedBottomDataPropertyCount = true;
+					if (getRefferedBottomDataPropertyCount() > 0) {
+						mConsistencyProblematicExpressions = true;
 					}
 
 

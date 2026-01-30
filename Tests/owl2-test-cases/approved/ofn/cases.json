@@ -2653,34 +2653,6 @@
     "type": "PositiveEntailmentTest"
   },
   {
-    "expect": false,
-    "id": "WebOnt-someValuesFrom-003-entailment-2",
-    "input": "Tests/owl2-test-cases/approved/ofn/generated/WebOnt-someValuesFrom-003-entailment-2.ofn",
-    "source": "WebOnt-someValuesFrom-003",
-    "type": "PositiveEntailmentTest"
-  },
-  {
-    "expect": false,
-    "id": "WebOnt-someValuesFrom-003-entailment-3",
-    "input": "Tests/owl2-test-cases/approved/ofn/generated/WebOnt-someValuesFrom-003-entailment-3.ofn",
-    "source": "WebOnt-someValuesFrom-003",
-    "type": "PositiveEntailmentTest"
-  },
-  {
-    "expect": false,
-    "id": "WebOnt-someValuesFrom-003-entailment-4",
-    "input": "Tests/owl2-test-cases/approved/ofn/generated/WebOnt-someValuesFrom-003-entailment-4.ofn",
-    "source": "WebOnt-someValuesFrom-003",
-    "type": "PositiveEntailmentTest"
-  },
-  {
-    "expect": false,
-    "id": "WebOnt-someValuesFrom-003-entailment-5",
-    "input": "Tests/owl2-test-cases/approved/ofn/generated/WebOnt-someValuesFrom-003-entailment-5.ofn",
-    "source": "WebOnt-someValuesFrom-003",
-    "type": "PositiveEntailmentTest"
-  },
-  {
     "expect": true,
     "id": "WebOnt-unionOf-003-consistency",
     "input": "Tests/owl2-test-cases/approved/ofn/WebOnt-unionOf-003-premise.ofn",

@@ -1062,6 +1062,25 @@ namespace Konclude {
 								} else if (expType == CBuildExpression::BETOBJECTSOMEVALUEFROM) {
 									CObjectSomeValuesFromExpression* objExp = (CObjectSomeValuesFromExpression*)classTermExp;
 									CObjectPropertyTermExpression* opObjPropExp = objExp->getObjectPropertyTermExpression();
+									bool bottomObjProp = (opObjPropExp == mBottomObjPropExpression);
+									if (!bottomObjProp) {
+										CObjectPropertyTermExpression* checkExp = opObjPropExp;
+										if (CInverseObjectPropertyOfExpression* invExp = dynamic_cast<CInverseObjectPropertyOfExpression*>(opObjPropExp)) {
+											checkExp = invExp->getInverseOfExpression();
+										}
+										if (checkExp == mBottomObjPropExpression) {
+											bottomObjProp = true;
+										} else if (CObjectPropertyExpression* namedProp = dynamic_cast<CObjectPropertyExpression*>(checkExp)) {
+											bottomObjProp = (namedProp->getName() == PREFIX_OWL_BOTTOMOBJECTPROPERTY);
+										}
+									}
+									if (!bottomObjProp && getRoleForObjectPropertyTerm(opObjPropExp) == rBox->getBottomObjectRole()) {
+										bottomObjProp = true;
+									}
+									if (bottomObjProp) {
+										concept->setOperatorCode(CCBOTTOM);
+										continue;
+									}
 									setConceptRoleFromObjectPropertyTerm(concept,opObjPropExp);
 									CClassTermExpression* opClassExp = objExp->getClassTermExpression();
 									if (opClassExp == nullptr) {
@@ -1075,6 +1094,53 @@ namespace Konclude {
 									CDataPropertyTermExpression* dataPropPropExp = dataSomeValueExp->getDataPropertyTermExpression();									
 									setConceptRoleFromDataPropertyTerm(concept,dataPropPropExp);
 									CDataRangeTermExpression* dataRangeTermExp = dataSomeValueExp->getDataRangeTermExpression();
+									if (dataRangeTermExp) {
+										CDataLiteralExpression* singleLiteralExp = nullptr;
+										CBuildExpression::ExpressionType dataRangeType = dataRangeTermExp->getType();
+										if (dataRangeType == CBuildExpression::BETDATALITERAL) {
+											singleLiteralExp = (CDataLiteralExpression*)dataRangeTermExp;
+										} else if (dataRangeType == CBuildExpression::BETDATAONEOF) {
+											CDataOneOfExpression* dataOneOfExp = (CDataOneOfExpression*)dataRangeTermExp;
+											CEXPRESSIONLIST<CDataRangeTermExpression*>* dataRangeList = dataOneOfExp->getDataRangeTermExpressionList();
+											if (dataRangeList && dataRangeList->count() == 1) {
+												CDataRangeTermExpression* singleRangeExp = dataRangeList->first();
+												if (singleRangeExp && singleRangeExp->getType() == CBuildExpression::BETDATALITERAL) {
+													singleLiteralExp = (CDataLiteralExpression*)singleRangeExp;
+												}
+											}
+										} else if (dataRangeType == CBuildExpression::BETDATATYPERESTRICTION) {
+											CDatatypeRestrictionExpression* restrExp = (CDatatypeRestrictionExpression*)dataRangeTermExp;
+											CEXPRESSIONLIST<CDataFacetRestrictionExpression*>* facetList = restrExp->getDataFacetRestrictionExpressionList();
+											if (facetList && facetList->count() == 2) {
+												CDataLiteralExpression* minLitExp = nullptr;
+												CDataLiteralExpression* maxLitExp = nullptr;
+												FOREACHIT (CDataFacetRestrictionExpression* facetRestrictionExp, *facetList) {
+													if (!facetRestrictionExp) {
+														continue;
+													}
+													CDataFacetExpression* facetExp = facetRestrictionExp->getDataFacetExpression();
+													CDataLiteralExpression* litExp = facetRestrictionExp->getDataLiteralExpression();
+													if (!facetExp || !litExp) {
+														continue;
+													}
+													const QString& facetIRI = facetExp->getName();
+													if (facetIRI == PREFIX_MIN_INCLUSIVE_FACET) {
+														minLitExp = litExp;
+													} else if (facetIRI == PREFIX_MAX_INCLUSIVE_FACET) {
+														maxLitExp = litExp;
+													}
+												}
+												if (minLitExp && maxLitExp) {
+													if (minLitExp == maxLitExp || minLitExp->compareStructuralEquivalence(maxLitExp)) {
+														singleLiteralExp = minLitExp;
+													}
+												}
+											}
+										}
+										if (singleLiteralExp) {
+											dataRangeTermExp = singleLiteralExp;
+										}
+									}
 									if (dataRangeTermExp == nullptr) {
 										dataRangeTermExp = mTopDataRangeExpression;
 									}
@@ -2396,6 +2462,23 @@ namespace Konclude {
 				CRoleAssertionLinker* roleAssLinker = CObjectAllocator< CRoleAssertionLinker >::allocateAndConstruct(mMemManager);
 				roleAssLinker->initRoleAssertionLinker(role,desIndividual);
 				individual->addAssertionRoleLinker(roleAssLinker);
+				if (individual == desIndividual) {
+					// explicit self-assertions imply ObjectHasSelf(role)
+					CClassTermExpression* selfExp = getObjectHasSelf(objPropTermExp);
+					setIndividualAssertionConceptFromClassTerm(individual, selfExp, false);
+					if (role->isIrreflexive() || role->isAsymmetric()) {
+						setIndividualAssertionConceptFromClassTerm(individual, mBottomClassExpression, false);
+					}
+				}
+				if (role->isAsymmetric() && individual != desIndividual) {
+					for (CRoleAssertionLinker* revAssLinkerIt = desIndividual->getAssertionRoleLinker(); revAssLinkerIt; revAssLinkerIt = revAssLinkerIt->getNext()) {
+						if (revAssLinkerIt->getRole() == role && revAssLinkerIt->getIndividual() == individual) {
+							setIndividualAssertionConceptFromClassTerm(individual, mBottomClassExpression, false);
+							setIndividualAssertionConceptFromClassTerm(desIndividual, mBottomClassExpression, false);
+							break;
+						}
+					}
+				}
 				return true;
 			}
 
@@ -2410,6 +2493,17 @@ namespace Konclude {
 			bool CConcreteOntologyUpdateBuilder::setIndividualAssertionDataFromDataLiteralTerm(CIndividual* individual, CDataPropertyTermExpression* dataPropTermExp, CDataLiteralExpression* dataLitExp) {
 				CRole* role = getRoleForDataPropertyTerm(dataPropTermExp);
 				CDataLiteral* dataLiteral = getDataLiteralForLiteralExpression(dataLitExp);
+				if (dataLiteral) {
+					for (CDataAssertionLinker* dataAssIt = individual->getAssertionDataLinker(); dataAssIt; dataAssIt = dataAssIt->getNext()) {
+						if (dataAssIt->getDataLiteral() == dataLiteral) {
+							CRole* existingRole = dataAssIt->getRole();
+							if ((role && role->hasDisjointRole(existingRole)) || (existingRole && existingRole->hasDisjointRole(role))) {
+								setIndividualAssertionConceptFromClassTerm(individual, mBottomClassExpression, false);
+								break;
+							}
+						}
+					}
+				}
 				CDataAssertionLinker* dataAssLinker = CObjectAllocator< CDataAssertionLinker >::allocateAndConstruct(mMemManager);
 				dataAssLinker->initDataAssertionLinker(role, dataLiteral);
 				individual->addAssertionDataLinker(dataAssLinker);
