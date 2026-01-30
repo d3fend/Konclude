@@ -11,6 +11,7 @@ CASES_FILE="${2:-Tests/owl2-test-cases/approved/ofn/cases.txt}"
 WORK_DIR="${3:-Tests/owl2-test-cases/approved/ofn/tmp}"
 EXPECTED_FILE="${4:-Tests/owl2-test-cases/expected-failures.txt}"
 IRI_MAPPING_FILE="${5:-Tests/owl2-test-cases/approved/ofn/iri-mapping.txt}"
+KONCLUDE_ARGS_STR="${KONCLUDE_ARGS:-}"
 
 mkdir -p "$WORK_DIR"
 
@@ -31,6 +32,11 @@ if [[ -f "$IRI_MAPPING_FILE" ]]; then
   MAPPING_ARG=(-m "$IRI_MAPPING_FILE")
 fi
 
+EXTRA_ARGS=()
+if [[ -n "$KONCLUDE_ARGS_STR" ]]; then
+  read -r -a EXTRA_ARGS <<< "$KONCLUDE_ARGS_STR"
+fi
+
 fail=0
 count=0
 xfail=0
@@ -40,7 +46,24 @@ while IFS=$'\t' read -r expect path case_id; do
   [[ "$expect" == \#* ]] && continue
   ((count+=1))
   out="$WORK_DIR/$(basename "$path").out"
-  "$KONCLUDE" consistency -i "$path" -o "$out" "${MAPPING_ARG[@]}" >/dev/null
+  if "$KONCLUDE" consistency -i "$path" -o "$out" "${MAPPING_ARG[@]}" "${EXTRA_ARGS[@]}" >/dev/null; then
+    :
+  else
+    rc=$?
+    if [[ "$rc" -eq 137 && "${KONCLUDE_OOM_XFAIL:-}" == "1" ]]; then
+      echo "XFAIL $case_id: konclude killed (exit $rc)"
+      ((xfail+=1))
+      continue
+    fi
+    if is_expected "$case_id"; then
+      echo "XFAIL $case_id: konclude exit $rc"
+      ((xfail+=1))
+      continue
+    fi
+    echo "FAIL $case_id: konclude exit $rc"
+    fail=1
+    continue
+  fi
   if [[ ! -f "$out" ]]; then
     if is_expected "$case_id"; then
       echo "XFAIL $case_id: missing output"

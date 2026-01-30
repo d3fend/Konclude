@@ -23,6 +23,10 @@ Follow existing `Source/` style: tabs for indentation, braces on the next line, 
 
 ## Testing Guidelines
 There is no unit test framework. Add small, descriptive fixtures under `Tests/` when behavior changes. WASM browser tests live in `wasm/tests/` and are run via Playwright (`npm test`).
+Before committing, run OWL2 conformance tests after all other tests and update coverage/expected-failures as needed:
+- Linux/macOS: `Tests/owl2-test-cases/scripts/run_ofn_tests.sh Release/Konclude`
+- Windows: `powershell -File Tests\\owl2-test-cases\\scripts\\run_ofn_tests.ps1 -Konclude Release\\Konclude.exe`
+- Keep `Tests/owl2-test-cases/coverage.md` and `Tests/owl2-test-cases/expected-failures.txt` current with the latest results.
 
 ## Commit & Pull Request Guidelines
 Recent commits use short, lower-case subjects (e.g., “add wasm bridge…”, “fixed crash…”). Keep commit messages concise and scoped. PRs should include a summary, the exact test commands run, and note any changes to toolchain pins in `wasm/versions.env` or runtime configs in `Configs/`.
