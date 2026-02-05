@@ -26,6 +26,13 @@ export async function createKoncludeApi(createKoncludeModule, options = {}) {
   const tick = module.cwrap("konclude_tick", null, ["number"]);
   const setConfig = module.cwrap("konclude_set_config", "number", ["string", "string"]);
   const resetConfigOverrides = module.cwrap("konclude_reset_config_overrides", "number", []);
+  const shutdown = (() => {
+    try {
+      return module.cwrap("konclude_shutdown", null, []);
+    } catch {
+      return null;
+    }
+  })();
 
   async function waitForJob(jobId, { intervalMs = 10, timeoutMs = 120000, tickMs = 5 } = {}) {
     const started = Date.now();
@@ -113,6 +120,24 @@ export async function createKoncludeApi(createKoncludeModule, options = {}) {
     }
   }
 
+  function dispose() {
+    try {
+      if (shutdown) {
+        shutdown();
+      }
+    } catch {
+      // ignore
+    }
+    try {
+      const pthread = module.PThread;
+      if (pthread && typeof pthread.terminateAllThreads === "function") {
+        pthread.terminateAllThreads();
+      }
+    } catch {
+      // ignore
+    }
+  }
+
   return {
     module,
     submitJob,
@@ -121,6 +146,7 @@ export async function createKoncludeApi(createKoncludeModule, options = {}) {
     submitRealizeFiles,
     submitRealiseFiles,
     submitConsistencyFiles,
+    jobFree,
     waitForJob,
     classifyOwl2XmlString,
     realizeOwl2XmlString,
@@ -128,5 +154,6 @@ export async function createKoncludeApi(createKoncludeModule, options = {}) {
     setConfig,
     resetConfigOverrides,
     applyConfigOverrides,
+    dispose,
   };
 }

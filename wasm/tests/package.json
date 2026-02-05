@@ -4,7 +4,8 @@
   "version": "0.0.1",
   "description": "Browser smoke tests for Konclude WASM build",
   "scripts": {
-    "test": "node e2e.js"
+    "test": "node e2e.js",
+    "compare:ofn:native-wasm": "node ofn_native_wasm_perf_compare.js"
   },
   "devDependencies": {
     "playwright": "1.57.0"

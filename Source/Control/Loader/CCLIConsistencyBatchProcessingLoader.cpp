@@ -51,8 +51,15 @@ namespace Konclude {
 				if (mTrivialOnly) {
 					logOutputNotice("Trivial-only consistency mode enabled (skipping full consistency test).");
 				}
+				mDetailedConsistencyAttemptCount = 0;
+				mDetailedConsistencyMaxAttempts = CConfigDataReader::readConfigInteger(mLoaderConfig, "Konclude.CLI.DetailedConsistencyMaxAttempts", 2);
+				if (mDetailedConsistencyMaxAttempts < 1) {
+					mDetailedConsistencyMaxAttempts = 1;
+				}
 				mTestKB = QString("http://konclude.com/test/kb");
 				mReleaseScheduled = false;
+				mConsistencyFailureLogged = false;
+				mFallbackSatisfiableScheduled = false;
 				CCreateKnowledgeBaseCommand* createKBCommand = new CCreateKnowledgeBaseCommand(mTestKB);
 				QStringList ontoIRIList;
 				ontoIRIList.append(mRequestFileString);
@@ -61,7 +68,7 @@ namespace Konclude {
 				if (!getOntologyIRIMapping().isEmpty()) {
 					loadKBCommand->setOntologieIRIMappings(getOntologyIRIMapping());
 				}
-				mConsistencyKBCommand = new CIsConsistentQueryCommand(mTestKB);
+				mConsistencyKBCommand = nullptr;
 				mTriviallyConsistencyKBCommand = new CIsTriviallyConsistentQueryCommand(mTestKB);
 				addProcessingCommand(createKBCommand);
 				addProcessingCommand(loadKBCommand);
@@ -70,9 +77,28 @@ namespace Konclude {
 			}
 
 
+			CIsConsistentQueryCommand* CCLIConsistencyBatchProcessingLoader::createDetailedConsistencyCommand() {
+				CIsConsistentQueryCommand* consistencyCommand = new CIsConsistentQueryCommand(mTestKB);
+				mConsistencyKBCommand = consistencyCommand;
+				++mDetailedConsistencyAttemptCount;
+				return consistencyCommand;
+			}
+
+
+			CProcessClassNameSatisfiableQueryCommand* CCLIConsistencyBatchProcessingLoader::createConsistencyFallbackSatisfiableCommand() {
+				const QString thingClassName = QString("http://www.w3.org/2002/07/owl#Thing");
+				CProcessClassNameSatisfiableQueryCommand* satisfiableCommand = new CProcessClassNameSatisfiableQueryCommand(mTestKB, thingClassName);
+				mConsistencyFallbackSatisfiableCommand = satisfiableCommand;
+				mFallbackSatisfiableScheduled = true;
+				return satisfiableCommand;
+			}
+
+
 			void CCLIConsistencyBatchProcessingLoader::writeCommandOutput(const QString& outputFileName, CCommand* processedCommand) {
 				bool outputWritten = false;
 				bool requiresDetailedConsistencyChecking = true;
+				const bool processedDetailedConsistencyCommand = processedCommand && processedCommand == mConsistencyKBCommand;
+				const bool processedFallbackSatisfiableCommand = processedCommand && processedCommand == mConsistencyFallbackSatisfiableCommand;
 				CKnowledgeBaseQueryCommand* kbQueryCommand = dynamic_cast<CKnowledgeBaseQueryCommand*>(processedCommand);
 				if (kbQueryCommand) {
 					CQuery* query = kbQueryCommand->getCalculateQueryCommand()->getQuery();
@@ -86,7 +112,15 @@ namespace Konclude {
 									writeOutput = true;
 									requiresDetailedConsistencyChecking = false;
 								}
-								if (boolQueryResult->getResult() == true) {
+								if (processedFallbackSatisfiableCommand) {
+									requiresDetailedConsistencyChecking = false;
+									writeOutput = true;
+									if (boolQueryResult->getResult() == true) {
+										logOutputMessage(QString("Ontology '%1' is consistent.").arg(mRequestFileString));
+									} else {
+										logOutputMessage(QString("Ontology '%1' is inconsistent.").arg(mRequestFileString));
+									}
+								} else if (boolQueryResult->getResult() == true) {
 									requiresDetailedConsistencyChecking = false;
 									writeOutput = true;
 									logOutputMessage(QString("Ontology '%1' is consistent.").arg(mRequestFileString));
@@ -122,11 +156,32 @@ namespace Konclude {
 					}
 				}
 				if (requiresDetailedConsistencyChecking) {
-					addProcessingCommand(mConsistencyKBCommand,false,"",true,mResponseFileString);
+					if (mDetailedConsistencyAttemptCount < mDetailedConsistencyMaxAttempts) {
+						addProcessingCommand(createDetailedConsistencyCommand(),false,"",true,mResponseFileString);
+						if (processedDetailedConsistencyCommand) {
+							logOutputNotice(QString("Detailed consistency check returned no boolean result, retrying with a fresh command (%1/%2).")
+								.arg(mDetailedConsistencyAttemptCount)
+								.arg(mDetailedConsistencyMaxAttempts));
+						} else {
+							logOutputNotice(QString("Scheduling detailed consistency check (%1/%2).")
+								.arg(mDetailedConsistencyAttemptCount)
+								.arg(mDetailedConsistencyMaxAttempts));
+						}
+					} else {
+						if (!mFallbackSatisfiableScheduled) {
+							addProcessingCommand(createConsistencyFallbackSatisfiableCommand(),false,"",true,mResponseFileString);
+							logOutputNotice("Detailed consistency checks did not return a boolean result, trying OWL Thing satisfiability fallback.");
+						} else {
+							mConsistencyFailureLogged = true;
+							logOutputError(QString("Detailed consistency checking failed after %1 attempts.")
+								.arg(mDetailedConsistencyAttemptCount));
+							requiresDetailedConsistencyChecking = false;
+						}
+					}
 				} else if (!mReleaseScheduled && !mTestKB.isEmpty()) {
 					mReleaseScheduled = true;
 					addProcessingCommand(new CReleaseKnowledgeBaseCommand(mTestKB));
-				} else if (!outputWritten) {
+				} else if (!outputWritten && !mConsistencyFailureLogged) {
 					logOutputError("Consistency checking failed.");
 				}
 			}

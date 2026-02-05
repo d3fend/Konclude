@@ -489,16 +489,21 @@ namespace Konclude {
 
 
 #ifdef __EMSCRIPTEN__
-					if (!workTestCreated && totallyPreCompItem->hasRemainingProcessingRequirements() && mCurrRunningTestParallelCount == 0) {
-						const bool hasRemainingSaturationWork =
-								totallyPreCompItem->hasRemainingConsistencyRequiredSaturationConcepts() ||
-								totallyPreCompItem->hasRemainingRequiredSaturationConcepts() ||
-								totallyPreCompItem->hasRemainingRequiredSaturationIndividuals() ||
-								totallyPreCompItem->hasRemainingRequiredABoxSaturationIndividuals() ||
-								totallyPreCompItem->isSaturationComputationRunning() ||
-								totallyPreCompItem->hasIndividualSaturationRunning();
-						if (!hasRemainingSaturationWork) {
-							CPrecomputationTestingStep* preStep = nullptr;
+						if (!workTestCreated && totallyPreCompItem->hasRemainingProcessingRequirements() && mCurrRunningTestParallelCount == 0) {
+							const bool hasPendingConsistencyWork =
+									totallyPreCompItem->isConsistenceStepRequired() &&
+									(!totallyPreCompItem->isConsistenceStepFinished() || !totallyPreCompItem->hasConsistenceCheched());
+							const bool hasRemainingSaturationWork =
+									totallyPreCompItem->hasRemainingConsistencyRequiredSaturationConcepts() ||
+									totallyPreCompItem->hasRemainingRequiredSaturationConcepts() ||
+									totallyPreCompItem->hasRemainingRequiredSaturationIndividuals() ||
+									totallyPreCompItem->hasRemainingRequiredABoxSaturationIndividuals() ||
+									totallyPreCompItem->isSaturationComputationRunning() ||
+									totallyPreCompItem->hasIndividualSaturationRunning() ||
+									totallyPreCompItem->isIndividualComputationRunning() ||
+									totallyPreCompItem->isPrecompuationRetrievingIncompletelyHandledIndividuals();
+							if (!hasPendingConsistencyWork && !hasRemainingSaturationWork) {
+								CPrecomputationTestingStep* preStep = nullptr;
 
 							preStep = totallyPreCompItem->getConsistencePrecomputationStep();
 							if (preStep) {
@@ -2323,18 +2328,27 @@ namespace Konclude {
 			bool CTotallyPrecomputationThread::precomputationTested(COntologyPrecomputationItem* ontPreCompItem, CPrecomputationTestingItem* preTestItem, CSaturationPrecomputationCalculatedCallbackEvent* pcce) {
 				CTotallyOntologyPrecomputationItem* totallyPreCompItem = (CTotallyOntologyPrecomputationItem*)ontPreCompItem;
 #ifdef __EMSCRIPTEN__
-				auto wasmForceFinish = [&]() {
-					if (mCurrRunningTestParallelCount == 0 && !totallyPreCompItem->hasCurrentPrecomputationTesting() && totallyPreCompItem->hasRemainingProcessingRequirements()) {
-						const bool hasRemainingSaturationWork =
-								totallyPreCompItem->hasRemainingConsistencyRequiredSaturationConcepts() ||
-								totallyPreCompItem->hasRemainingRequiredSaturationConcepts() ||
-								totallyPreCompItem->hasRemainingRequiredSaturationIndividuals() ||
-								totallyPreCompItem->hasRemainingRequiredABoxSaturationIndividuals() ||
-								totallyPreCompItem->isSaturationComputationRunning() ||
-								totallyPreCompItem->hasIndividualSaturationRunning();
-						if (hasRemainingSaturationWork) {
-							return;
-						}
+					auto wasmForceFinish = [&]() {
+						if (mCurrRunningTestParallelCount == 0 && !totallyPreCompItem->hasCurrentPrecomputationTesting() && totallyPreCompItem->hasRemainingProcessingRequirements()) {
+							const bool hasPendingConsistencyWork =
+									totallyPreCompItem->isConsistenceStepRequired() &&
+									(!totallyPreCompItem->isConsistenceStepFinished() || !totallyPreCompItem->hasConsistenceCheched());
+							if (hasPendingConsistencyWork) {
+								return;
+							}
+
+							const bool hasRemainingSaturationWork =
+									totallyPreCompItem->hasRemainingConsistencyRequiredSaturationConcepts() ||
+									totallyPreCompItem->hasRemainingRequiredSaturationConcepts() ||
+									totallyPreCompItem->hasRemainingRequiredSaturationIndividuals() ||
+									totallyPreCompItem->hasRemainingRequiredABoxSaturationIndividuals() ||
+									totallyPreCompItem->isSaturationComputationRunning() ||
+									totallyPreCompItem->hasIndividualSaturationRunning() ||
+									totallyPreCompItem->isIndividualComputationRunning() ||
+									totallyPreCompItem->isPrecompuationRetrievingIncompletelyHandledIndividuals();
+							if (hasRemainingSaturationWork) {
+								return;
+							}
 
 						CPrecomputationTestingStep* preStep = nullptr;
 

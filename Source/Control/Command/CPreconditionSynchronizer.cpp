@@ -88,8 +88,12 @@ namespace Konclude {
 											preIt = (CLinker<CCommandPrecondition *> *)preIt->getNext();
 										}
 										if (!connCallback) {
-											LOG(ERROR,"::Konclude::Command::PreconditionSynchronizer",logTr("Unprocessable commands which are not depending on their preconditions are not supported."),this);
-											delegater->delegateCommand(command);
+											if (command->isProcessed()) {
+												LOG(WARNING,"::Konclude::Command::PreconditionSynchronizer",logTr("Skipping re-dispatch of already processed command."),this);
+											} else {
+												LOG(ERROR,"::Konclude::Command::PreconditionSynchronizer",logTr("Unprocessable commands which are not depending on their preconditions are not supported."),this);
+												delegater->delegateCommand(command);
+											}
 										}
 									}
 								} else {

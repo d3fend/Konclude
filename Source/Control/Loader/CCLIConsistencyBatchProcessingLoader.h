@@ -32,6 +32,7 @@
 #include "CCLIBatchProcessingLoader.h"
 
 // Other includes
+#include "Control/Command/Instructions/CProcessClassNameSatisfiableQueryCommand.h"
 
 // Logger includes
 #include "Logger/CLogger.h"
@@ -82,11 +83,18 @@ namespace Konclude {
 
 				// private methods
 				private:
+					CIsConsistentQueryCommand* createDetailedConsistencyCommand();
+					CProcessClassNameSatisfiableQueryCommand* createConsistencyFallbackSatisfiableCommand();
 					CIsConsistentQueryCommand* mConsistencyKBCommand;
 					CIsTriviallyConsistentQueryCommand* mTriviallyConsistencyKBCommand;
+					CProcessClassNameSatisfiableQueryCommand* mConsistencyFallbackSatisfiableCommand = nullptr;
 					QString mTestKB;
 					bool mReleaseScheduled = false;
 					bool mTrivialOnly = false;
+					bool mConsistencyFailureLogged = false;
+					bool mFallbackSatisfiableScheduled = false;
+					cint64 mDetailedConsistencyAttemptCount = 0;
+					cint64 mDetailedConsistencyMaxAttempts = 2;
 
 
 				// private variables
